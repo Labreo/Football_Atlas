@@ -1,35 +1,24 @@
-export interface MatchExample {
-  match: string;
-  season: string;
-  teams: string;
-  description: string;
-}
+import { z } from 'zod';
+import {
+  KeyPrincipleSchema,
+  DefensiveResponseSchema,
+  EventTimestampSchema,
+  HistoricalMatchSchema,
+  DoclingChunkReferenceSchema,
+  AnimationModuleReferenceSchema,
+  TacticalConceptSchema,
+  GraniteResponseSchema
+} from '../schemas/tactical.schemas';
+import { ComplexityLevel } from '../enums/tactical.enums';
 
-export type ConceptCategory = 
-  | 'Attacking Shape' 
-  | 'Out-of-Possession' 
-  | 'Attacking Transition' 
-  | 'Defensive Shape' 
-  | 'Transition' 
-  | 'Formation Mechanics' 
-  | 'Attacking Mechanics' 
-  | 'Defensive Organization';
-
-export type ComplexityLevel = 'Beginner' | 'Intermediate' | 'Advanced';
-
-export interface TacticalConcept {
-  concept_id: string;
-  concept_name: string;
-  category: ConceptCategory;
-  complexity: ComplexityLevel;
-  core_explanation: string;
-  key_principles: string[];
-  defensive_response: string;
-  animation_module: string;
-  historical_examples: MatchExample[];
-  related_concepts: string[];
-  docling_chunks: string[];
-}
+export type KeyPrinciple = z.infer<typeof KeyPrincipleSchema>;
+export type DefensiveResponse = z.infer<typeof DefensiveResponseSchema>;
+export type EventTimestamp = z.infer<typeof EventTimestampSchema>;
+export type HistoricalMatch = z.infer<typeof HistoricalMatchSchema>;
+export type DoclingChunkReference = z.infer<typeof DoclingChunkReferenceSchema>;
+export type AnimationModuleReference = z.infer<typeof AnimationModuleReferenceSchema>;
+export type TacticalConcept = z.infer<typeof TacticalConceptSchema>;
+export type GraniteResponse = z.infer<typeof GraniteResponseSchema>;
 
 export interface ConversationTurn {
   role: 'user' | 'assistant';

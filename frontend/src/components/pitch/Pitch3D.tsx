@@ -9,7 +9,7 @@ const Pitch3D: React.FC = () => {
   
   // Resolve active animation coordinates or fallback to null
   const activeAnimation = currentConcept 
-    ? animationRegistry[currentConcept.animation_module] || null 
+    ? animationRegistry[currentConcept.animation_module.module_id] || null 
     : null;
 
   const { containerRef, canvasRef } = usePitchAnimation({

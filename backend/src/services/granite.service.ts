@@ -367,7 +367,7 @@ export class GraniteService {
         conversation_id: conversationId,
         last_questions: [],
         last_concepts: [],
-        user_level: 'Beginner',
+        user_level: ComplexityLevel.BEGINNER,
       };
     }
     return GraniteService.conversationMemory[conversationId];
@@ -405,9 +405,9 @@ export class GraniteService {
 
     // Adapt user level based on keyword signals
     if (q.includes('zone 14') || q.includes('half-space')) {
-      context.user_level = 'Advanced';
+      context.user_level = ComplexityLevel.ADVANCED;
     } else if (q.includes('trigger') || q.includes('structure')) {
-      context.user_level = 'Intermediate';
+      context.user_level = ComplexityLevel.INTERMEDIATE;
     }
 
     if (!matchedConcept) {
@@ -423,70 +423,70 @@ export class GraniteService {
     const mockDatabase: Record<string, { name: string; complexity: ComplexityLevel; module: string; text: string; suggestions: string[] }> = {
       false_9: {
         name: 'False 9',
-        complexity: 'Intermediate',
+        complexity: ComplexityLevel.INTERMEDIATE,
         module: 'false9',
         text: 'The False 9 is a striker who drops deep into central midfield, pulling the opposing center-backs out of position. This spatial disruption vacates channels behind the defensive line for inverted wingers to exploit.',
         suggestions: ['What happens if the defender follows the False 9?', 'Show a match example of Messi', 'How does it connect to third man runs?'],
       },
       high_press: {
         name: 'High Press',
-        complexity: 'Intermediate',
+        complexity: ComplexityLevel.INTERMEDIATE,
         module: 'highPress',
         text: 'A high press applies aggressive pressure on the opponent center-backs close to their own goal, forcing hurried clearances or bad passes to win possession high up.',
         suggestions: ['What is a pressing trap?', 'How do you bypass a high press?', 'Show Klopp\'s Liverpool triggers'],
       },
       pressing_trap: {
         name: 'Pressing Trap',
-        complexity: 'Advanced',
+        complexity: ComplexityLevel.ADVANCED,
         module: 'pressingTrap',
         text: 'A pressing trap intentionally leaves a specific passing channel open, inviting the ball inside before closing down the target simultaneously with multiple defenders.',
         suggestions: ['What are pressing triggers?', 'What is a cover shadow?', 'Show Mourinho\'s Inter Milan setups'],
       },
       midfield_overload: {
         name: 'Overload in Midfield',
-        complexity: 'Advanced',
+        complexity: ComplexityLevel.ADVANCED,
         module: 'midfieldOverload',
         text: 'Creating numerical superiority in central midfield (e.g., 4v3) by dropping attackers or bringing inverted fullbacks inside to dominate possession and progress play.',
         suggestions: ['What is an inverted fullback?', 'How does a back 3 help overload?', 'Show Guardiola\'s box midfield'],
       },
       low_block: {
         name: 'Defensive Block (Low Block)',
-        complexity: 'Beginner',
+        complexity: ComplexityLevel.BEGINNER,
         module: 'lowBlock',
         text: 'A deep, compact defensive shape where all players drop close to their own box, minimizing space behind and protecting central corridors.',
         suggestions: ['How do you break down a low block?', 'What is compactness?', 'Show Chelsea\'s 2012 UCL block'],
       },
       counter_attack: {
         name: 'Counter-Attack',
-        complexity: 'Intermediate',
+        complexity: ComplexityLevel.INTERMEDIATE,
         module: 'counterTrigger',
         text: 'An immediate shift from defending to attacking upon winning possession, moving the ball forward quickly before the opponent can reorganize.',
         suggestions: ['What are transition zones?', 'Show Leicester\'s 2016 Vardy counter', 'What is counter-pressing?'],
       },
       inverted_winger: {
         name: 'Inverted Winger',
-        complexity: 'Beginner',
+        complexity: ComplexityLevel.BEGINNER,
         module: 'invertedWinger',
         text: 'A wide attacking player positioned on the side opposite their dominant foot, enabling them to cut inside to shoot or pass, rather than cross.',
         suggestions: ['Show Robben\'s classic cut-inside move', 'How does this create overlapping lanes?', 'What is the difference with inside forwards?'],
       },
       back_three: {
         name: 'Back 3 / Wing-Back System',
-        complexity: 'Intermediate',
+        complexity: ComplexityLevel.INTERMEDIATE,
         module: 'back3Wingbacks',
         text: 'A formation using three center-backs and two advanced wing-backs, combining defensive stability with wide attacking options.',
         suggestions: ['How does a back 3 transition in defense?', 'Show Conte\'s Chelsea systems', 'What are the spacing demands on centerbacks?'],
       },
       third_man_run: {
         name: 'Off-Ball Movement & Third Man Run',
-        complexity: 'Advanced',
+        complexity: ComplexityLevel.ADVANCED,
         module: 'thirdManRun',
         text: 'An attacking pattern where Player A passes to Player B to draw markers, while Player C makes a run to receive a one-touch pass from Player B.',
         suggestions: ['What is positional play?', 'Show Xavi/Messi combinations', 'How do you defend off-ball runs?'],
       },
       compactness: {
         name: 'Compactness & Pressing Lines',
-        complexity: 'Intermediate',
+        complexity: ComplexityLevel.INTERMEDIATE,
         module: 'compactnessPressing',
         text: 'The distance between the forward pressing line and the back line, kept short (10-15m) to limit central passing options.',
         suggestions: ['What is a block height?', 'Show Simeone\'s Atletico Madrid shape', 'What happens if lines stretch?'],

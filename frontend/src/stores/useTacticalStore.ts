@@ -42,7 +42,7 @@ export const useTacticalStore = create<TacticalState>((set, get) => ({
       content: "Welcome to Football Atlas! I'm your AI tactical tutor powered by IBM Granite. Ask me questions like 'Why is a False 9 hard to defend?' or 'How does a high press work?' to begin!"
     }
   ],
-  detectedLevel: 'Beginner',
+  detectedLevel: ComplexityLevel.BEGINNER,
   isLoading: false,
   error: null,
 

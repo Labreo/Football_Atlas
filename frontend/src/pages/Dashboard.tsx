@@ -3,6 +3,7 @@ import { useTacticalStore } from '../stores/useTacticalStore';
 import Header from '../components/common/Header';
 import Pitch3D from '../components/pitch/Pitch3D';
 import ChatConsole from '../components/chat/ChatConsole';
+import { ComplexityLevel } from '@football-atlas/shared';
 
 const Dashboard: React.FC = () => {
   const { 
@@ -58,18 +59,18 @@ const Dashboard: React.FC = () => {
                         : 'bg-transparent border-transparent text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
                     }`}
                   >
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold font-display">
+                    <div className="flex flex-col text-ellipsis overflow-hidden">
+                      <span className="text-xs font-semibold font-display truncate">
                         {concept.concept_name}
                       </span>
-                      <span className="text-[10px] text-slate-500 font-medium">
-                        {concept.category}
+                      <span className="text-[9px] text-slate-500 font-medium truncate uppercase">
+                        {concept.category.replace('_', ' ')}
                       </span>
                     </div>
-                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase ${
-                      concept.complexity === 'Beginner'
+                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase shrink-0 ${
+                      concept.complexity === ComplexityLevel.BEGINNER
                         ? 'bg-slate-900 border-slate-700 text-slate-400'
-                        : concept.complexity === 'Intermediate'
+                        : concept.complexity === ComplexityLevel.INTERMEDIATE
                         ? 'bg-pitch-neonCyan/10 border-pitch-neonCyan/30 text-pitch-neonCyan'
                         : 'bg-pitch-neonAmber/10 border-pitch-neonAmber/30 text-pitch-neonAmber'
                     }`}>
@@ -109,8 +110,8 @@ const Dashboard: React.FC = () => {
                     <h3 className="font-display font-bold text-lg text-slate-100">
                       {currentConcept.concept_name}
                     </h3>
-                    <span className="text-[10px] bg-pitch-surface text-slate-300 border border-pitch-border px-2 py-0.5 rounded font-semibold font-display uppercase">
-                      {currentConcept.category}
+                    <span className="text-[9px] bg-pitch-surface text-slate-300 border border-pitch-border px-2 py-0.5 rounded font-semibold font-display uppercase">
+                      {currentConcept.category.replace('_', ' ')}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 leading-relaxed bg-pitch-surface/40 p-3 rounded-xl border border-slate-800/80">
@@ -123,24 +124,39 @@ const Dashboard: React.FC = () => {
                   <h4 className="text-xs font-bold font-display uppercase tracking-wider text-pitch-neonCyan">
                     Key Principles
                   </h4>
-                  <ul className="space-y-1.5">
+                  <ul className="space-y-2">
                     {currentConcept.key_principles.map((principle, index) => (
-                      <li key={index} className="text-xs text-slate-300 flex items-start gap-2 leading-relaxed">
-                        <span className="text-pitch-neonCyan mt-0.5">✦</span>
-                        <span>{principle}</span>
+                      <li key={index} className="text-xs leading-relaxed flex flex-col bg-pitch-surface/20 border border-slate-800/40 p-2 rounded-xl">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-pitch-neonCyan">✦</span>
+                          <span className="font-semibold text-slate-200 font-display">{principle.title}</span>
+                        </div>
+                        <span className="pl-4 text-slate-400 text-[11px]">{principle.description}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* Defensive Counter */}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <h4 className="text-xs font-bold font-display uppercase tracking-wider text-pitch-neonRed">
                     Opposition Counters
                   </h4>
-                  <p className="text-xs text-slate-300 leading-relaxed bg-pitch-neonRed/5 p-2.5 rounded-xl border border-pitch-neonRed/20">
-                    {currentConcept.defensive_response}
-                  </p>
+                  <div className="bg-pitch-neonRed/5 p-3 rounded-xl border border-pitch-neonRed/20 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold font-display text-pitch-neonRed">
+                      <span>{currentConcept.defensive_response.title}</span>
+                      <span className="text-[10px] bg-pitch-neonRed/10 px-1.5 py-0.5 rounded border border-pitch-neonRed/30">
+                        Eff: {currentConcept.defensive_response.effectiveness_rating}%
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      {currentConcept.defensive_response.description}
+                    </p>
+                    <div className="text-[10px] space-y-1 border-t border-slate-800/60 pt-2 mt-1">
+                      <div className="text-slate-400"><strong className="text-pitch-neonGreen">Advantages:</strong> {currentConcept.defensive_response.advantages.join(', ')}</div>
+                      <div className="text-slate-400"><strong className="text-pitch-neonRed">Risks:</strong> {currentConcept.defensive_response.risks.join(', ')}</div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Historical Match Example */}
@@ -150,16 +166,20 @@ const Dashboard: React.FC = () => {
                       Match Benchmark Case
                     </h4>
                     {currentConcept.historical_examples.map((ex, i) => (
-                      <div key={i} className="bg-pitch-surface p-3 rounded-xl border border-pitch-border space-y-1.5 shadow-md">
+                      <div key={i} className="bg-pitch-surface p-3 rounded-xl border border-pitch-border space-y-2 shadow-md">
                         <div className="flex items-center justify-between text-[11px] font-bold font-display">
-                          <span className="text-pitch-neonAmber">{ex.match}</span>
+                          <span className="text-pitch-neonAmber">{ex.title}</span>
                           <span className="text-slate-400">{ex.season}</span>
                         </div>
                         <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
-                          {ex.teams}
+                          {ex.teams} ({ex.competition})
                         </div>
+                        <p className="text-xs text-slate-400 leading-relaxed italic bg-slate-950/20 p-2 rounded border border-slate-800/40">
+                          <strong className="text-slate-300 font-display not-italic text-[10px] block uppercase mb-0.5">Tactical Context:</strong> 
+                          {ex.tactical_context}
+                        </p>
                         <p className="text-xs text-slate-300 leading-relaxed">
-                          {ex.description}
+                          {ex.summary}
                         </p>
                       </div>
                     ))}
@@ -173,8 +193,12 @@ const Dashboard: React.FC = () => {
                       Docling Source Grounding
                     </h4>
                     {currentConcept.docling_chunks.map((chunk, i) => (
-                      <div key={i} className="p-2.5 rounded-xl bg-slate-950/50 border border-slate-900 text-[10px] text-slate-400 leading-relaxed font-sans italic">
-                        {chunk}
+                      <div key={i} className="p-2.5 rounded-xl bg-slate-950/50 border border-slate-900 text-[10px] text-slate-400 leading-relaxed font-sans space-y-1">
+                        <div className="flex items-center justify-between font-semibold text-[9px] text-slate-500 uppercase tracking-wider">
+                          <span>{chunk.source_document}</span>
+                          <span className="text-pitch-neonCyan font-bold">Match: {chunk.relevance_score}%</span>
+                        </div>
+                        <div className="text-[9px] text-slate-600 font-mono">Ref ID: {chunk.chunk_id}</div>
                       </div>
                     ))}
                   </div>

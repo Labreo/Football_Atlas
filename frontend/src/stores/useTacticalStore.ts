@@ -17,6 +17,14 @@ interface TacticalState {
   isLoading: boolean;
   error: string | null;
 
+  // New visual pitch state
+  formation: string;
+  teamAVisible: boolean;
+  teamBVisible: boolean;
+  cameraResetTrigger: number;
+  cameraPanDirection: { dir: 'up' | 'down' | 'left' | 'right' | null; count: number };
+  cameraZoom: number;
+
   fetchConcepts: () => Promise<void>;
   selectConcept: (conceptId: string) => Promise<void>;
   setPlayState: (state: 'playing' | 'paused' | 'stopped') => void;
@@ -24,6 +32,14 @@ interface TacticalState {
   toggleOverlay: (overlay: 'passingLanes' | 'movementPaths' | 'pressingZones') => void;
   askQuestion: (prompt: string) => Promise<void>;
   clearConversation: () => void;
+
+  // New visual pitch actions
+  setFormation: (formation: string) => void;
+  setTeamAVisible: (visible: boolean) => void;
+  setTeamBVisible: (visible: boolean) => void;
+  triggerCameraReset: () => void;
+  panCamera: (dir: 'up' | 'down' | 'left' | 'right') => void;
+  setCameraZoom: (zoom: number) => void;
 }
 
 export const useTacticalStore = create<TacticalState>((set, get) => ({
@@ -45,6 +61,14 @@ export const useTacticalStore = create<TacticalState>((set, get) => ({
   detectedLevel: ComplexityLevel.BEGINNER,
   isLoading: false,
   error: null,
+
+  // New state values
+  formation: '4-3-3',
+  teamAVisible: true,
+  teamBVisible: true,
+  cameraResetTrigger: 0,
+  cameraPanDirection: { dir: null, count: 0 },
+  cameraZoom: 1.0,
 
   fetchConcepts: async () => {
     set({ isLoading: true, error: null });
@@ -75,6 +99,15 @@ export const useTacticalStore = create<TacticalState>((set, get) => ({
       [overlay]: !state.overlays[overlay]
     }
   })),
+
+  setFormation: (formation) => set({ formation }),
+  setTeamAVisible: (teamAVisible) => set({ teamAVisible }),
+  setTeamBVisible: (teamBVisible) => set({ teamBVisible }),
+  triggerCameraReset: () => set((state) => ({ cameraResetTrigger: state.cameraResetTrigger + 1, cameraZoom: 1.0 })),
+  panCamera: (dir) => set((state) => ({
+    cameraPanDirection: { dir, count: state.cameraPanDirection.count + 1 }
+  })),
+  setCameraZoom: (cameraZoom) => set({ cameraZoom }),
 
   askQuestion: async (prompt: string) => {
     const { conversation } = get();

@@ -82,13 +82,15 @@ export class GraniteService {
 
     // 1. Trigger mock completion if in Mock Mode
     if (this.isMockMode) {
-      Logger.info('Running in environmental MOCK mode. Emulating model prediction...', { trace_id: traceId });
-      const latency = Math.floor(Math.random() * 400) + 200; // 200-600ms latency simulation
+      Logger.warn('IBM_API_KEY is not set or is a mock key — running in MOCK mode. Responses are NOT from a real AI model.', { trace_id: traceId });
+      const latency = Math.floor(Math.random() * 400) + 200;
       await new Promise((r) => setTimeout(r, latency));
       const mockResult = this.generateMockResponse(question, context);
-      
+
       return {
         success: true,
+        is_mocked: true,
+        mode: 'mock',
         latency_ms: Date.now() - startTime,
         data: mockResult,
       };
@@ -153,17 +155,21 @@ export class GraniteService {
 
         return {
           success: true,
+          is_mocked: false,
+          mode: 'live',
           latency_ms: Date.now() - startTime,
           data: parsedData,
         };
 
       } catch (err: any) {
-        Logger.warn(`Hugging Face connection error: ${err.message}. Falling back to mock generator.`, {
+        Logger.warn(`Hugging Face API error: ${err.message}. Falling back to local mock generator. Responses are NOT from a real AI model.`, {
           trace_id: traceId,
         });
         const mockResult = this.generateMockResponse(question, context);
         return {
           success: true,
+          is_mocked: true,
+          mode: 'mock',
           latency_ms: Date.now() - startTime,
           data: mockResult,
         };
@@ -229,19 +235,22 @@ export class GraniteService {
 
       return {
         success: true,
+        is_mocked: false,
+        mode: 'live',
         latency_ms: Date.now() - startTime,
         data: parsedData,
       };
 
     } catch (err: any) {
-      Logger.warn(`IBM Granite connection error: ${err.message}. Falling back to mock generator.`, {
+      Logger.warn(`IBM Granite API error: ${err.message}. Falling back to local mock generator. Responses are NOT from a real AI model.`, {
         trace_id: traceId,
       });
 
-      // Recover and proceed with mock response fallback to protect user operations
       const mockResult = this.generateMockResponse(question, context);
       return {
         success: true,
+        is_mocked: true,
+        mode: 'mock',
         latency_ms: Date.now() - startTime,
         data: mockResult,
       };
@@ -379,19 +388,19 @@ export class GraniteService {
   private generateMockResponse(question: string, context: ConversationContext): any {
     const q = question.toLowerCase();
 
-    // Mapping keyword heuristics
+    // Mapping keyword heuristics (with typo-tolerance)
     let matchedConcept = '';
-    if (q.includes('false 9') || q.includes('false9') || q.includes('dropped striker')) {
+    if (q.includes('false 9') || q.includes('false9') || q.includes('flase 9') || q.includes('flase9') || q.includes('dropped striker')) {
       matchedConcept = 'false_9';
-    } else if (q.includes('high press') || q.includes('gegenpress') || q.includes('pressing high')) {
+    } else if (q.includes('high press') || q.includes('gegenpress') || q.includes('gegen press') || q.includes('pressing high')) {
       matchedConcept = 'high_press';
     } else if (q.includes('trap') || q.includes('pressing trap')) {
       matchedConcept = 'pressing_trap';
     } else if (q.includes('overload') || q.includes('midfield overload')) {
       matchedConcept = 'midfield_overload';
-    } else if (q.includes('low block') || q.includes('defending deep') || q.includes('compact block')) {
+    } else if (q.includes('low block') || q.includes('lowblock') || q.includes('defending deep') || q.includes('compact block')) {
       matchedConcept = 'low_block';
-    } else if (q.includes('counter') || q.includes('transition') || q.includes('counter-attack')) {
+    } else if (q.includes('counter') || q.includes('transition') || q.includes('counter-attack') || q.includes('counter attack')) {
       matchedConcept = 'counter_attack';
     } else if (q.includes('inverted') || q.includes('winger') || q.includes('cut inside')) {
       matchedConcept = 'inverted_winger';
@@ -399,7 +408,7 @@ export class GraniteService {
       matchedConcept = 'back_three';
     } else if (q.includes('third man') || q.includes('off-ball run') || q.includes('third-man')) {
       matchedConcept = 'third_man_run';
-    } else if (q.includes('compactness') || q.includes('lines') || q.includes('vertical distance')) {
+    } else if (q.includes('compactness') || q.includes('compact') || q.includes('lines') || q.includes('vertical distance')) {
       matchedConcept = 'compactness';
     }
 
@@ -411,10 +420,15 @@ export class GraniteService {
     }
 
     if (!matchedConcept) {
-      return {
-        needs_clarification: true,
-        clarification_question: 'Are you asking about pressing high up the pitch (High Press) or defending deep (Low Block)?',
-      };
+      // Context-aware fallback: if the user typed a typo or follow-up, use the last discussed concept!
+      if (context.last_concepts.length > 0) {
+        matchedConcept = context.last_concepts[context.last_concepts.length - 1];
+      } else {
+        return {
+          needs_clarification: true,
+          clarification_question: 'Are you asking about pressing high up the pitch (High Press) or defending deep (Low Block)?',
+        };
+      }
     }
 
     // Store concept memory

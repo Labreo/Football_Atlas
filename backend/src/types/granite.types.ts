@@ -12,12 +12,18 @@ export interface FootballConceptData {
 
 export interface GraniteSuccessResponse {
   success: true;
+  /** Whether this response came from the real Granite model or the local fallback generator */
+  is_mocked: boolean;
+  /** 'live' = real HF/IBM API call succeeded | 'mock' = fallback generator used */
+  mode: 'live' | 'mock';
   latency_ms: number;
   data: FootballConceptData & { needs_clarification: false };
 }
 
 export interface GraniteClarificationResponse {
   success: true;
+  is_mocked: boolean;
+  mode: 'live' | 'mock';
   latency_ms: number;
   data: {
     needs_clarification: true;

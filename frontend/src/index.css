@@ -64,3 +64,54 @@
 .pulse-border-cyan {
   animation: pulse-cyan 3s infinite ease-in-out;
 }
+
+/* Premium Blue-Black Background Gradient */
+.bg-pitch-gradient {
+  background: radial-gradient(circle at 50% 50%, #0F172A 0%, #070A12 100%);
+}
+
+/* Custom Vertical Zoom Slider styling */
+.vertical-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 96px;
+  height: 4px;
+  background: #1e293b;
+  outline: none;
+  border-radius: 999px;
+  transform: rotate(-90deg);
+  cursor: pointer;
+}
+
+.vertical-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #10B981; /* Football Atlas green */
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  transition: transform 0.1s ease;
+}
+
+.vertical-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.vertical-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #10B981;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  transition: transform 0.1s ease;
+}
+
+.vertical-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+

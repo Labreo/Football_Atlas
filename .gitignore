@@ -42,3 +42,7 @@ Thumbs.db
 # Vite / Testing cache
 .vite/
 .eslintcache
+
+# Local tactical literature and store
+football_atlas_docling/
+backend/data/store.json

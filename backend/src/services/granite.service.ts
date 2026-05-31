@@ -1,326 +1,508 @@
-import { TacticalConcept, TutorResponse, ComplexityLevel, ConversationTurn } from '@football-atlas/shared';
-import { DoclingService } from './docling.service';
-
-const doclingService = new DoclingService();
+import { envConfig } from '../config/env.config';
+import { Logger } from '../utils/logger';
+import { parseGraniteJson } from '../utils/jsonParser';
+import { GraniteTestResponse, FootballConceptData, ConversationContext } from '../types/granite.types';
+import { TUTOR_SYSTEM_PROMPT } from '../prompts/tutor.prompt';
+import { ComplexityLevel } from '@football-atlas/shared';
 
 export class GraniteService {
-  private concepts: Record<string, TacticalConcept> = {
-    false_9: {
-      concept_id: 'false_9',
-      concept_name: 'False 9',
-      category: 'Attacking Shape',
-      complexity: 'Intermediate',
-      core_explanation: 'A centre-forward who drops deep into the space between the opponent\'s defensive line and midfield (Zone 14). This movement creates a numerical overload in central midfield, dragging center-backs out of position and opening space behind for wingers or attacking midfielders to exploit.',
-      key_principles: [
-        'Dropping deep to create a midfield diamond or overload.',
-        'Dragging central defenders out of their structure.',
-        'Creating passing lanes for inside forwards running into channels.',
-        'Serving as a technical connector between lines.'
-      ],
-      defensive_response: 'Opponents often counter by employing a defensive midfielder to screen the space, or using strict zonal marking where center-backs do not follow the dropping run.',
-      animation_module: 'false9',
-      historical_examples: [
-        {
-          match: 'Real Madrid 2-6 Barcelona',
-          season: '2008-09',
-          teams: 'Real Madrid vs. Barcelona',
-          description: 'Pep Guardiola deployed Lionel Messi as a False 9. Messi dropped deep into midfield, leaving Cannavaro and Metzelder without a direct player to mark, opening space for Henry and Eto\'o.'
-        }
-      ],
-      related_concepts: ['third_man_run', 'midfield_overload'],
-      docling_chunks: doclingService.getChunksForConcept('false_9')
-    },
-    high_press: {
-      concept_id: 'high_press',
-      concept_name: 'High Press',
-      category: 'Out-of-Possession',
-      complexity: 'Intermediate',
-      core_explanation: 'A collective defensive tactic where a team applies immediate pressure high up the pitch, close to the opponent\'s penalty area. The goal is to disrupt buildup play, force passing errors, and win possession close to the target goal.',
-      key_principles: [
-        'Aggressive high pressure on the ball-playing center-backs/goalkeeper.',
-        'Using cover shadows to block backward and horizontal passing lanes.',
-        'Maintaining a compact team shape to compress the playing area.',
-        'Forcing play wide towards the touchlines.'
-      ],
-      defensive_response: 'Utilizing a deep lying playmaker, sweeping goalkeeper, or direct long-ball passes to target target-men in space.',
-      animation_module: 'highPress',
-      historical_examples: [
-        {
-          match: 'Liverpool 4-3 Manchester City',
-          season: '2017-18',
-          teams: 'Liverpool vs. Manchester City',
-          description: 'Jurgen Klopp\'s Liverpool applied a relentless high counter-press, forcing errors from Ederson and John Stones to score three quick-fire second-half goals.'
-        }
-      ],
-      related_concepts: ['pressing_trap', 'compactness_pressing'],
-      docling_chunks: doclingService.getChunksForConcept('high_press')
-    },
-    pressing_trap: {
-      concept_id: 'pressing_trap',
-      concept_name: 'Pressing Trap',
-      category: 'Out-of-Possession',
-      complexity: 'Advanced',
-      core_explanation: 'A defensive mechanism where a team intentionally leaves a passing lane open, inviting the opponent to play the ball into a specific zone (the trap). Once the target receives the ball, adjacent players immediately close in, blocking all escape routes to force a turnover.',
-      key_principles: [
-        'Passive positioning to invite a specific forward or sideways pass.',
-        'Simultaneous closure of space by 2-3 players upon the reception trigger.',
-        'Using the touchline or a player\'s weak foot as an additional boundary.'
-      ],
-      defensive_response: 'Switching play quickly to the opposite side or using quick, one-touch vertical combinations to break out of the trapping zone.',
-      animation_module: 'pressingTrap',
-      historical_examples: [
-        {
-          match: 'Barcelona 1-0 Inter Milan',
-          season: '2009-10',
-          teams: 'Barcelona vs. Inter Milan',
-          description: 'Jose Mourinho\'s Inter setup traps in the half-spaces, funneling Barca\'s possession wide and closing down Messi with double-teams immediately upon entry.'
-        }
-      ],
-      related_concepts: ['high_press', 'compactness_pressing'],
-      docling_chunks: doclingService.getChunksForConcept('pressing_trap')
-    },
-    midfield_overload: {
-      concept_id: 'midfield_overload',
-      concept_name: 'Overload in Midfield',
-      category: 'Attacking Transition',
-      complexity: 'Advanced',
-      core_explanation: 'Creating numerical superiority in central zones of the pitch to control possession, bypass the opponent\'s pressing lines, and create free players to carry the ball forward.',
-      key_principles: [
-        'Positioning players between opposition lines to create triangles.',
-        'Rotating midfielders to draw markers and free up passing options.',
-        'Using fullbacks tucking inside (inverted fullbacks) to create midfield overloads.'
-      ],
-      defensive_response: 'Shifting defensive lines horizontally to stay compact, or matching midfield numbers with an extra central defender stepping up.',
-      animation_module: 'midfieldOverload',
-      historical_examples: [
-        {
-          match: 'Manchester City 4-0 Real Madrid',
-          season: '2022-23',
-          teams: 'Manchester City vs. Real Madrid',
-          description: 'John Stones moved from center-back into central midfield, creating a 3-2 buildup box that completely overloaded Madrid\'s midfield trio.'
-        }
-      ],
-      related_concepts: ['false_9', 'third_man_run'],
-      docling_chunks: doclingService.getChunksForConcept('midfield_overload')
-    },
-    low_block: {
-      concept_id: 'low_block',
-      concept_name: 'Defensive Block (Low Block)',
-      category: 'Defensive Shape',
-      complexity: 'Beginner',
-      core_explanation: 'A deep, compact defensive shape where the entire team drops close to their own box, minimizing the space behind them and focusing on protecting central corridors.',
-      key_principles: [
-        'Staying horizontally and vertically compact, leaving no room between defense and midfield.',
-        'Forcing the opponent to play wide, cross-heavy deliveries.',
-        'Protecting the space in front of the box (Zone 14).'
-      ],
-      defensive_response: 'Countered by rapid horizontal ball circulation, stretching the defense, or individual dribbles that draw players out of position.',
-      animation_module: 'lowBlock',
-      historical_examples: [
-        {
-          match: 'Barcelona 2-2 Chelsea',
-          season: '2011-12',
-          teams: 'Barcelona vs. Chelsea',
-          description: 'Chelsea defended with 10 players inside their own defensive third, maintaining a low block that blocked central passing lines and secured their Champions League final spot.'
-        }
-      ],
-      related_concepts: ['counter_trigger', 'compactness_pressing'],
-      docling_chunks: doclingService.getChunksForConcept('low_block')
-    },
-    counter_trigger: {
-      concept_id: 'counter_trigger',
-      concept_name: 'Counter-Attack Trigger',
-      category: 'Transition',
-      complexity: 'Intermediate',
-      core_explanation: 'The immediate shift from defense to attack the moment possession is won. Triggers identify vertical channels and exploit space vacated by the opponent\'s advanced shapes.',
-      key_principles: [
-        'First pass directed vertically out of the pressure zone.',
-        'Explosive forward runs by wide attackers into channels.',
-        'Taking advantage of disorganized defensive transitions.'
-      ],
-      defensive_response: 'Counter-pressing immediately upon losing possession, or committing tactical fouls to break momentum.',
-      animation_module: 'counterTrigger',
-      historical_examples: [
-        {
-          match: 'Leicester City 2-0 Liverpool',
-          season: '2015-16',
-          teams: 'Leicester City vs. Liverpool',
-          description: 'Leicester won possession deep, and instantly sent a long pass to Jamie Vardy who scored a famous looping volley, exploiting Liverpool\'s high line.'
-        }
-      ],
-      related_concepts: ['low_block', 'inverted_winger'],
-      docling_chunks: doclingService.getChunksForConcept('counter_trigger')
-    },
-    inverted_winger: {
-      concept_id: 'inverted_winger',
-      concept_name: 'Inverted Winger',
-      category: 'Attacking Shape',
-      complexity: 'Beginner',
-      core_explanation: 'A wide attacking player positioned on the side opposite of their dominant foot (e.g. left-footed winger playing on the right), allowing them to cut inside to shoot or combine, rather than stay wide to cross.',
-      key_principles: [
-        'Dribbling diagonally inwards towards the penalty area.',
-        'Opening up passing angles to combine with central midfielders or the striker.',
-        'Creating space for overlapping fullbacks on the outside flank.'
-      ],
-      defensive_response: 'Fullbacks showing the winger onto their weaker, outside foot, or double-teaming them with wide midfielders.',
-      animation_module: 'invertedWinger',
-      historical_examples: [
-        {
-          match: 'Bayern Munich 2-1 Borussia Dortmund',
-          season: '2012-13',
-          teams: 'Bayern Munich vs. Borussia Dortmund',
-          description: 'Arjen Robben cut inside repeatedly from the right wing using his dominant left foot, culminating in the winning goal in the UCL final.'
-        }
-      ],
-      related_concepts: ['false_9', 'counter_trigger'],
-      docling_chunks: doclingService.getChunksForConcept('inverted_winger')
-    },
-    back_3_wingbacks: {
-      concept_id: 'back_3_wingbacks',
-      concept_name: 'Back 3 / Wing-Back System',
-      category: 'Formation Mechanics',
-      complexity: 'Intermediate',
-      core_explanation: 'A tactical system using three central defenders and two high-positioned wing-backs. This offers defensive solidity with five at the back out of possession, while morphing into a wide attacking shape with the wing-backs acting as wingers.',
-      key_principles: [
-        'Wide central defenders pushing out to cover the half-spaces.',
-        'Wing-backs providing the primary attacking width and depth.',
-        'Dynamic transition between a 3-5-2 or 3-4-3 and a 5-3-2 or 5-4-1.'
-      ],
-      defensive_response: 'Exploiting the space behind the wing-backs during quick transitions before the defensive five can form.',
-      animation_module: 'back3Wingbacks',
-      historical_examples: [
-        {
-          match: 'Chelsea 5-0 Everton',
-          season: '2016-17',
-          teams: 'Chelsea vs. Everton',
-          description: 'Antonio Conte\'s 3-4-3 system overloaded the flanks, with wing-backs Marcos Alonso and Victor Moses dominating the width.'
-        }
-      ],
-      related_concepts: ['midfield_overload', 'low_block'],
-      docling_chunks: doclingService.getChunksForConcept('back_3_wingbacks')
-    },
-    third_man_run: {
-      concept_id: 'third_man_run',
-      concept_name: 'Off-Ball Movement & Third Man Run',
-      category: 'Attacking Mechanics',
-      complexity: 'Advanced',
-      core_explanation: 'An attacking combination where Player A passes to Player B to draw the defense\'s attention, while Player C (the third man) makes a blind run into space to receive a first-time pass from Player B.',
-      key_principles: [
-        'Player A acts as the initiator, passing to a wall player (Player B).',
-        'Player B acts as the connector, returning the ball in one touch.',
-        'Player C makes an off-ball run, moving behind the defensive line.'
-      ],
-      defensive_response: 'Maintaining focus on off-ball runners and dropping defenders deep to track runners instead of ball watching.',
-      animation_module: 'thirdManRun',
-      historical_examples: [
-        {
-          match: 'Barcelona 5-0 Real Madrid',
-          season: '2010-11',
-          teams: 'Barcelona vs. Real Madrid',
-          description: 'Xavi, Messi, and Villa executed continuous third-man combinations, bypassing Madrid\'s central defenders before they could react.'
-        }
-      ],
-      related_concepts: ['false_9', 'midfield_overload'],
-      docling_chunks: doclingService.getChunksForConcept('third_man_run')
-    },
-    compactness_pressing: {
-      concept_id: 'compactness_pressing',
-      concept_name: 'Compactness & Pressing Lines',
-      category: 'Defensive Organization',
-      complexity: 'Intermediate',
-      core_explanation: 'The defensive principle of reducing the distance between the front line (strikers) and the back line (defenders) to restrict the opponent\'s passing options in central channels.',
-      key_principles: [
-        'Restricting the vertical distance between lines to 10-15 meters.',
-        'Moving the defensive line high up the pitch when the team presses.',
-        'Shifting laterally as a single unit relative to the ball position.'
-      ],
-      defensive_response: 'Countered by direct passes over the defense or switching the play with long cross-field balls to isolate players.',
-      animation_module: 'compactnessPressing',
-      historical_examples: [
-        {
-          match: 'Atletico Madrid 1-0 Barcelona',
-          season: '2015-16',
-          teams: 'Atletico Madrid vs. Barcelona',
-          description: 'Diego Simeone\'s Atletico maintained absolute defensive compactness, leaving zero space between lines and keeping Barcelona quiet.'
-        }
-      ],
-      related_concepts: ['high_press', 'low_block'],
-      docling_chunks: doclingService.getChunksForConcept('compactness_pressing')
-    }
-  };
+  private static cachedToken: string | null = null;
+  private static tokenExpiry: number = 0;
 
-  public async getAllTacticalConcepts(): Promise<TacticalConcept[]> {
-    return Object.values(this.concepts);
+  // Track simple session memory mapping for future multi-turn support
+  private static conversationMemory: Record<string, ConversationContext> = {};
+
+  private isMockMode: boolean;
+  private isHFMode: boolean;
+
+  constructor() {
+    const key = envConfig.ibmApiKey;
+    this.isMockMode = !key || key === 'mock-key-for-local-testing' || key.toLowerCase().includes('mock');
+    this.isHFMode = !!key && key.startsWith('hf_');
+    if (this.isHFMode) {
+      this.isMockMode = false;
+    }
   }
 
-  public async getTacticalConcept(conceptId: string): Promise<TacticalConcept | null> {
-    return this.concepts[conceptId] || null;
-  }
-
-  public async queryTutor(prompt: string, conversationHistory: ConversationTurn[]): Promise<TutorResponse> {
-    const lowercasePrompt = prompt.toLowerCase();
-    
-    // Simple concept detection rules
-    let matchedId = '';
-    if (lowercasePrompt.includes('false 9') || lowercasePrompt.includes('false9') || lowercasePrompt.includes('messi')) {
-      matchedId = 'false_9';
-    } else if (lowercasePrompt.includes('high press') || lowercasePrompt.includes('klopp') || lowercasePrompt.includes('gegenpress')) {
-      matchedId = 'high_press';
-    } else if (lowercasePrompt.includes('trap')) {
-      matchedId = 'pressing_trap';
-    } else if (lowercasePrompt.includes('overload') || lowercasePrompt.includes('numerical superiority')) {
-      matchedId = 'midfield_overload';
-    } else if (lowercasePrompt.includes('low block') || lowercasePrompt.includes('defensive block') || lowercasePrompt.includes('chelsea')) {
-      matchedId = 'low_block';
-    } else if (lowercasePrompt.includes('counter') || lowercasePrompt.includes('transition') || lowercasePrompt.includes('vardy')) {
-      matchedId = 'counter_trigger';
-    } else if (lowercasePrompt.includes('inverted') || lowercasePrompt.includes('winger') || lowercasePrompt.includes('robben')) {
-      matchedId = 'inverted_winger';
-    } else if (lowercasePrompt.includes('wing') || lowercasePrompt.includes('back') || lowercasePrompt.includes('conte')) {
-      matchedId = 'back_3_wingbacks';
-    } else if (lowercasePrompt.includes('third man') || lowercasePrompt.includes('blind run') || lowercasePrompt.includes('xavi')) {
-      matchedId = 'third_man_run';
-    } else if (lowercasePrompt.includes('compact') || lowercasePrompt.includes('simeone') || lowercasePrompt.includes('lines')) {
-      matchedId = 'compactness_pressing';
+  /**
+   * Retrieves and caches the Watsonx IAM OAuth token.
+   */
+  private async getAccessToken(traceId: string): Promise<string> {
+    if (GraniteService.cachedToken && Date.now() < GraniteService.tokenExpiry) {
+      return GraniteService.cachedToken;
     }
 
-    // Determine user knowledge level based on terms used
-    let level: ComplexityLevel = 'Beginner';
-    if (lowercasePrompt.includes('half-space') || lowercasePrompt.includes('zone 14') || lowercasePrompt.includes('tactical periodization')) {
-      level = 'Advanced';
-    } else if (lowercasePrompt.includes('trigger') || lowercasePrompt.includes('compact') || lowercasePrompt.includes('transition')) {
-      level = 'Intermediate';
-    }
+    Logger.info('IAM token expired or absent. Requesting fresh token from IBM Cloud...', { trace_id: traceId });
+    const startTime = Date.now();
 
-    if (matchedId) {
-      const concept = this.concepts[matchedId];
-      let explanation = '';
+    try {
+      const response = await fetch('https://iam.cloud.ibm.com/identity/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'urn:ibm:params:oauth:grant-type:apikey',
+          apikey: envConfig.ibmApiKey,
+        }),
+      });
 
-      if (level === 'Beginner') {
-        explanation = `Hello! Let's talk about the **${concept.concept_name}**. In simple terms, this is when ${concept.core_explanation.toLowerCase()} Think of it as a tactical tool to give your team an advantage. You can see how this works on the 3D pitch on your screen. Notice the player positions and movement patterns.`;
-      } else if (level === 'Intermediate') {
-        explanation = `Analyzing the **${concept.concept_name}** at an intermediate level. This concept belongs to the **${concept.category}** category. The main goal is: ${concept.core_explanation} Key indicators include: ${concept.key_principles.slice(0,2).join(' and ')}. Look at the animated visualization: we've highlighted the passing channels and defensive shapes.`;
-      } else {
-        explanation = `Deconstructing the tactical mechanics of the **${concept.concept_name}**. This system requires strict positioning: ${concept.key_principles.join(' | ')}. Grounded in modern literature processed via IBM Docling, this is highly effective. To counter it, the defensive unit must implement: ${concept.defensive_response}`;
+      if (!response.ok) {
+        throw new Error(`IAM Auth API rejected credentials: ${response.statusText} (${response.status})`);
       }
 
+      const data = (await response.json()) as { access_token: string; expires_in: number };
+      GraniteService.cachedToken = data.access_token;
+      // Subtract 5 minutes from expiry for safety margin
+      GraniteService.tokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
+
+      Logger.info('IAM Token successfully generated and cached.', {
+        trace_id: traceId,
+        latency_ms: Date.now() - startTime,
+      });
+
+      return GraniteService.cachedToken;
+    } catch (err: any) {
+      Logger.error('Failed to retrieve IBM OAuth Token', err, { trace_id: traceId });
+      throw err;
+    }
+  }
+
+  /**
+   * Calls Watsonx prediction generation endpoints with retries, timeouts, and fallback routing.
+   */
+  public async queryTutor(
+    question: string,
+    conversationId: string = 'default-session',
+    traceId: string = 'system-request'
+  ): Promise<GraniteTestResponse> {
+    const startTime = Date.now();
+    
+    // Resolve session context history
+    const context = this.getOrCreateContext(conversationId);
+    context.last_questions.push(question);
+
+    // 1. Trigger mock completion if in Mock Mode
+    if (this.isMockMode) {
+      Logger.info('Running in environmental MOCK mode. Emulating model prediction...', { trace_id: traceId });
+      const latency = Math.floor(Math.random() * 400) + 200; // 200-600ms latency simulation
+      await new Promise((r) => setTimeout(r, latency));
+      const mockResult = this.generateMockResponse(question, context);
+      
       return {
-        explanation,
-        concept_id: matchedId,
-        detected_level: level,
-        follow_up_suggestions: concept.related_concepts.map(id => `Tell me more about ${this.concepts[id]?.concept_name || id}`)
+        success: true,
+        latency_ms: Date.now() - startTime,
+        data: mockResult,
       };
     }
 
-    // Fallback response
+    // 2. Trigger Hugging Face API if in Hugging Face mode
+    if (this.isHFMode) {
+      try {
+        Logger.info('Querying Hugging Face Serverless Inference endpoint...', {
+          trace_id: traceId,
+          model: envConfig.ibmGraniteModel,
+        });
+
+        const url = `https://${envConfig.ibmBaseUrl}/models/${envConfig.ibmGraniteModel}`;
+        const promptText = `<|system|>\n${TUTOR_SYSTEM_PROMPT}\n<|user|>\n${question}\n<|assistant|>\n`;
+
+        const payload = {
+          inputs: promptText,
+          parameters: {
+            max_new_tokens: 500,
+            return_full_text: false,
+            temperature: 0.1,
+          },
+        };
+
+        const response = await this.fetchWithRetryAndTimeout(
+          url,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${envConfig.ibmApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          },
+          3,
+          15000,
+          traceId
+        );
+
+        if (!response.ok) {
+          const errMsg = await response.text();
+          throw new Error(`Hugging Face API returned error ${response.status}: ${errMsg}`);
+        }
+
+        const data = await response.json();
+        let rawText = '';
+        if (Array.isArray(data) && data[0]?.generated_text) {
+          rawText = data[0].generated_text;
+        } else if (data && typeof data === 'object' && 'generated_text' in data) {
+          rawText = (data as any).generated_text;
+        } else {
+          throw new Error(`Unexpected Hugging Face response structure: ${JSON.stringify(data)}`);
+        }
+
+        const parsedData = parseGraniteJson(rawText, traceId);
+
+        if (parsedData && !parsedData.needs_clarification && parsedData.concept_id) {
+          context.last_concepts.push(parsedData.concept_id);
+          context.user_level = parsedData.user_level as ComplexityLevel;
+        }
+
+        return {
+          success: true,
+          latency_ms: Date.now() - startTime,
+          data: parsedData,
+        };
+
+      } catch (err: any) {
+        Logger.warn(`Hugging Face connection error: ${err.message}. Falling back to mock generator.`, {
+          trace_id: traceId,
+        });
+        const mockResult = this.generateMockResponse(question, context);
+        return {
+          success: true,
+          latency_ms: Date.now() - startTime,
+          data: mockResult,
+        };
+      }
+    }
+
+    // 3. Perform production IBM Cloud call
+    try {
+      const token = await this.getAccessToken(traceId);
+      const url = `https://${envConfig.ibmBaseUrl}/ml/v1/text/generation?version=2023-05-29`;
+      
+      const promptText = `<|system|>\n${TUTOR_SYSTEM_PROMPT}\n<|user|>\n${question}\n<|assistant|>\n`;
+
+      const payload = {
+        model_id: envConfig.ibmGraniteModel,
+        input: promptText,
+        parameters: {
+          decoding_method: 'greedy',
+          max_new_tokens: 500,
+          min_new_tokens: 1,
+          stop_sequences: ['<|endoftext|>'],
+          repetition_penalty: 1.05,
+        },
+        project_id: envConfig.ibmProjectId,
+      };
+
+      Logger.info(`Sending generation query to watsonx.ai model: ${envConfig.ibmGraniteModel}`, {
+        trace_id: traceId,
+        project_id: envConfig.ibmProjectId,
+      });
+
+      const response = await this.fetchWithRetryAndTimeout(
+        url,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(payload),
+        },
+        3, // 3 retries
+        15000, // 15-second timeout
+        traceId
+      );
+
+      if (!response.ok) {
+        throw new Error(`Watsonx API returned error code ${response.status}: ${response.statusText}`);
+      }
+
+      const body = (await response.json()) as { results?: Array<{ generated_text: string }> };
+      const rawText = body.results?.[0]?.generated_text || '';
+      
+      // Parse generated output to JSON structure
+      const parsedData = parseGraniteJson(rawText, traceId);
+
+      // Track active concept memory
+      if (parsedData && !parsedData.needs_clarification && parsedData.concept_id) {
+        context.last_concepts.push(parsedData.concept_id);
+        context.user_level = parsedData.user_level as ComplexityLevel;
+      }
+
+      return {
+        success: true,
+        latency_ms: Date.now() - startTime,
+        data: parsedData,
+      };
+
+    } catch (err: any) {
+      Logger.warn(`IBM Granite connection error: ${err.message}. Falling back to mock generator.`, {
+        trace_id: traceId,
+      });
+
+      // Recover and proceed with mock response fallback to protect user operations
+      const mockResult = this.generateMockResponse(question, context);
+      return {
+        success: true,
+        latency_ms: Date.now() - startTime,
+        data: mockResult,
+      };
+    }
+  }
+
+  /**
+   * Helper that fetches with timeout and retries on 5xx errors.
+   */
+  private async fetchWithRetryAndTimeout(
+    url: string,
+    options: RequestInit,
+    retries: number,
+    timeoutMs: number,
+    traceId: string
+  ): Promise<Response> {
+    let delay = 1000;
+
+    for (let i = 0; i < retries; i++) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeoutMs);
+      
+      const reqOptions = { ...options, signal: controller.signal };
+
+      try {
+        const res = await fetch(url, reqOptions);
+        clearTimeout(id);
+
+        if (res.ok) return res;
+        
+        // Retry only on server errors (500, 502, 503, 504)
+        if (res.status >= 500 && i < retries - 1) {
+          Logger.warn(`Watsonx returned transient error ${res.status}. Retrying in ${delay}ms...`, {
+            trace_id: traceId,
+            attempt: i + 1,
+          });
+          await new Promise((r) => setTimeout(r, delay));
+          delay *= 2;
+          continue;
+        }
+
+        return res;
+      } catch (err: any) {
+        clearTimeout(id);
+        if (err.name === 'AbortError') {
+          Logger.warn(`Request timed out after ${timeoutMs}ms.`, { trace_id: traceId, attempt: i + 1 });
+        } else {
+          Logger.warn(`Network fail: ${err.message}`, { trace_id: traceId, attempt: i + 1 });
+        }
+
+        if (i === retries - 1) throw err;
+        await new Promise((r) => setTimeout(r, delay));
+        delay *= 2;
+      }
+    }
+
+    throw new Error('Retries exhausted');
+  }
+
+  /**
+   * Checks IBM connectivity with a quick, lightweight request.
+   */
+  public async pingConnectivity(traceId: string): Promise<boolean> {
+    if (this.isMockMode) return true;
+
+    if (this.isHFMode) {
+      try {
+        const url = `https://${envConfig.ibmBaseUrl}/models/${envConfig.ibmGraniteModel}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${envConfig.ibmApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            inputs: 'ping',
+            parameters: { max_new_tokens: 1 },
+          }),
+          signal: AbortSignal.timeout(6000),
+        });
+        return res.ok;
+      } catch (err: any) {
+        Logger.error('Hugging Face ping connectivity check failed', err, { trace_id: traceId });
+        return false;
+      }
+    }
+
+    try {
+      const token = await this.getAccessToken(traceId);
+      const url = `https://${envConfig.ibmBaseUrl}/ml/v1/text/generation?version=2023-05-29`;
+      
+      const payload = {
+        model_id: envConfig.ibmGraniteModel,
+        input: 'ping',
+        parameters: { max_new_tokens: 1 },
+        project_id: envConfig.ibmProjectId,
+      };
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(6000), // 6-second quick check
+      });
+
+      return res.ok;
+    } catch (err: any) {
+      Logger.error('Ping connectivity check failed', err, { trace_id: traceId });
+      return false;
+    }
+  }
+
+  /**
+   * Resolves or initializes session memory.
+   */
+  private getOrCreateContext(conversationId: string): ConversationContext {
+    if (!GraniteService.conversationMemory[conversationId]) {
+      GraniteService.conversationMemory[conversationId] = {
+        conversation_id: conversationId,
+        last_questions: [],
+        last_concepts: [],
+        user_level: 'Beginner',
+      };
+    }
+    return GraniteService.conversationMemory[conversationId];
+  }
+
+  /**
+   * Evaluates user question against concept tags and returns high-fidelity fallback objects.
+   */
+  private generateMockResponse(question: string, context: ConversationContext): any {
+    const q = question.toLowerCase();
+
+    // Mapping keyword heuristics
+    let matchedConcept = '';
+    if (q.includes('false 9') || q.includes('false9') || q.includes('dropped striker')) {
+      matchedConcept = 'false_9';
+    } else if (q.includes('high press') || q.includes('gegenpress') || q.includes('pressing high')) {
+      matchedConcept = 'high_press';
+    } else if (q.includes('trap') || q.includes('pressing trap')) {
+      matchedConcept = 'pressing_trap';
+    } else if (q.includes('overload') || q.includes('midfield overload')) {
+      matchedConcept = 'midfield_overload';
+    } else if (q.includes('low block') || q.includes('defending deep') || q.includes('compact block')) {
+      matchedConcept = 'low_block';
+    } else if (q.includes('counter') || q.includes('transition') || q.includes('counter-attack')) {
+      matchedConcept = 'counter_attack';
+    } else if (q.includes('inverted') || q.includes('winger') || q.includes('cut inside')) {
+      matchedConcept = 'inverted_winger';
+    } else if (q.includes('back three') || q.includes('back 3') || q.includes('wingback')) {
+      matchedConcept = 'back_three';
+    } else if (q.includes('third man') || q.includes('off-ball run') || q.includes('third-man')) {
+      matchedConcept = 'third_man_run';
+    } else if (q.includes('compactness') || q.includes('lines') || q.includes('vertical distance')) {
+      matchedConcept = 'compactness';
+    }
+
+    // Adapt user level based on keyword signals
+    if (q.includes('zone 14') || q.includes('half-space')) {
+      context.user_level = 'Advanced';
+    } else if (q.includes('trigger') || q.includes('structure')) {
+      context.user_level = 'Intermediate';
+    }
+
+    if (!matchedConcept) {
+      return {
+        needs_clarification: true,
+        clarification_question: 'Are you asking about pressing high up the pitch (High Press) or defending deep (Low Block)?',
+      };
+    }
+
+    // Store concept memory
+    context.last_concepts.push(matchedConcept);
+
+    const mockDatabase: Record<string, { name: string; complexity: ComplexityLevel; module: string; text: string; suggestions: string[] }> = {
+      false_9: {
+        name: 'False 9',
+        complexity: 'Intermediate',
+        module: 'false9',
+        text: 'The False 9 is a striker who drops deep into central midfield, pulling the opposing center-backs out of position. This spatial disruption vacates channels behind the defensive line for inverted wingers to exploit.',
+        suggestions: ['What happens if the defender follows the False 9?', 'Show a match example of Messi', 'How does it connect to third man runs?'],
+      },
+      high_press: {
+        name: 'High Press',
+        complexity: 'Intermediate',
+        module: 'highPress',
+        text: 'A high press applies aggressive pressure on the opponent center-backs close to their own goal, forcing hurried clearances or bad passes to win possession high up.',
+        suggestions: ['What is a pressing trap?', 'How do you bypass a high press?', 'Show Klopp\'s Liverpool triggers'],
+      },
+      pressing_trap: {
+        name: 'Pressing Trap',
+        complexity: 'Advanced',
+        module: 'pressingTrap',
+        text: 'A pressing trap intentionally leaves a specific passing channel open, inviting the ball inside before closing down the target simultaneously with multiple defenders.',
+        suggestions: ['What are pressing triggers?', 'What is a cover shadow?', 'Show Mourinho\'s Inter Milan setups'],
+      },
+      midfield_overload: {
+        name: 'Overload in Midfield',
+        complexity: 'Advanced',
+        module: 'midfieldOverload',
+        text: 'Creating numerical superiority in central midfield (e.g., 4v3) by dropping attackers or bringing inverted fullbacks inside to dominate possession and progress play.',
+        suggestions: ['What is an inverted fullback?', 'How does a back 3 help overload?', 'Show Guardiola\'s box midfield'],
+      },
+      low_block: {
+        name: 'Defensive Block (Low Block)',
+        complexity: 'Beginner',
+        module: 'lowBlock',
+        text: 'A deep, compact defensive shape where all players drop close to their own box, minimizing space behind and protecting central corridors.',
+        suggestions: ['How do you break down a low block?', 'What is compactness?', 'Show Chelsea\'s 2012 UCL block'],
+      },
+      counter_attack: {
+        name: 'Counter-Attack',
+        complexity: 'Intermediate',
+        module: 'counterTrigger',
+        text: 'An immediate shift from defending to attacking upon winning possession, moving the ball forward quickly before the opponent can reorganize.',
+        suggestions: ['What are transition zones?', 'Show Leicester\'s 2016 Vardy counter', 'What is counter-pressing?'],
+      },
+      inverted_winger: {
+        name: 'Inverted Winger',
+        complexity: 'Beginner',
+        module: 'invertedWinger',
+        text: 'A wide attacking player positioned on the side opposite their dominant foot, enabling them to cut inside to shoot or pass, rather than cross.',
+        suggestions: ['Show Robben\'s classic cut-inside move', 'How does this create overlapping lanes?', 'What is the difference with inside forwards?'],
+      },
+      back_three: {
+        name: 'Back 3 / Wing-Back System',
+        complexity: 'Intermediate',
+        module: 'back3Wingbacks',
+        text: 'A formation using three center-backs and two advanced wing-backs, combining defensive stability with wide attacking options.',
+        suggestions: ['How does a back 3 transition in defense?', 'Show Conte\'s Chelsea systems', 'What are the spacing demands on centerbacks?'],
+      },
+      third_man_run: {
+        name: 'Off-Ball Movement & Third Man Run',
+        complexity: 'Advanced',
+        module: 'thirdManRun',
+        text: 'An attacking pattern where Player A passes to Player B to draw markers, while Player C makes a run to receive a one-touch pass from Player B.',
+        suggestions: ['What is positional play?', 'Show Xavi/Messi combinations', 'How do you defend off-ball runs?'],
+      },
+      compactness: {
+        name: 'Compactness & Pressing Lines',
+        complexity: 'Intermediate',
+        module: 'compactnessPressing',
+        text: 'The distance between the forward pressing line and the back line, kept short (10-15m) to limit central passing options.',
+        suggestions: ['What is a block height?', 'Show Simeone\'s Atletico Madrid shape', 'What happens if lines stretch?'],
+      },
+    };
+
+    const concept = mockDatabase[matchedConcept];
     return {
-      explanation: "I couldn't match that query directly to our tactical handbook. Try asking about 'False 9', 'High Press', 'Pressing Trap', 'Midfield Overloads', or 'Defensive Blocks' to trigger a detailed visualization on our 3D Pitch!",
-      detected_level: 'Beginner',
-      follow_up_suggestions: [
-        "Explain the False 9 role",
-        "How does a High Press work?",
-        "What is a Pressing Trap?"
-      ]
+      needs_clarification: false,
+      concept_id: matchedConcept,
+      concept_name: concept.name,
+      complexity: concept.complexity,
+      user_level: context.user_level,
+      animation_module: concept.module,
+      explanation: concept.text,
+      follow_up_suggestions: concept.suggestions,
     };
   }
 }

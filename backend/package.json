@@ -6,11 +6,13 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "test:client": "ts-node-dev --respawn --transpile-only src/test-client.ts"
   },
   "dependencies": {
     "@football-atlas/shared": "*",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.18.2"
   },
   "devDependencies": {

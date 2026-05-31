@@ -1,15 +1,23 @@
 import express from 'express';
 import cors from 'cors';
+import { requestLogger } from './middleware/requestLogger';
+import { errorHandler } from './middleware/errorHandler';
 import healthRoutes from './routes/health.routes';
-import tacticalRoutes from './routes/tactical.routes';
+import graniteRoutes from './routes/granite.routes';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/health', healthRoutes);
-app.use('/api/tactical', tacticalRoutes);
+// Initialize structured correlation trace mapping for all requests
+app.use(requestLogger);
+
+// Mount routing boundaries
+app.use('/health', healthRoutes);
+app.use('/api/granite', graniteRoutes);
+
+// Global exception catcher boundary
+app.use(errorHandler);
 
 export default app;

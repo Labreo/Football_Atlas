@@ -68,23 +68,23 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
   };
 
   return (
-    <div className="absolute bottom-6 left-6 z-50 flex flex-col items-start font-mono select-none">
+    <div className="absolute top-4 right-40 z-50 flex flex-col items-end font-mono select-none">
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider shadow-lg transition-all duration-200 border ${
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-wider shadow-lg transition-all duration-200 border ${
           isOpen
             ? 'bg-rose-500/25 border-rose-500/50 text-rose-200 hover:bg-rose-500/40'
             : 'bg-slate-900/80 border-slate-700/60 text-slate-300 hover:bg-slate-800'
         }`}
       >
-        <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-rose-400 animate-pulse' : 'bg-slate-400'}`} />
+        <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-rose-400 animate-pulse' : 'bg-slate-400'}`} />
         {isOpen ? 'Close Engine Debug' : 'Engine Debug HUD'}
       </button>
 
       {/* Floating Panel */}
       {isOpen && (
-        <div className="mt-3 w-[350px] bg-slate-950/90 border border-slate-800/80 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden flex flex-col text-slate-200 text-xs">
+        <div className="mt-3 w-[350px] bg-slate-950/90 border border-slate-800/80 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden flex flex-col text-slate-200 text-xs text-left">
           {/* Header */}
           <div className="px-4 py-3 bg-slate-900/85 border-b border-slate-800/85 flex items-center justify-between">
             <span className="font-bold text-slate-100 uppercase tracking-widest text-[10px]">Animation Telemetry</span>

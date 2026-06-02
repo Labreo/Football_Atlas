@@ -6,6 +6,7 @@ import { animationModuleRegistry } from './registry';
 import { ConceptRouter } from './router';
 import { analyticsTracker } from './analytics';
 import { TacticalAnimationEngine } from '../tacticalEngine/engine';
+import { useLearningUIStore } from '../stores/LearningUIStore';
 
 export class LearningOrchestrator {
   private engine: TacticalAnimationEngine | null = null;
@@ -38,6 +39,11 @@ export class LearningOrchestrator {
     store.setCurrentQuestion(question);
     useTacticalStore.setState({ isLoading: true, error: null });
 
+    useLearningUIStore.getState().setLoading(true);
+    useLearningUIStore.getState().setError(null);
+    useLearningUIStore.getState().setCurrentQuestion(question);
+    useLearningUIStore.getState().addToFollowUpChain(question);
+
     analyticsTracker.track('question_submitted', { question });
     const startTime = performance.now();
 
@@ -54,6 +60,10 @@ export class LearningOrchestrator {
       const response = await tacticalApi.askTutor(question, globalStore.conversation);
       const endTime = performance.now();
       const latency = Math.round(endTime - startTime);
+
+      useLearningUIStore.getState().setLoading(false);
+      useLearningUIStore.getState().setCurrentExplanation(response.explanation);
+      analyticsTracker.track('question_answered', { question, conceptId: response.concept_id });
 
       analyticsTracker.track('granite_response_received', { 
         concept_id: response.concept_id, 
@@ -87,13 +97,35 @@ export class LearningOrchestrator {
         analyticsTracker.track('concept_identified', { conceptId, confidence });
 
         if (confidence >= store.config.autoPlayThreshold) {
-          // Auto-play animation
-          if (this.engine) {
+          // Check if the same concept is already active — if so, this is a follow-up
+          // and we should NOT reset the running animation.
+          const currentActiveConcept2 = useTacticalStore.getState().currentConcept;
+          const isSameConcept = currentActiveConcept2?.concept_id === conceptId;
+
+          if (isSameConcept && this.activeModuleInstance) {
+            // Follow-up on the same concept: update explanation only, keep animation running
+            analyticsTracker.track('follow_up_same_concept', { conceptId });
+            const concept = await tacticalApi.getConceptById(conceptId);
+            useLearningUIStore.getState().setCurrentConcept(concept);
+            useLearningUIStore.getState().setCurrentExplanation(response.explanation);
+            useLearningUIStore.getState().setLoading(false);
+            store.setCurrentConcept(concept);
+          } else if (this.engine) {
+            // Different concept — load the new animation
             await this.loadConceptAnimation(conceptId);
           } else {
             // Engine not initialized yet. Update store to trigger mounting the InteractivePitchPlayer
             const concept = await tacticalApi.getConceptById(conceptId);
             const resolvedModule = ConceptRouter.resolveAnimationModule(conceptId);
+            
+            useLearningUIStore.getState().setCurrentConcept(concept);
+            useLearningUIStore.getState().setAnimationState(resolvedModule ? 'playing' : 'stopped');
+            useLearningUIStore.getState().setLoading(false);
+            analyticsTracker.track('concept_changed', { conceptId });
+            if (resolvedModule) {
+              analyticsTracker.track('lesson_started', { conceptId });
+            }
+
             useTacticalStore.setState({ 
               currentConcept: concept, 
               playState: resolvedModule ? 'playing' : 'stopped' 
@@ -129,6 +161,8 @@ export class LearningOrchestrator {
     } catch (err: any) {
       analyticsTracker.track('orchestrator_error', { error: err.message });
       store.setError(err.message || 'An error occurred in the orchestrator.');
+      useLearningUIStore.getState().setError(err.message || 'An error occurred.');
+      useLearningUIStore.getState().setLoading(false);
       
       // Append assistant error message in chat instead of overriding the global playbook error
       useTacticalStore.setState((state) => ({
@@ -144,6 +178,7 @@ export class LearningOrchestrator {
     } finally {
       store.setIsLoading(false);
       useTacticalStore.setState({ isLoading: false });
+      useLearningUIStore.getState().setLoading(false);
     }
   }
 
@@ -163,6 +198,10 @@ export class LearningOrchestrator {
       // 1. Fetch details from API
       const concept = await tacticalApi.getConceptById(conceptId);
       
+      useLearningUIStore.getState().setCurrentConcept(concept);
+      useLearningUIStore.getState().setLoading(false);
+      analyticsTracker.track('concept_changed', { conceptId });
+
       // 2. Resolve module key
       const resolvedModule = ConceptRouter.resolveAnimationModule(conceptId);
       
@@ -190,6 +229,7 @@ export class LearningOrchestrator {
         store.setCurrentConcept(concept);
         store.setCurrentAnimation(null);
         store.setAnimationStatus('stopped');
+        useLearningUIStore.getState().setAnimationState('stopped');
         return;
       }
       
@@ -201,9 +241,16 @@ export class LearningOrchestrator {
       // 4. Set listeners
       instance.onPhaseChange = (index: number, name: string) => {
         analyticsTracker.track('phase_changed', { conceptId, phaseIndex: index, phaseName: name });
+        useLearningUIStore.getState().setPhaseInfo(index, name);
+      };
+      instance.onAnnotationChange = (annotation: string) => {
+        useLearningUIStore.getState().setPhaseAnnotation(annotation);
       };
       instance.onAnalyticsEvent = (name: string, data: any) => {
         analyticsTracker.track(name, data);
+        if (name === 'animation_completed') {
+          analyticsTracker.track('lesson_completed', { conceptId: data.concept_id });
+        }
       };
 
       const loadEnd = performance.now();
@@ -230,13 +277,16 @@ export class LearningOrchestrator {
       store.setCurrentConcept(concept);
       store.setCurrentAnimation(resolvedModule);
       store.setAnimationStatus('playing');
+      useLearningUIStore.getState().setAnimationState('playing');
 
+      analyticsTracker.track('lesson_started', { conceptId });
       analyticsTracker.track('animation_started', { conceptId, latencyMs: latency });
 
     } catch (err: any) {
       analyticsTracker.track('animation_failure', { conceptId, error: err.message });
       store.setError(`Failed to load tactical animation: ${err.message}`);
       store.setTelemetry({ sessionState: 'error' });
+      useLearningUIStore.getState().setError(`Failed to load animation: ${err.message}`);
     }
   }
 
@@ -274,6 +324,7 @@ export class LearningOrchestrator {
     if (this.engine) {
       this.engine.play();
       learningStateStore.getState().setAnimationStatus('playing');
+      useLearningUIStore.getState().setAnimationState('playing');
     }
   }
 
@@ -281,6 +332,7 @@ export class LearningOrchestrator {
     if (this.engine) {
       this.engine.pause();
       learningStateStore.getState().setAnimationStatus('paused');
+      useLearningUIStore.getState().setAnimationState('paused');
     }
   }
 
@@ -289,6 +341,7 @@ export class LearningOrchestrator {
       this.engine.reset();
       this.activeModuleInstance?.reset();
       learningStateStore.getState().setAnimationStatus('stopped');
+      useLearningUIStore.getState().setAnimationState('stopped');
     }
   }
 
@@ -300,6 +353,7 @@ export class LearningOrchestrator {
     this.engine = null;
     conversationContextManager.clear();
     learningStateStore.getState().reset();
+    useLearningUIStore.getState().resetUIStore();
   }
 }
 

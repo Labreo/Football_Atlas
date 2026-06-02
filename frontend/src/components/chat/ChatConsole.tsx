@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTacticalStore } from '../../stores/useTacticalStore';
 
 const ChatConsole: React.FC = () => {
-  const { conversation, isLoading, askQuestion, detectedLevel } = useTacticalStore();
+  const { conversation, isLoading, askQuestion, detectedLevel, followUpSuggestions } = useTacticalStore();
   const [input, setInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -22,13 +22,6 @@ const ChatConsole: React.FC = () => {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation, isLoading]);
-
-  const suggestions = [
-    "Why is a False 9 hard to defend?",
-    "How does a high press create chances?",
-    "Can you show me a pressing trap?",
-    "What is a low block?"
-  ];
 
   return (
     <div className="flex flex-col h-full glass-panel rounded-2xl border border-pitch-border overflow-hidden">
@@ -87,7 +80,7 @@ const ChatConsole: React.FC = () => {
 
       {/* Suggested Prompts */}
       <div className="px-4 py-2 border-t border-pitch-border bg-slate-900/30 flex flex-wrap gap-1.5 max-h-[85px] overflow-y-auto">
-        {suggestions.map((prompt, i) => (
+        {followUpSuggestions.map((prompt, i) => (
           <button
             key={i}
             onClick={() => handleSuggestionClick(prompt)}

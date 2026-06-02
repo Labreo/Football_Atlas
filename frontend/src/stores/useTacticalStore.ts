@@ -14,6 +14,7 @@ interface TacticalState {
   };
   conversation: ConversationTurn[];
   detectedLevel: ComplexityLevel;
+  followUpSuggestions: string[];
   isLoading: boolean;
   error: string | null;
 
@@ -57,6 +58,12 @@ export const useTacticalStore = create<TacticalState>((set, get) => ({
       role: 'assistant',
       content: "Welcome to Football Atlas! I'm your AI tactical tutor powered by IBM Granite. Ask me questions like 'Why is a False 9 hard to defend?' or 'How does a high press work?' to begin!"
     }
+  ],
+  followUpSuggestions: [
+    "Why is a False 9 hard to defend?",
+    "How does a high press create chances?",
+    "Can you show me a pressing trap?",
+    "What is a low block?"
   ],
   detectedLevel: ComplexityLevel.BEGINNER,
   isLoading: false,
@@ -119,6 +126,9 @@ export const useTacticalStore = create<TacticalState>((set, get) => ({
       set({
         conversation: [...newHistory, { role: 'assistant', content: response.explanation }],
         detectedLevel: response.detected_level,
+        followUpSuggestions: response.follow_up_suggestions && response.follow_up_suggestions.length > 0
+          ? response.follow_up_suggestions
+          : get().followUpSuggestions,
         isLoading: false
       });
       if (response.concept_id) {

@@ -149,6 +149,7 @@ export class TacticalAnimationEngine {
     };
     duration?: number;
   }): void {
+    const wasPlaying = this.timeline.isPlaying();
     this.timeline.reset();
     
     if (data.duration) {
@@ -169,6 +170,10 @@ export class TacticalAnimationEngine {
 
     // Force redraw first frame
     this.timeline.seek(0.0);
+
+    if (wasPlaying) {
+      this.timeline.play();
+    }
   }
 
   /**

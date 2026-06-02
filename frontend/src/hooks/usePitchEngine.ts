@@ -265,6 +265,9 @@ export function usePitchEngine() {
 
     // 7. Instantiate core Animation Engine orchestrator
     const activeEngine = new TacticalAnimationEngine(scene, 12.0);
+    // Attach camera references for dynamic preset adjustments
+    (activeEngine as any).camera = camera;
+    (activeEngine as any).controls = controls;
     setEngine(activeEngine);
 
     // Resizing Observer

@@ -2,24 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { useTacticalStore } from '../../stores/useTacticalStore';
 import { usePitchAnimation } from '../../hooks/usePitchAnimation';
 import { usePitchEngine } from '../../hooks/usePitchEngine';
-import { animationRegistry } from '../../tacticalModules';
-import { False9Module } from '../../tacticalModules/False9Module';
+import { animationRegistry, False9Module, HighPressModule } from '../../tacticalModules';
 import { DebugTools } from '../../tacticalEngine/components/DebugTools';
 
 const InteractivePitchPlayer: React.FC = () => {
-  const { playState, playSpeed, overlays, setPlayState } = useTacticalStore();
+  const { playState, playSpeed, overlays, setPlayState, currentConcept } = useTacticalStore();
 
-  // State values for False 9 Interactive Module
+  // State values for Interactive Modules
   const [annotation, setAnnotation] = useState<string>('');
   const [phaseInfo, setPhaseInfo] = useState<{ index: number; name: string }>({ index: 1, name: 'Initial Shape' });
   const [branch, setBranch] = useState<'A' | 'B'>('A');
-  const [moduleInstance, setModuleInstance] = useState<False9Module | null>(null);
+  const [moduleInstance, setModuleInstance] = useState<any | null>(null);
+  const [activeCameraPreset, setActiveCameraPreset] = useState<string>('overview');
 
   // Hook: New generic Tactical Engine
   const { containerRef, canvasRef, engine } = usePitchEngine();
 
-  // Phase start timeline frames
-  const PHASE_STARTS = [0.0, 0.15, 0.40, 0.60, 0.75, 0.90];
+  // Dynamic Phase start timeline frames
+  const PHASE_STARTS = moduleInstance?.getPhaseStarts
+    ? moduleInstance.getPhaseStarts()
+    : [0.0, 0.15, 0.40, 0.60, 0.75, 0.90];
 
   const handlePrevPhase = () => {
     if (!engine) return;
@@ -51,29 +53,71 @@ const InteractivePitchPlayer: React.FC = () => {
     }
   };
 
-  // Setup False9Module lifecycle
-  useEffect(() => {
+  const handleCameraPreset = (preset: string) => {
+    setActiveCameraPreset(preset);
     if (!engine) return;
+    const camera = (engine as any).camera;
+    const controls = (engine as any).controls;
+    if (!camera || !controls) return;
 
-    const f9 = new False9Module();
-    f9.init(engine);
-    setModuleInstance(f9);
+    let targetPos = { x: 0, y: 55, z: 80 };
+    let targetLookAt = { x: 0, y: 0, z: 0 };
+
+    if (preset === 'press_trigger') {
+      targetPos = { x: -28, y: 32, z: 46 };
+      targetLookAt = { x: -35, y: 0, z: -10 };
+    } else if (preset === 'turnover') {
+      targetPos = { x: -14, y: 26, z: 38 };
+      targetLookAt = { x: -22, y: 0, z: -8 };
+    } else if (preset === 'summary') {
+      targetPos = { x: -28, y: 22, z: 32 };
+      targetLookAt = { x: -42, y: 0, z: 0 };
+    }
+
+    controls.target.set(targetLookAt.x, targetLookAt.y, targetLookAt.z);
+    camera.position.set(targetPos.x, targetPos.y, targetPos.z);
+    controls.update();
+  };
+
+  // Setup Module lifecycle based on concept_id
+  useEffect(() => {
+    if (!engine || !currentConcept) return;
+
+    let instance: any = null;
+    if (currentConcept.concept_id === 'false_9') {
+      instance = new False9Module();
+    } else if (currentConcept.concept_id === 'high_press') {
+      instance = new HighPressModule();
+    }
+
+    if (!instance) return;
+
+    instance.init(engine);
+    setModuleInstance(instance);
 
     // Setup visual event listeners
-    f9.onAnnotationChange = (text) => setAnnotation(text);
-    f9.onPhaseChange = (index, name) => setPhaseInfo({ index, name });
-    f9.onAnalyticsEvent = (name, data) => {
+    instance.onAnnotationChange = (text: string) => setAnnotation(text);
+    instance.onPhaseChange = (index: number, name: string) => setPhaseInfo({ index, name });
+    instance.onAnalyticsEvent = (name: string, data: any) => {
       console.log(`[Analytics Event] ${name}:`, data);
     };
 
-    // Load initial default branch
-    f9.setBranch(branch);
+    if (currentConcept.concept_id === 'high_press') {
+      instance.onCameraPresetChange = (presetName: string) => {
+        setActiveCameraPreset(presetName);
+      };
+    }
+
+    // Load initial default branch for False 9
+    if (currentConcept.concept_id === 'false_9' && instance.setBranch) {
+      instance.setBranch(branch);
+    }
 
     return () => {
-      f9.destroy();
+      instance.destroy();
       setModuleInstance(null);
     };
-  }, [engine]);
+  }, [engine, currentConcept]);
 
   // Synchronize playback timeline controls from Zustand store to our Engine
   useEffect(() => {
@@ -104,7 +148,7 @@ const InteractivePitchPlayer: React.FC = () => {
 
   const handleBranchChange = (newBranch: 'A' | 'B') => {
     setBranch(newBranch);
-    if (moduleInstance) {
+    if (moduleInstance && moduleInstance.setBranch) {
       moduleInstance.setBranch(newBranch);
       // Force sync playState to resume playback if timeline reset paused it
       if (playState === 'playing') {
@@ -158,34 +202,83 @@ const InteractivePitchPlayer: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Interactive Branch/Scenario Selector */}
-      <div className="absolute top-4 right-4 z-20 flex bg-[#0B0F19]/90 border border-[#23324C]/60 p-1 rounded-xl shadow-xl backdrop-blur-md items-center gap-1 font-sans">
-        <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 px-2 select-none">
-          Defensive Reaction:
+      {/* 2. Interactive Branch/Scenario Selector (False 9 only) */}
+      {currentConcept?.concept_id === 'false_9' && (
+        <div className="absolute top-4 right-4 z-20 flex bg-[#0B0F19]/90 border border-[#23324C]/60 p-1 rounded-xl shadow-xl backdrop-blur-md items-center gap-1 font-sans">
+          <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 px-2 select-none">
+            Defensive Reaction:
+          </span>
+          <button
+            onClick={() => handleBranchChange('A')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+              branch === 'A'
+                ? 'bg-[#FF0055]/15 text-[#FF0055] border border-[#FF0055]/30 shadow-md'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+            }`}
+          >
+            CB Follows (Gap)
+          </button>
+          <button
+            onClick={() => handleBranchChange('B')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+              branch === 'B'
+                ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 shadow-md'
+                : 'text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-slate-800/40'
+            }`}
+          >
+            CB Holds (Free)
+          </button>
+        </div>
+      )}
+
+      {/* 3. Camera Presets Selector */}
+      <div className="absolute top-4 left-4 z-20 flex bg-[#0B0F19]/90 border border-[#23324C]/60 p-1 rounded-xl shadow-xl backdrop-blur-md items-center gap-1 font-sans">
+        <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 px-2 select-none font-mono">
+          Camera:
         </span>
         <button
-          onClick={() => handleBranchChange('A')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
-            branch === 'A'
-              ? 'bg-[#FF0055]/15 text-[#FF0055] border border-[#FF0055]/30 shadow-md'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+          onClick={() => handleCameraPreset('overview')}
+          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+            activeCameraPreset === 'overview'
+              ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
+              : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
           }`}
         >
-          CB Follows (Gap)
+          Overview
         </button>
         <button
-          onClick={() => handleBranchChange('B')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
-            branch === 'B'
-              ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 shadow-md'
-              : 'text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-slate-800/40'
+          onClick={() => handleCameraPreset('press_trigger')}
+          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+            activeCameraPreset === 'press_trigger'
+              ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
+              : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
           }`}
         >
-          CB Holds (Free)
+          Trigger
+        </button>
+        <button
+          onClick={() => handleCameraPreset('turnover')}
+          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+            activeCameraPreset === 'turnover'
+              ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
+              : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
+          }`}
+        >
+          Turnover
+        </button>
+        <button
+          onClick={() => handleCameraPreset('summary')}
+          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+            activeCameraPreset === 'summary'
+              ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
+              : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
+          }`}
+        >
+          Summary
         </button>
       </div>
 
-      {/* 3. DevTools HUD integration */}
+      {/* 4. DevTools HUD integration */}
       <DebugTools engine={engine} />
     </div>
   );
@@ -213,9 +306,9 @@ const LegacyPitchPlayer: React.FC = () => {
 
 const Pitch3D: React.FC = () => {
   const { currentConcept } = useTacticalStore();
-  const isFalse9 = currentConcept?.concept_id === 'false_9';
+  const isInteractive = currentConcept?.concept_id === 'false_9' || currentConcept?.concept_id === 'high_press';
 
-  if (isFalse9) {
+  if (isInteractive) {
     return <InteractivePitchPlayer />;
   }
 
@@ -223,3 +316,4 @@ const Pitch3D: React.FC = () => {
 };
 
 export default Pitch3D;
+

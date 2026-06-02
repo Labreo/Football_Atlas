@@ -12,4 +12,6 @@ export interface TacticalModule {
     description: string;
     duration: number; // duration in seconds
   };
+  getPhaseStarts?(): number[];
 }
+

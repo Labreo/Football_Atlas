@@ -503,7 +503,9 @@ export class GraniteService {
       matchedConcept = 'pressing_trap';
     } else if (q.includes('overload') || q.includes('midfield overload')) {
       matchedConcept = 'midfield_overload';
-    } else if (q.includes('low block') || q.includes('lowblock') || q.includes('defending deep') || q.includes('compact block')) {
+    } else if (q.includes('defensive block') || q.includes('defensiveblock') || q.includes('4-4-2 block') || q.includes('442 block') || q.includes('compact block')) {
+      matchedConcept = 'defensive_block';
+    } else if (q.includes('low block') || q.includes('lowblock') || q.includes('defending deep')) {
       matchedConcept = 'low_block';
     } else if (q.includes('counter') || q.includes('transition') || q.includes('counter-attack') || q.includes('counter attack')) {
       matchedConcept = 'counter_attack';
@@ -598,9 +600,19 @@ export class GraniteService {
         module: 'lowBlock',
         overview: 'A deep, compact defensive shape where all players drop close to their own box, minimizing space behind and protecting central corridors.',
         origin: 'Evolved from the Italian Catenaccio (door bolt) system in the 1960s (pioneered by Nereo Rocco and Helenio Herrera), and modernly mastered by coaches like José Mourinho and Diego Simeone.',
-        defense: 'Countered by quick ball circulation to stretch the block, using overlapping/underlapping runs, crossing to physical strikers, or taking long-range shots to force defenders to step out.',
-        examples: 'José Mourinho\'s Inter Milan (vs Barcelona 2010), Diego Simeone\'s Atlético Madrid.',
-        prosCons: 'Pros: Denies space behind, highly structured, hard to break down. Cons: Giving up possession, fatigue from constant defending, hard to transition into attack due to low starting positions.'
+        defense: 'To break down a low block, teams must circulate the ball quickly horizontally, make third-man runs to stretch lines, or attempt early crosses into the penalty box.',
+        examples: 'Diego Simeone\'s Atlético Madrid, Chelsea under José Mourinho (2004-06), and Greece under Otto Rehhagel (Euro 2004).',
+        prosCons: 'Pros: Extremely difficult to score against, high defensive stability, space behind line is minimized. Cons: Offensively passive, high fatigue from sliding, surrenders field control.'
+      },
+      defensive_block: {
+        name: 'Defensive Block',
+        complexity: ComplexityLevel.INTERMEDIATE,
+        module: 'defensiveBlock',
+        overview: 'A structured, compact defensive setup (often in a 4-4-2) designed to protect central space, closing the central corridor and half spaces, forcing the opposition to attack down the wings where the threat is minimized.',
+        origin: 'Pioneered by Italian tacticians developing Catenaccio in the 1960s, it evolved into modern zonal blocks popularized by Arrigo Sacchi at Milan, Rafa Benitez, and Diego Simeone at Atletico Madrid.',
+        defense: 'To bypass a compact defensive block, teams must circulate the ball quickly to stretch the block horizontally, use overlapping fullbacks to create 2v1 situations out wide, or play diagonal crosses from half-spaces to target back-post runners.',
+        examples: 'Diego Simeone\'s Atletico Madrid (disciplined 4-4-2 block), Jose Mourinho\'s Chelsea (2004-05), and Claudio Ranieri\'s Leicester City (2015-16).',
+        prosCons: 'Pros: High spatial protection of danger zones, low physical exertion in possession, easy to counter-attack from. Cons: Yields possession dominance to the opponent, vulnerable to early crosses and fatigue from constant shifting.'
       },
       counter_attack: {
         name: 'Counter-Attack',
@@ -709,6 +721,13 @@ export class GraniteService {
         defense: "How do you break down a Low Block?",
         examples: "What are famous examples of a Low Block?",
         prosCons: "What are the pros and cons of a Low Block?"
+      },
+      defensive_block: {
+        overview: "What is a Defensive Block?",
+        origin: "Where did the Defensive Block concept originate from?",
+        defense: "How do you break down a Defensive Block?",
+        examples: "What are famous examples of a Defensive Block?",
+        prosCons: "What are the pros and cons of a Defensive Block?"
       },
       counter_attack: {
         overview: "What is a Counter-Attack?",

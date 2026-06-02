@@ -640,9 +640,71 @@ export const compactnessSeed: TacticalConcept = {
   updated_at: '2026-05-31T00:00:00Z'
 };
 
+export const defensiveBlockSeed: TacticalConcept = {
+  concept_id: 'defensive_block',
+  concept_name: 'Defensive Block',
+  category: TacticalCategory.DEFENSIVE_SHAPE,
+  complexity: ComplexityLevel.INTERMEDIATE,
+  core_explanation: 'A collective defensive setup where a team forms a compact, disciplined shape (often a 4-4-2) to protect central space, closing the central corridor and half spaces, forcing the opposition to attack down the wings.',
+  key_principles: [
+    {
+      title: 'Compactness Preservation',
+      description: 'Keeping horizontal and vertical distances between lines extremely tight (under 10 meters) to deny space.'
+    },
+    {
+      title: 'Central Corridor Denial',
+      description: 'Positioning players in central corridors and half spaces to protect the high-value areas of the pitch.'
+    },
+    {
+      title: 'Forcing Wide Play',
+      description: 'Steering the opponent\'s progression outwards toward the touchlines where the threat is minimized.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'wing_overlap_cross',
+    title: 'Overlapping Fullback Crosses',
+    description: 'Bypassing the compact block by executing overlaps and double-width winger runs to cross from the touchline.',
+    effectiveness_rating: 75,
+    advantages: [
+      'Stretches the horizontal width of the defensive block',
+      'Allows delivery into the box from advanced positions'
+    ],
+    risks: [
+      'Exposes the attacking team to rapid counter-attacks if possession is lost wide'
+    ]
+  },
+  animation_module: {
+    module_id: 'defensiveBlock',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.DEFENSIVE_LINES, RequiredOverlay.SPACE_CONTROL]
+  },
+  historical_examples: [
+    {
+      match_id: 'atm_rma_2014_db',
+      title: 'Atletico\'s Compact 4-4-2 Defensive Block',
+      competition: 'La Liga',
+      season: '2013-14',
+      teams: 'Atletico Madrid vs. Real Madrid',
+      tactical_context: 'Atletico defended in an extremely compact 4-4-2 block, denying Modric and Ronaldo space in central corridors.',
+      summary: 'Gabi and Tiago sat right in front of the center-backs, keeping lines under 20m. Ronaldo had to settle for speculative shots, giving Atletico a 1-0 derby win.',
+      relevance_score: 95,
+      video_url: 'https://video.footballatlas.com/atletico-madrid-compact.mp4',
+      event_timestamps: [
+        { name: 'Tiago interception & block shifting', timestamp: '54:12' }
+      ]
+    }
+  ],
+  related_concepts: ['compactness', 'low_block', 'high_press', 'pressing_trap', 'transition_defending'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-05-31T00:00:00Z',
+  updated_at: '2026-05-31T00:00:00Z'
+};
+
 export const allSeeds: TacticalConcept[] = [
   false9Seed, 
   highPressSeed, 
+  defensiveBlockSeed,
   pressingTrapSeed,
   midfieldOverloadSeed,
   lowBlockSeed,
@@ -652,3 +714,4 @@ export const allSeeds: TacticalConcept[] = [
   thirdManRunSeed,
   compactnessSeed
 ];
+

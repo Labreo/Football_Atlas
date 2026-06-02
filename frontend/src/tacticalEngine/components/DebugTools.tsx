@@ -4,9 +4,10 @@ import { EngineTelemetry } from '../types';
 
 interface DebugToolsProps {
   engine: TacticalAnimationEngine | null;
+  moduleInstance?: any;
 }
 
-export const DebugTools: React.FC<DebugToolsProps> = ({ engine }) => {
+export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [telemetry, setTelemetry] = useState<EngineTelemetry>({
     fps: 0,
@@ -189,6 +190,17 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine }) => {
                     {engine.getBallPosition().x.toFixed(1)}, {engine.getBallPosition().y.toFixed(1)}, {engine.getBallPosition().z.toFixed(1)}
                   </span>
                 </div>
+                {moduleInstance && typeof moduleInstance.getDebugMetrics === 'function' && (
+                  <div className="mt-3 pt-2.5 border-t border-[#23324C]/60 space-y-1.5 font-mono">
+                    <h4 className="text-[9px] font-bold text-[#00F3FF] uppercase tracking-wider mb-1">Tactical Metrics</h4>
+                    {Object.entries(moduleInstance.getDebugMetrics(telemetry.currentTime)).map(([key, val]: any) => (
+                      <div key={key} className="flex justify-between border-b border-slate-900/50 pb-0.5 last:border-b-0">
+                        <span className="text-slate-400 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                        <span className="text-slate-100 font-bold">{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

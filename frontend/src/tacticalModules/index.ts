@@ -9,10 +9,12 @@ export { highPressAnimation } from './highPress';
 export { pressingTrapAnimation } from './pressingTrap';
 export { HighPressModule } from './HighPressModule';
 export { False9Module } from './False9Module';
+export { DefensiveBlockModule } from './DefensiveBlockModule';
 
 export const animationRegistry: Record<string, TacticalAnimation> = {
   false9: false9Animation,
   highPress: highPressAnimation,
   pressingTrap: pressingTrapAnimation
 };
+
 

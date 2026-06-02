@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTacticalStore } from '../../stores/useTacticalStore';
 import { usePitchAnimation } from '../../hooks/usePitchAnimation';
 import { usePitchEngine } from '../../hooks/usePitchEngine';
-import { animationRegistry, False9Module, HighPressModule } from '../../tacticalModules';
+import { animationRegistry, False9Module, HighPressModule, DefensiveBlockModule } from '../../tacticalModules';
 import { DebugTools } from '../../tacticalEngine/components/DebugTools';
 
 const InteractivePitchPlayer: React.FC = () => {
@@ -55,7 +55,7 @@ const InteractivePitchPlayer: React.FC = () => {
 
   const handleCameraPreset = (preset: string) => {
     setActiveCameraPreset(preset);
-    if (!engine) return;
+    if (!engine || !currentConcept) return;
     const camera = (engine as any).camera;
     const controls = (engine as any).controls;
     if (!camera || !controls) return;
@@ -63,15 +63,28 @@ const InteractivePitchPlayer: React.FC = () => {
     let targetPos = { x: 0, y: 55, z: 80 };
     let targetLookAt = { x: 0, y: 0, z: 0 };
 
-    if (preset === 'press_trigger') {
-      targetPos = { x: -28, y: 32, z: 46 };
-      targetLookAt = { x: -35, y: 0, z: -10 };
-    } else if (preset === 'turnover') {
-      targetPos = { x: -14, y: 26, z: 38 };
-      targetLookAt = { x: -22, y: 0, z: -8 };
-    } else if (preset === 'summary') {
-      targetPos = { x: -28, y: 22, z: 32 };
-      targetLookAt = { x: -42, y: 0, z: 0 };
+    if (currentConcept.concept_id === 'high_press') {
+      if (preset === 'press_trigger') {
+        targetPos = { x: -28, y: 32, z: 46 };
+        targetLookAt = { x: -35, y: 0, z: -10 };
+      } else if (preset === 'turnover') {
+        targetPos = { x: -14, y: 26, z: 38 };
+        targetLookAt = { x: -22, y: 0, z: -8 };
+      } else if (preset === 'summary') {
+        targetPos = { x: -28, y: 22, z: 32 };
+        targetLookAt = { x: -42, y: 0, z: 0 };
+      }
+    } else if (currentConcept.concept_id === 'defensive_block') {
+      if (preset === 'central_space' || preset === 'central-space') {
+        targetPos = { x: 15, y: 32, z: 45 };
+        targetLookAt = { x: 22, y: 0, z: 0 };
+      } else if (preset === 'compactness') {
+        targetPos = { x: 20, y: 36, z: 40 };
+        targetLookAt = { x: 20, y: 0, z: 0 };
+      } else if (preset === 'summary') {
+        targetPos = { x: 12, y: 28, z: 42 };
+        targetLookAt = { x: 25, y: 0, z: -15 };
+      }
     }
 
     controls.target.set(targetLookAt.x, targetLookAt.y, targetLookAt.z);
@@ -88,6 +101,8 @@ const InteractivePitchPlayer: React.FC = () => {
       instance = new False9Module();
     } else if (currentConcept.concept_id === 'high_press') {
       instance = new HighPressModule();
+    } else if (currentConcept.concept_id === 'defensive_block') {
+      instance = new DefensiveBlockModule();
     }
 
     if (!instance) return;
@@ -102,7 +117,7 @@ const InteractivePitchPlayer: React.FC = () => {
       console.log(`[Analytics Event] ${name}:`, data);
     };
 
-    if (currentConcept.concept_id === 'high_press') {
+    if (currentConcept.concept_id === 'high_press' || currentConcept.concept_id === 'defensive_block') {
       instance.onCameraPresetChange = (presetName: string) => {
         setActiveCameraPreset(presetName);
       };
@@ -246,26 +261,54 @@ const InteractivePitchPlayer: React.FC = () => {
         >
           Overview
         </button>
-        <button
-          onClick={() => handleCameraPreset('press_trigger')}
-          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-            activeCameraPreset === 'press_trigger'
-              ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
-              : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
-          }`}
-        >
-          Trigger
-        </button>
-        <button
-          onClick={() => handleCameraPreset('turnover')}
-          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-            activeCameraPreset === 'turnover'
-              ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
-              : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
-          }`}
-        >
-          Turnover
-        </button>
+        {currentConcept?.concept_id === 'high_press' && (
+          <>
+            <button
+              onClick={() => handleCameraPreset('press_trigger')}
+              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                activeCameraPreset === 'press_trigger'
+                  ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
+                  : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
+              }`}
+            >
+              Trigger
+            </button>
+            <button
+              onClick={() => handleCameraPreset('turnover')}
+              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                activeCameraPreset === 'turnover'
+                  ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
+                  : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
+              }`}
+            >
+              Turnover
+            </button>
+          </>
+        )}
+        {currentConcept?.concept_id === 'defensive_block' && (
+          <>
+            <button
+              onClick={() => handleCameraPreset('central_space')}
+              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                activeCameraPreset === 'central_space' || activeCameraPreset === 'central-space'
+                  ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
+                  : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
+              }`}
+            >
+              Central Space
+            </button>
+            <button
+              onClick={() => handleCameraPreset('compactness')}
+              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                activeCameraPreset === 'compactness'
+                  ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
+                  : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
+              }`}
+            >
+              Compactness
+            </button>
+          </>
+        )}
         <button
           onClick={() => handleCameraPreset('summary')}
           className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
@@ -279,7 +322,7 @@ const InteractivePitchPlayer: React.FC = () => {
       </div>
 
       {/* 4. DevTools HUD integration */}
-      <DebugTools engine={engine} />
+      <DebugTools engine={engine} moduleInstance={moduleInstance} />
     </div>
   );
 };
@@ -306,7 +349,9 @@ const LegacyPitchPlayer: React.FC = () => {
 
 const Pitch3D: React.FC = () => {
   const { currentConcept } = useTacticalStore();
-  const isInteractive = currentConcept?.concept_id === 'false_9' || currentConcept?.concept_id === 'high_press';
+  const isInteractive = currentConcept?.concept_id === 'false_9' || 
+                        currentConcept?.concept_id === 'high_press' || 
+                        currentConcept?.concept_id === 'defensive_block';
 
   if (isInteractive) {
     return <InteractivePitchPlayer />;

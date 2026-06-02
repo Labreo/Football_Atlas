@@ -66,6 +66,16 @@ export class ConceptVocabularyService {
       }
     },
     {
+      conceptId: 'defensive_block',
+      translations: {
+        en: ['defensive block', 'compact block', 'compact defense', 'defensive shape', 'compactness shape', 'midfield defensive block'],
+        de: ['abwehrblock', 'kompakter block', 'defensivblock', 'kompakter abwehrblock'],
+        es: ['bloque defensivo', 'bloque compacto', 'bloque defensivo compacto', 'organización defensiva'],
+        fr: ['bloc défensif', 'bloc compact', 'bloc defensif', 'organisation défensive'],
+        it: ['blocco difensivo', 'blocco compatto', 'blocco difensivo compatto', 'fase difensiva di blocco']
+      }
+    },
+    {
       conceptId: 'inverted_winger',
       translations: {
         en: ['inverted winger', 'winger cutting inside', 'wingers inside'],

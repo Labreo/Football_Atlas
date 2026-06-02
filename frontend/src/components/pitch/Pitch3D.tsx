@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useTacticalStore } from '../../stores/useTacticalStore';
 import { usePitchAnimation } from '../../hooks/usePitchAnimation';
 import { usePitchEngine } from '../../hooks/usePitchEngine';
-import { animationRegistry, False9Module, HighPressModule, DefensiveBlockModule } from '../../tacticalModules';
+import { animationRegistry } from '../../tacticalModules';
 import { DebugTools } from '../../tacticalEngine/components/DebugTools';
+import { learningOrchestrator } from '../../tacticalOrchestrator/orchestrator';
+
 
 const InteractivePitchPlayer: React.FC = () => {
   const { playState, playSpeed, overlays, setPlayState, currentConcept } = useTacticalStore();
@@ -13,7 +15,6 @@ const InteractivePitchPlayer: React.FC = () => {
   const [phaseInfo, setPhaseInfo] = useState<{ index: number; name: string }>({ index: 1, name: 'Initial Shape' });
   const [branch, setBranch] = useState<'A' | 'B'>('A');
   const [moduleInstance, setModuleInstance] = useState<any | null>(null);
-  const [activeCameraPreset, setActiveCameraPreset] = useState<string>('overview');
 
   // Hook: New generic Tactical Engine
   const { containerRef, canvasRef, engine } = usePitchEngine();
@@ -53,83 +54,59 @@ const InteractivePitchPlayer: React.FC = () => {
     }
   };
 
-  const handleCameraPreset = (preset: string) => {
-    setActiveCameraPreset(preset);
-    if (!engine || !currentConcept) return;
-    const camera = (engine as any).camera;
-    const controls = (engine as any).controls;
-    if (!camera || !controls) return;
+  // Initialize learning orchestrator with the pitch engine
+  useEffect(() => {
+    if (!engine) return;
+    learningOrchestrator.init(engine);
+    return () => {
+      learningOrchestrator.destroy();
+    };
+  }, [engine]);
 
-    let targetPos = { x: 0, y: 55, z: 80 };
-    let targetLookAt = { x: 0, y: 0, z: 0 };
-
-    if (currentConcept.concept_id === 'high_press') {
-      if (preset === 'press_trigger') {
-        targetPos = { x: -28, y: 32, z: 46 };
-        targetLookAt = { x: -35, y: 0, z: -10 };
-      } else if (preset === 'turnover') {
-        targetPos = { x: -14, y: 26, z: 38 };
-        targetLookAt = { x: -22, y: 0, z: -8 };
-      } else if (preset === 'summary') {
-        targetPos = { x: -28, y: 22, z: 32 };
-        targetLookAt = { x: -42, y: 0, z: 0 };
-      }
-    } else if (currentConcept.concept_id === 'defensive_block') {
-      if (preset === 'central_space' || preset === 'central-space') {
-        targetPos = { x: 15, y: 32, z: 45 };
-        targetLookAt = { x: 22, y: 0, z: 0 };
-      } else if (preset === 'compactness') {
-        targetPos = { x: 20, y: 36, z: 40 };
-        targetLookAt = { x: 20, y: 0, z: 0 };
-      } else if (preset === 'summary') {
-        targetPos = { x: 12, y: 28, z: 42 };
-        targetLookAt = { x: 25, y: 0, z: -15 };
-      }
-    }
-
-    controls.target.set(targetLookAt.x, targetLookAt.y, targetLookAt.z);
-    camera.position.set(targetPos.x, targetPos.y, targetPos.z);
-    controls.update();
-  };
-
-  // Setup Module lifecycle based on concept_id
+  // Setup Module lifecycle based on concept_id via the Orchestrator
   useEffect(() => {
     if (!engine || !currentConcept) return;
 
-    let instance: any = null;
-    if (currentConcept.concept_id === 'false_9') {
-      instance = new False9Module();
-    } else if (currentConcept.concept_id === 'high_press') {
-      instance = new HighPressModule();
-    } else if (currentConcept.concept_id === 'defensive_block') {
-      instance = new DefensiveBlockModule();
-    }
+    let active = true;
 
-    if (!instance) return;
+    learningOrchestrator.loadConceptAnimation(currentConcept.concept_id).then(() => {
+      if (!active) return;
+      const instance = learningOrchestrator.getActiveModule();
+      if (!instance) return;
 
-    instance.init(engine);
-    setModuleInstance(instance);
+      setModuleInstance(instance);
 
-    // Setup visual event listeners
-    instance.onAnnotationChange = (text: string) => setAnnotation(text);
-    instance.onPhaseChange = (index: number, name: string) => setPhaseInfo({ index, name });
-    instance.onAnalyticsEvent = (name: string, data: any) => {
-      console.log(`[Analytics Event] ${name}:`, data);
-    };
+      // Setup visual event listeners
+      instance.onAnnotationChange = (text: string) => setAnnotation(text);
 
-    if (currentConcept.concept_id === 'high_press' || currentConcept.concept_id === 'defensive_block') {
-      instance.onCameraPresetChange = (presetName: string) => {
-        setActiveCameraPreset(presetName);
+      const originalOnPhaseChange = instance.onPhaseChange;
+      instance.onPhaseChange = (index: number, name: string) => {
+        setPhaseInfo({ index, name });
+        if (originalOnPhaseChange) {
+          originalOnPhaseChange(index, name);
+        }
       };
-    }
 
-    // Load initial default branch for False 9
-    if (currentConcept.concept_id === 'false_9' && instance.setBranch) {
-      instance.setBranch(branch);
-    }
+      const originalOnAnalyticsEvent = instance.onAnalyticsEvent;
+      instance.onAnalyticsEvent = (name: string, data: any) => {
+        console.log(`[Analytics Event] ${name}:`, data);
+        if (originalOnAnalyticsEvent) {
+          originalOnAnalyticsEvent(name, data);
+        }
+      };
+
+
+
+      // Load initial default branch for False 9
+      if (currentConcept.concept_id === 'false_9' && instance.setBranch) {
+        instance.setBranch(branch);
+      }
+    }).catch((err) => {
+      console.error('[Pitch3D Orchestration Error] Failed to load animation:', err);
+    });
 
     return () => {
-      instance.destroy();
+      active = false;
       setModuleInstance(null);
     };
   }, [engine, currentConcept]);
@@ -246,80 +223,7 @@ const InteractivePitchPlayer: React.FC = () => {
         </div>
       )}
 
-      {/* 3. Camera Presets Selector */}
-      <div className="absolute top-4 left-4 z-20 flex bg-[#0B0F19]/90 border border-[#23324C]/60 p-1 rounded-xl shadow-xl backdrop-blur-md items-center gap-1 font-sans">
-        <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 px-2 select-none font-mono">
-          Camera:
-        </span>
-        <button
-          onClick={() => handleCameraPreset('overview')}
-          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-            activeCameraPreset === 'overview'
-              ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
-              : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
-          }`}
-        >
-          Overview
-        </button>
-        {currentConcept?.concept_id === 'high_press' && (
-          <>
-            <button
-              onClick={() => handleCameraPreset('press_trigger')}
-              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-                activeCameraPreset === 'press_trigger'
-                  ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
-                  : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
-              }`}
-            >
-              Trigger
-            </button>
-            <button
-              onClick={() => handleCameraPreset('turnover')}
-              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-                activeCameraPreset === 'turnover'
-                  ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
-                  : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
-              }`}
-            >
-              Turnover
-            </button>
-          </>
-        )}
-        {currentConcept?.concept_id === 'defensive_block' && (
-          <>
-            <button
-              onClick={() => handleCameraPreset('central_space')}
-              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-                activeCameraPreset === 'central_space' || activeCameraPreset === 'central-space'
-                  ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
-                  : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
-              }`}
-            >
-              Central Space
-            </button>
-            <button
-              onClick={() => handleCameraPreset('compactness')}
-              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-                activeCameraPreset === 'compactness'
-                  ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
-                  : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
-              }`}
-            >
-              Compactness
-            </button>
-          </>
-        )}
-        <button
-          onClick={() => handleCameraPreset('summary')}
-          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-            activeCameraPreset === 'summary'
-              ? 'bg-[#00F3FF]/15 text-[#00F3FF] border border-[#00F3FF]/30 shadow-md'
-              : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800/40'
-          }`}
-        >
-          Summary
-        </button>
-      </div>
+
 
       {/* 4. DevTools HUD integration */}
       <DebugTools engine={engine} moduleInstance={moduleInstance} />

@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { TacticalConcept, ConversationTurn, ComplexityLevel } from '@football-atlas/shared';
 import { tacticalApi } from '../apiClients/tacticalApi';
+import { learningOrchestrator } from '../tacticalOrchestrator/orchestrator';
+
 
 interface TacticalState {
   concepts: TacticalConcept[];
@@ -43,7 +45,7 @@ interface TacticalState {
   setCameraZoom: (zoom: number) => void;
 }
 
-export const useTacticalStore = create<TacticalState>((set, get) => ({
+export const useTacticalStore = create<TacticalState>((set) => ({
   concepts: [],
   currentConcept: null,
   playState: 'stopped',
@@ -117,31 +119,8 @@ export const useTacticalStore = create<TacticalState>((set, get) => ({
   setCameraZoom: (cameraZoom) => set({ cameraZoom }),
 
   askQuestion: async (prompt: string) => {
-    const { conversation } = get();
-    const newHistory: ConversationTurn[] = [...conversation, { role: 'user', content: prompt }];
-    set({ isLoading: true, conversation: newHistory });
-
-    try {
-      const response = await tacticalApi.askTutor(prompt, conversation);
-      set({
-        conversation: [...newHistory, { role: 'assistant', content: response.explanation }],
-        detectedLevel: response.detected_level,
-        followUpSuggestions: response.follow_up_suggestions && response.follow_up_suggestions.length > 0
-          ? response.follow_up_suggestions
-          : get().followUpSuggestions,
-        isLoading: false
-      });
-      if (response.concept_id) {
-        // Auto-load matching concept details & trigger playing status
-        const concept = await tacticalApi.getConceptById(response.concept_id);
-        set({ currentConcept: concept, playState: 'playing' });
-      }
-    } catch (err: any) {
-      set({
-        conversation: [...newHistory, { role: 'assistant', content: "I had trouble talking to the tutoring backend server. Make sure the Node server is up and listening on port 3001." }],
-        isLoading: false
-      });
-    }
+    // Delegate fully to the orchestrator layer to handle the end-to-end loop
+    await learningOrchestrator.askQuestion(prompt);
   },
 
   clearConversation: () => set({ conversation: [] })

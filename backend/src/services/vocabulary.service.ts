@@ -118,6 +118,13 @@ export class ConceptVocabularyService {
   ];
 
   /**
+   * Returns list of all supported concept IDs dynamically.
+   */
+  public getSupportedConceptIds(): string[] {
+    return this.vocabularies.map((v) => v.conceptId);
+  }
+
+  /**
    * Returns list of translations/terms for a specific concept ID and language.
    */
   public getKeywordsForConcept(conceptId: string, language: string): string[] {

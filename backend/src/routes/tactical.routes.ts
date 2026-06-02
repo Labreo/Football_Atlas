@@ -53,7 +53,8 @@ router.post('/tutor', async (req: Request, res: Response, next: NextFunction) =>
       tutorResponse = {
         explanation: responseData.clarification_question,
         detected_level: ComplexityLevel.BEGINNER,
-        follow_up_suggestions: []
+        follow_up_suggestions: [],
+        confidence_score: 0.65
       };
     } else {
       const conceptData = responseData as any;
@@ -61,7 +62,8 @@ router.post('/tutor', async (req: Request, res: Response, next: NextFunction) =>
         explanation: conceptData.explanation,
         concept_id: conceptData.concept_id,
         detected_level: conceptData.user_level || ComplexityLevel.BEGINNER,
-        follow_up_suggestions: conceptData.follow_up_suggestions || []
+        follow_up_suggestions: conceptData.follow_up_suggestions || [],
+        confidence_score: conceptData.confidence_score !== undefined ? conceptData.confidence_score : 0.93
       };
     }
 

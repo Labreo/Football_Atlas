@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { TacticalAnimationEngine } from '../engine';
 import { EngineTelemetry } from '../types';
+import { useOrchestratorStore } from '../../tacticalOrchestrator/store';
+import { useTacticalStore } from '../../stores/useTacticalStore';
+
 
 interface DebugToolsProps {
   engine: TacticalAnimationEngine | null;
@@ -20,7 +23,10 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
   
   // Re-sync states for controls
   const [speed, setSpeed] = useState(1.0);
-  const [selectedTab, setSelectedTab] = useState<'telemetry' | 'players' | 'entities'>('telemetry');
+  const [selectedTab, setSelectedTab] = useState<'telemetry' | 'players' | 'entities' | 'orchestrator'>('telemetry');
+
+  const orchTelemetry = useOrchestratorStore((state) => state.telemetry);
+  const conversationHistory = useTacticalStore((state) => state.conversation);
 
   useEffect(() => {
     if (!engine) return;
@@ -78,7 +84,7 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
 
       {/* Floating Panel */}
       {isOpen && (
-        <div className="mt-3 w-80 bg-slate-950/90 border border-slate-800/80 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden flex flex-col text-slate-200 text-xs">
+        <div className="mt-3 w-[350px] bg-slate-950/90 border border-slate-800/80 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden flex flex-col text-slate-200 text-xs">
           {/* Header */}
           <div className="px-4 py-3 bg-slate-900/85 border-b border-slate-800/85 flex items-center justify-between">
             <span className="font-bold text-slate-100 uppercase tracking-widest text-[10px]">Animation Telemetry</span>
@@ -147,8 +153,8 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-900 bg-slate-900/50 text-[10px] text-center">
-            {(['telemetry', 'players', 'entities'] as const).map((tab) => (
+          <div className="flex border-b border-slate-900 bg-slate-900/50 text-[9px] text-center">
+            {(['telemetry', 'players', 'entities', 'orchestrator'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setSelectedTab(tab)}
@@ -262,6 +268,52 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
                       .filter(o => telemetry.currentTime >= o.startFrame && telemetry.currentTime <= o.endFrame)
                       .length === 0 && (
                       <div className="text-[9px] text-slate-600">No active overlays inside frame</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: Orchestrator panel */}
+            {selectedTab === 'orchestrator' && (
+              <div className="space-y-1.5 text-[10px]">
+                <div className="flex justify-between border-b border-slate-900/80 pb-1">
+                  <span className="text-slate-400">Session State</span>
+                  <span className="text-emerald-400 font-bold uppercase">{orchTelemetry.sessionState}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-900/80 pb-1">
+                  <span className="text-slate-400">Active Concept</span>
+                  <span className="text-slate-100 font-bold">{orchTelemetry.activeConceptId}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-900/80 pb-1">
+                  <span className="text-slate-400">Confidence Score</span>
+                  <span className="text-slate-100 font-bold">{(orchTelemetry.confidenceScore * 100).toFixed(0)}%</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-900/80 pb-1">
+                  <span className="text-slate-400">Loaded Module</span>
+                  <span className="text-slate-100 font-bold">{orchTelemetry.loadedModuleId}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-900/80 pb-1">
+                  <span className="text-slate-400">Granite Latency</span>
+                  <span className="text-slate-100 font-bold">{orchTelemetry.graniteLatencyMs} ms</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-900/80 pb-1">
+                  <span className="text-slate-400">Animation Latency</span>
+                  <span className="text-slate-100 font-bold">{orchTelemetry.animationLatencyMs} ms</span>
+                </div>
+                <div className="mt-3 pt-2 border-t border-slate-900">
+                  <span className="text-slate-400 block mb-1.5 uppercase tracking-wider font-bold text-[9px]">Conversation History</span>
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                    {conversationHistory.map((turn, i) => (
+                      <div key={i} className="p-1.5 rounded bg-slate-900/50 border border-slate-900/80 text-[9.5px] leading-relaxed">
+                        <span className={`font-bold ${turn.role === 'user' ? 'text-sky-400' : 'text-emerald-400'}`}>
+                          {turn.role.toUpperCase()}:
+                        </span>{' '}
+                        <span className="text-slate-300">{turn.content}</span>
+                      </div>
+                    ))}
+                    {conversationHistory.length === 0 && (
+                      <div className="text-slate-600 text-center py-2">No conversation history</div>
                     )}
                   </div>
                 </div>

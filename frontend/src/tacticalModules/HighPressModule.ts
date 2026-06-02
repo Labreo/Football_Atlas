@@ -184,11 +184,11 @@ export class HighPressModule implements TacticalModule {
       }
     }
 
-    // 3. Dynamic Camera Presets
+    // 3. Dynamic Camera Presets (Disabled to maintain solid top-down view)
     const cameraPreset = this.getCameraPresetForFraction(fraction);
     if (cameraPreset !== this.lastPreset) {
       this.lastPreset = cameraPreset;
-      this.applyCameraPreset(cameraPreset);
+      // this.applyCameraPreset(cameraPreset);
     }
 
     // 4. Analytics Events Emission
@@ -220,31 +220,7 @@ export class HighPressModule implements TacticalModule {
     return 'summary';
   }
 
-  private applyCameraPreset(preset: string): void {
-    if (!this.engine) return;
-    const camera = (this.engine as any).camera;
-    const controls = (this.engine as any).controls;
-    if (!camera || !controls) return;
 
-    let targetPos = { x: 0, y: 55, z: 80 };
-    let targetLookAt = { x: 0, y: 0, z: 0 };
-
-    if (preset === 'press_trigger') {
-      targetPos = { x: -28, y: 32, z: 46 };
-      targetLookAt = { x: -35, y: 0, z: -10 };
-    } else if (preset === 'turnover') {
-      targetPos = { x: -14, y: 26, z: 38 };
-      targetLookAt = { x: -22, y: 0, z: -8 };
-    } else if (preset === 'summary') {
-      targetPos = { x: -28, y: 22, z: 32 };
-      targetLookAt = { x: -42, y: 0, z: 0 };
-    }
-
-    // Direct update to camera and controls
-    controls.target.set(targetLookAt.x, targetLookAt.y, targetLookAt.z);
-    camera.position.set(targetPos.x, targetPos.y, targetPos.z);
-    controls.update();
-  }
 
   private evaluateAnalyticsTriggers(fraction: number): void {
     if (fraction >= 0.15 && !this.hasFiredTrigger) {

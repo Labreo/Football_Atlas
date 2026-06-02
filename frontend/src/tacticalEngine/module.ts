@@ -13,5 +13,12 @@ export interface TacticalModule {
     duration: number; // duration in seconds
   };
   getPhaseStarts?(): number[];
+  onPhaseChange?: ((phaseIndex: number, phaseName: string) => void) | null;
+  onAnnotationChange?: ((text: string) => void) | null;
+  onAnalyticsEvent?: ((name: string, data: any) => void) | null;
+  onCameraPresetChange?: ((presetName: string) => void) | null;
+  getDebugMetrics?(fraction: number): Record<string, any>;
+  setBranch?(branch: 'A' | 'B'): void;
 }
+
 

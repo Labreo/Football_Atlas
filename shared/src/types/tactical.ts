@@ -30,4 +30,5 @@ export interface TutorResponse {
   concept_id?: string;
   detected_level: ComplexityLevel;
   follow_up_suggestions: string[];
+  confidence_score?: number;
 }

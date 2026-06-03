@@ -138,6 +138,10 @@ export class ComposedTacticalModule implements TacticalModule {
     return phases.map(p => p.start);
   }
 
+  public getPhases(): Array<{ index: number; start: number; end: number; name: string; description: string }> {
+    return this.options.phases || [];
+  }
+
   public play(): void {
     this.engine?.play();
   }
@@ -166,19 +170,37 @@ export class ComposedTacticalModule implements TacticalModule {
 
   public getPhaseInfo(t: number): { index: number; name: string; description: string } {
     const phases = this.options.phases || [];
-    const active = phases.find(p => t >= p.start && t <= p.end);
+    const active = phases.find((p, idx) => {
+      const isLast = idx === phases.length - 1;
+      if (isLast) {
+        return t >= p.start && t <= p.end;
+      }
+      return t >= p.start && t < p.end;
+    });
     return active || { index: 1, name: 'Setup', description: '' };
   }
 
   public getTeachingAnnotation(t: number): string {
     const annotations = this.options.annotations || [];
-    const active = annotations.find(a => t >= a.start && t <= a.end);
+    const active = annotations.find((a, idx) => {
+      const isLast = idx === annotations.length - 1;
+      if (isLast) {
+        return t >= a.start && t <= a.end;
+      }
+      return t >= a.start && t < a.end;
+    });
     return active ? active.text : '';
   }
 
   public getCameraPresetForFraction(t: number): string {
     const cameras = this.options.cameraPresets || [];
-    const active = cameras.find(c => t >= c.start && t <= c.end);
+    const active = cameras.find((c, idx) => {
+      const isLast = idx === cameras.length - 1;
+      if (isLast) {
+        return t >= c.start && t <= c.end;
+      }
+      return t >= c.start && t < c.end;
+    });
     return active ? active.preset : 'overview';
   }
 

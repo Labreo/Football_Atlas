@@ -2,6 +2,7 @@ import { ConceptPackage } from '@football-atlas/shared';
 import { false9Package } from './false9.package';
 import { highPressPackage } from './highPress.package';
 import { defensiveBlockPackage } from './defensiveBlock.package';
+import { pressingTrapPackage } from './pressingTrap.package';
 
 // ────────────────────────────────────────────────────────────
 // ALL CONCEPT PACKAGES
@@ -17,9 +18,11 @@ export const allConceptPackages: ConceptPackage[] = [
   false9Package,
   highPressPackage,
   defensiveBlockPackage,
+  pressingTrapPackage,
 ];
 
 // Re-export individual packages for direct access
 export { false9Package } from './false9.package';
 export { highPressPackage } from './highPress.package';
 export { defensiveBlockPackage } from './defensiveBlock.package';
+export { pressingTrapPackage } from './pressingTrap.package';

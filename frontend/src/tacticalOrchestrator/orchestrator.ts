@@ -17,6 +17,10 @@ export class LearningOrchestrator {
   private activeModuleInstance: any = null;
   private runtimeBooted: boolean = false;
 
+  constructor() {
+    this.bootRuntime();
+  }
+
   /**
    * Initializes the orchestrator with the pitch's 3D animation engine.
    * Boots the concept runtime on first init.
@@ -37,6 +41,7 @@ export class LearningOrchestrator {
    * This replaces all hardcoded module registration.
    */
   private bootRuntime(): void {
+    if (this.runtimeBooted) return;
     const startTime = performance.now();
 
     try {
@@ -306,6 +311,9 @@ export class LearningOrchestrator {
         }
       };
 
+      // Reset the instance to trigger the initial phase and annotation listeners immediately
+      instance.reset();
+
       const loadEnd = performance.now();
       const latency = Math.round(loadEnd - loadStart);
       store.setTelemetry({ 
@@ -396,6 +404,16 @@ export class LearningOrchestrator {
       learningStateStore.getState().setAnimationStatus('stopped');
       useLearningUIStore.getState().setAnimationState('stopped');
     }
+  }
+
+  public seek(fraction: number): void {
+    if (this.engine) {
+      this.engine.seek(fraction);
+    }
+  }
+
+  public getPhases(): Array<{ index: number; start: number; end: number; name: string; description: string }> {
+    return this.activeModuleInstance?.getPhases() || [];
   }
 
   public destroy(): void {

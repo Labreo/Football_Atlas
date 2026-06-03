@@ -437,13 +437,17 @@ export class FormationState implements TacticalPrimitive {
     public formation: FormationType,
     public side: PitchSide,
     public customPositions?: Record<string, TacticalPosition>,
-    public customIds?: Record<string, string>
+    public customIds?: Record<string, string>,
+    public onlyShowCustom: boolean = false
   ) {}
 
   compile(context: PrimitiveCompileContext): void {
     const defaultPositions = getFormationPositions(this.formation, this.team, this.side);
     
     defaultPositions.forEach((pos, role) => {
+      if (this.onlyShowCustom && (!this.customPositions || !this.customPositions[role])) {
+        return;
+      }
       const mergedPos = (this.customPositions && this.customPositions[role]) || pos;
       const defaultId = `${this.team === 'attack' ? 'att' : 'def'}_${role.toLowerCase().replace(/ /g, '_')}`;
       const id = (this.customIds && this.customIds[role]) || defaultId;

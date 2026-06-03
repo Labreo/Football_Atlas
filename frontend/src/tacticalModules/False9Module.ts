@@ -27,105 +27,116 @@ export class False9Module extends ComposedTacticalModule {
         // 1. Initial positions
         new FormationState('attack', '4-3-3', 'left', 
           {
-            'Central Midfielder': { x: -15, z: 5 },
+            'LCM': { x: -15, z: 5 },
             'CF': { x: 20, z: 0 },
-            'Left Winger': { x: 15, z: -22 },
-            'Right Winger': { x: 15, z: 22 },
-            'Right Midfielder': { x: -5, z: 12 }
+            'LW': { x: 15, z: -22 },
+            'RW': { x: 15, z: 22 },
+            'RCM': { x: -5, z: 12 }
           },
           {
-            'Central Midfielder': 'att_passer',
+            'LCM': 'att_passer',
             'CF': 'att_false9',
-            'Left Winger': 'att_winger_left',
-            'Right Winger': 'att_winger_right',
-            'Right Midfielder': 'att_mid_right'
-          }
+            'LW': 'att_winger_left',
+            'RW': 'att_winger_right',
+            'RCM': 'att_mid_right'
+          },
+          true
         ),
         new FormationState('defend', '4-3-3', 'right',
           {
-            'Left Center Back': { x: 22, z: -6 },
-            'Right Center Back': { x: 22, z: 6 },
-            'Left Back': { x: 18, z: -18 },
-            'Right Back': { x: 18, z: 18 },
-            'Defensive Midfielder': { x: 10, z: 0 }
+            'LCB': { x: 22, z: -6 },
+            'RCB': { x: 22, z: 6 },
+            'LB': { x: 18, z: -18 },
+            'RB': { x: 18, z: 18 },
+            'DM': { x: 10, z: 0 }
           },
           {
-            'Left Center Back': 'def_cb_left',
-            'Right Center Back': 'def_cb_right',
-            'Left Back': 'def_lb',
-            'Right Back': 'def_rb',
-            'Defensive Midfielder': 'def_dm'
-          }
+            'LCB': 'def_cb_left',
+            'RCB': 'def_cb_right',
+            'LB': 'def_lb',
+            'RB': 'def_rb',
+            'DM': 'def_dm'
+          },
+          true
         ),
 
         // 2. Global movements
-        new MovePlayer('att_passer', { x: -15, z: 5 }, 0.0, 0.2),
-        new MovePlayer('att_passer', { x: -10, z: 3 }, 0.2, 0.5),
-        new MovePlayer('att_passer', { x: -8, z: 2 }, 0.5, 1.0),
+        new MovePlayer('att_passer', { x: -15, z: 5 }, 0.0, 0.15),
+        new MovePlayer('att_passer', { x: -10, z: 3 }, 0.15, 0.40),
+        new MovePlayer('att_passer', { x: -8, z: 2 }, 0.40, 1.0),
 
         new MovePlayer('att_false9', { x: 20, z: 0 }, 0.0, 0.15),
-        new MovePlayer('att_false9', { x: 2, z: 0 }, 0.15, 0.45, 'quadInOut'),
+        new MovePlayer('att_false9', { x: 2, z: 0 }, 0.15, 0.40, 'quadInOut'),
 
-        new MovePlayer('att_winger_right', { x: 15, z: 22 }, 0.0, 0.5),
-        new MovePlayer('att_winger_right', { x: 25, z: 20 }, 0.5, 1.0),
+        new MovePlayer('att_winger_right', { x: 15, z: 22 }, 0.0, 0.60),
 
-        new MovePlayer('att_mid_right', { x: -5, z: 12 }, 0.0, 0.3),
-        new MovePlayer('att_mid_right', { x: 10, z: 10 }, 0.3, 1.0),
+        new MovePlayer('att_mid_right', { x: -5, z: 12 }, 0.0, 0.15),
+        new MovePlayer('att_mid_right', { x: 5, z: 10 }, 0.15, 0.40),
+        new MovePlayer('att_mid_right', { x: 5, z: 10 }, 0.40, 1.0),
 
-        new MovePlayer('def_cb_right', { x: 22, z: 6 }, 0.0, 0.3),
-        new MovePlayer('def_cb_right', { x: 21, z: 3 }, 0.3, 0.7),
-        new MovePlayer('def_cb_right', { x: 20, z: 1 }, 0.7, 1.0),
+        new MovePlayer('def_cb_right', { x: 22, z: 6 }, 0.0, 0.15),
+        new MovePlayer('def_cb_right', { x: 20, z: 4 }, 0.15, 0.40),
+        new MovePlayer('def_cb_right', { x: 20, z: 4 }, 0.40, 1.0),
 
-        new MovePlayer('def_lb', { x: 18, z: -18 }, 0.0, 0.5),
-        new MovePlayer('def_lb', { x: 22, z: -14 }, 0.5, 1.0),
+        new MovePlayer('def_lb', { x: 18, z: -18 }, 0.0, 0.40),
+        new MovePlayer('def_lb', { x: 22, z: -14 }, 0.40, 1.0),
 
         new MovePlayer('def_rb', { x: 18, z: 18 }, 0.0, 1.0),
 
-        new MovePlayer('def_dm', { x: 10, z: 0 }, 0.0, 0.2),
-        new MovePlayer('def_dm', { x: 6, z: 2 }, 0.2, 0.5),
-        new MovePlayer('def_dm', { x: 8, z: 4 }, 0.5, 1.0),
+        new MovePlayer('def_dm', { x: 10, z: 0 }, 0.0, 0.15),
+        new MovePlayer('def_dm', { x: 8, z: 1 }, 0.15, 0.40),
 
         // Ball CM -> F9
         new SetBallPosition('att_passer', 0.0),
-        new SetBallPosition('att_passer', 0.2),
-        new PassBall('att_passer', 'att_false9', 0.2, 0.45),
+        new SetBallPosition('att_passer', 0.18),
+        new PassBall('att_passer', 'att_false9', 0.18, 0.40),
 
         // Arrows
-        new MovementArrow('arrow_f9_drop', { x: 20, z: 0 }, { x: 2, z: 0 }, 0.15, 0.45, { color: '#39FF14', width: 3, dashSpeed: 1.0, dashSize: 1.5 }),
+        new MovementArrow('arrow_f9_drop', { x: 20, z: 0 }, { x: 2, z: 0 }, 0.15, 0.40, { color: '#39FF14', width: 3, dashSpeed: 1.0, dashSize: 1.5 }),
         new PassingArrow('pass_lane_1', 'att_passer', { x: 2, z: 0 }, 0.18, 0.38, { color: '#00F3FF', width: 2 }),
 
         // Overlays
-        new HighlightNumericalAdvantage({ x: 2, z: 0 }, 7.0, 0.45, 0.85, '#00F3FF', 0.18)
+        new HighlightNumericalAdvantage({ x: 2, z: 0 }, 7.0, 0.35, 0.60, '#00F3FF', 0.18)
       ],
 
       // Branch-specific primitives
       branchPrimitives: {
         A: [
           // Movements
-          new MovePlayer('att_false9', { x: 2, z: 0 }, 0.45, 0.65),
-          new MovePlayer('att_false9', { x: 3, z: 1 }, 0.65, 0.85),
-          new MovePlayer('att_false9', { x: 8, z: 3 }, 0.85, 1.0),
+          new MovePlayer('def_dm', { x: 8, z: 1 }, 0.40, 0.60),
+          new MovePlayer('def_dm', { x: 6, z: 2 }, 0.60, 0.75),
+          new MovePlayer('def_dm', { x: 6, z: 2 }, 0.75, 1.0),
 
-          new MovePlayer('att_winger_left', { x: 15, z: -22 }, 0.0, 0.45),
-          new MovePlayer('att_winger_left', { x: 26, z: -10 }, 0.45, 0.75, 'cubicInOut'),
-          new MovePlayer('att_winger_left', { x: 36, z: -5 }, 0.75, 1.0),
+          new MovePlayer('att_false9', { x: 2, z: 0 }, 0.40, 0.60),
+          new MovePlayer('att_false9', { x: 3, z: 1 }, 0.60, 0.75),
+          new MovePlayer('att_false9', { x: 5, z: 2 }, 0.75, 0.90),
+          new MovePlayer('att_false9', { x: 5, z: 2 }, 0.90, 1.0),
 
-          new MovePlayer('def_cb_left', { x: 22, z: -6 }, 0.0, 0.25),
-          new MovePlayer('def_cb_left', { x: 8, z: -3 }, 0.25, 0.55, 'quadInOut'),
-          new MovePlayer('def_cb_left', { x: 8, z: -3 }, 0.55, 0.75),
-          new MovePlayer('def_cb_left', { x: 18, z: -6 }, 0.75, 1.0),
+          new MovePlayer('def_cb_left', { x: 22, z: -6 }, 0.0, 0.40),
+          new MovePlayer('def_cb_left', { x: 8, z: -3 }, 0.40, 0.60, 'quadInOut'),
+          new MovePlayer('def_cb_left', { x: 8, z: -3 }, 0.60, 0.75),
+          new MovePlayer('def_cb_left', { x: 18, z: -6 }, 0.75, 0.90),
+          new MovePlayer('def_cb_left', { x: 18, z: -6 }, 0.90, 1.0),
+
+          new MovePlayer('att_winger_left', { x: 15, z: -22 }, 0.0, 0.60),
+          new MovePlayer('att_winger_left', { x: 26, z: -10 }, 0.60, 0.75, 'cubicInOut'),
+          new MovePlayer('att_winger_left', { x: 34, z: -6 }, 0.75, 0.90),
+          new MovePlayer('att_winger_left', { x: 38, z: -5 }, 0.90, 1.0),
+
+          new MovePlayer('att_winger_right', { x: 20, z: 22 }, 0.60, 0.75),
+          new MovePlayer('att_winger_right', { x: 25, z: 20 }, 0.75, 1.0),
 
           // Ball pass 2: F9 -> LW run
-          new PassBall('att_false9', 'att_winger_left', 0.65, 0.80),
-          new DribbleBall('att_winger_left', 0.80, 1.0),
+          new PassBall('att_false9', 'att_winger_left', 0.75, 0.88),
+          new DribbleBall('att_winger_left', 0.88, 1.0),
 
           // Arrows
-          new MovementArrow('arrow_cb_follow', { x: 22, z: -6 }, { x: 8, z: -3 }, 0.25, 0.55, { color: '#DC2626', width: 2 }),
-          new MovementArrow('arrow_winger_run', { x: 15, z: -22 }, { x: 26, z: -10 }, 0.45, 0.75, { color: '#39FF14', width: 3, dashSpeed: 1.2 }, true),
-          new PassingArrow('pass_lane_2', { x: 3, z: 1 }, { x: 28, z: -10 }, 0.62, 0.78, { color: '#00F3FF', width: 2.5 }),
+          new MovementArrow('arrow_cb_follow', { x: 22, z: -6 }, { x: 8, z: -3 }, 0.40, 0.60, { color: '#DC2626', width: 2 }),
+          new MovementArrow('arrow_winger_run', { x: 15, z: -22 }, { x: 26, z: -10 }, 0.60, 0.75, { color: '#39FF14', width: 3, dashSpeed: 1.2 }, true),
+          new PassingArrow('pass_lane_2', { x: 3, z: 1 }, { x: 34, z: -6 }, 0.73, 0.86, { color: '#00F3FF', width: 2.5 }),
 
           // Overlays
-          new HighlightZone('overlay_vacated_space', OverlayType.CIRCLE, { center: { x: 20, z: 0 }, radius: 5.5 }, 0.30, 0.90, '#39FF14', 0.2),
+          new HighlightZone('overlay_vacated_space', OverlayType.CIRCLE, { center: { x: 20, z: 0 }, radius: 5.5 }, 0.50, 0.90, '#39FF14', 0.2),
           new HighlightZone('overlay_defensive_gap', OverlayType.POLYGON, {
             points: [
               { x: 22, z: -14 },
@@ -133,45 +144,47 @@ export class False9Module extends ComposedTacticalModule {
               { x: 16, z: -3 },
               { x: 16, z: -14 }
             ]
-          }, 0.50, 0.95, '#FF0055', 0.22),
+          }, 0.60, 0.95, '#FF0055', 0.22),
 
           // Decision Event
-          new DefenderFollows(0.60)
+          new DefenderFollows(0.50)
         ],
         B: [
           // Movements
-          new MovePlayer('att_false9', { x: 2, z: 0 }, 0.45, 0.45),
-          new MovePlayer('att_false9', { x: 12, z: 0 }, 0.45, 0.70, 'linear'),
-          new MovePlayer('att_false9', { x: 12, z: 0 }, 0.70, 1.0),
+          new MovePlayer('def_dm', { x: 8, z: 1 }, 0.40, 0.60),
+          new MovePlayer('def_dm', { x: 14, z: 2 }, 0.60, 0.75),
+          new MovePlayer('def_dm', { x: 16, z: 3 }, 0.75, 1.0),
 
-          new MovePlayer('att_winger_left', { x: 15, z: -22 }, 0.0, 0.5),
-          new MovePlayer('att_winger_left', { x: 28, z: -20 }, 0.5, 1.0),
+          new MovePlayer('att_false9', { x: 2, z: 0 }, 0.40, 0.60),
+          new MovePlayer('att_false9', { x: 12, z: 0 }, 0.60, 0.75, 'linear'),
+          new MovePlayer('att_false9', { x: 13, z: 0 }, 0.75, 0.90),
+          new MovePlayer('att_false9', { x: 13, z: 0 }, 0.90, 1.0),
 
           new MovePlayer('def_cb_left', { x: 22, z: -6 }, 0.0, 1.0),
 
-          new MovePlayer('att_winger_right', { x: 15, z: 22 }, 0.0, 0.5),
-          new MovePlayer('att_winger_right', { x: 28, z: 14 }, 0.5, 0.85, 'cubicInOut'),
-          new MovePlayer('att_winger_right', { x: 32, z: 12 }, 0.85, 1.0),
+          new MovePlayer('att_winger_left', { x: 15, z: -22 }, 0.0, 0.60),
+          new MovePlayer('att_winger_left', { x: 22, z: -20 }, 0.60, 0.75),
+          new MovePlayer('att_winger_left', { x: 28, z: -20 }, 0.75, 1.0),
 
-          new MovePlayer('def_dm', { x: 10, z: 0 }, 0.0, 0.4),
-          new MovePlayer('def_dm', { x: 15, z: 2 }, 0.4, 0.7),
-          new MovePlayer('def_dm', { x: 16, z: 3 }, 0.7, 1.0),
+          new MovePlayer('att_winger_right', { x: 26, z: 16 }, 0.60, 0.75, 'cubicInOut'),
+          new MovePlayer('att_winger_right', { x: 32, z: 12 }, 0.75, 0.90),
+          new MovePlayer('att_winger_right', { x: 36, z: 10 }, 0.90, 1.0),
 
           // Ball dribble & pass
-          new DribbleBall('att_false9', 0.45, 0.70),
-          new PassBall('att_false9', 'att_winger_right', 0.70, 0.85),
-          new DribbleBall('att_winger_right', 0.85, 1.0),
+          new DribbleBall('att_false9', 0.60, 0.75),
+          new PassBall('att_false9', 'att_winger_right', 0.75, 0.88),
+          new DribbleBall('att_winger_right', 0.88, 1.0),
 
           // Arrows
-          new MovementArrow('arrow_f9_dribble', { x: 2, z: 0 }, { x: 12, z: 0 }, 0.45, 0.70, { color: '#39FF14', width: 2, dashSpeed: 0.8 }, true),
-          new PassingArrow('pass_lane_2', { x: 12, z: 0 }, { x: 28, z: 14 }, 0.68, 0.85, { color: '#00F3FF', width: 2.5 }),
+          new MovementArrow('arrow_f9_dribble', { x: 2, z: 0 }, { x: 12, z: 0 }, 0.60, 0.75, { color: '#39FF14', width: 2, dashSpeed: 0.8 }, true),
+          new PassingArrow('pass_lane_2', { x: 12, z: 0 }, { x: 32, z: 12 }, 0.73, 0.86, { color: '#00F3FF', width: 2.5 }),
 
           // Overlays
-          new HighlightZone('overlay_vacated_space', OverlayType.CIRCLE, { center: { x: 20, z: 0 }, radius: 5.5 }, 0.30, 0.65, '#39FF14', 0.2),
-          new HighlightZone('overlay_between_lines', OverlayType.RECTANGLE, { center: { x: 12, z: 0 }, bounds: { width: 12, length: 24, rotation: 0 } }, 0.35, 0.85, '#39FF14', 0.18),
+          new HighlightZone('overlay_vacated_space', OverlayType.CIRCLE, { center: { x: 20, z: 0 }, radius: 5.5 }, 0.50, 0.75, '#39FF14', 0.2),
+          new HighlightZone('overlay_between_lines', OverlayType.RECTANGLE, { center: { x: 12, z: 0 }, bounds: { width: 12, length: 24, rotation: 0 } }, 0.45, 0.85, '#39FF14', 0.18),
 
           // Decision Event
-          new DefenderHolds(0.60)
+          new DefenderHolds(0.50)
         ]
       },
 

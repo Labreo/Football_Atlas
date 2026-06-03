@@ -180,7 +180,7 @@ export function usePitchAnimation({
     const aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
     const camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 1000);
     // Beautiful default isometric elevated angle
-    camera.position.set(0, 90, 0.1);
+    camera.position.set(0, 135, 0.1);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
@@ -664,7 +664,7 @@ export function usePitchAnimation({
     
     // Smoothly reset camera position and target
     controls.target.set(0, 0, 0);
-    camera.position.set(0, 90, 0.1);
+    camera.position.set(0, 135, 0.1);
     camera.zoom = 1.0;
     camera.updateProjectionMatrix();
     controls.update();

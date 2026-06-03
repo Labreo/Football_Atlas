@@ -20,7 +20,7 @@ export class DefensiveBlockModule extends ComposedTacticalModule {
       
       primitives: [
         // 1. Red attacking team initial setup
-        new FormationState('defend', '4-4-2', 'left',
+        new FormationState('defend', '4-3-3', 'left',
           {
             'GK': { x: -40, z: 0 },
             'RCB': { x: -12, z: 12 },

@@ -28,7 +28,7 @@ export function usePitchEngine() {
 
     const aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
     const camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 1000);
-    camera.position.set(0, 90, 0.1);
+    camera.position.set(0, 135, 0.1);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
@@ -334,7 +334,7 @@ export function usePitchEngine() {
     const controls = controlsRef.current;
     if (!camera || !controls) return;
     controls.target.set(0, 0, 0);
-    camera.position.set(0, 90, 0.1);
+    camera.position.set(0, 135, 0.1);
     camera.zoom = 1.0;
     camera.updateProjectionMatrix();
     controls.update();

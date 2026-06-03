@@ -9,6 +9,7 @@ import { tacticalApi } from '../apiClients/tacticalApi';
 
 // Lazy-load developer tools (only rendered in dev mode Settings tab)
 const ConceptExplorer = lazy(() => import('../components/dev/ConceptExplorer'));
+const PrimitiveExplorer = lazy(() => import('../components/dev/PrimitiveExplorer'));
 
 type Tab = 'playbook' | 'classroom' | 'explore' | 'history' | 'settings';
 
@@ -628,6 +629,7 @@ const SettingsTab: React.FC = () => {
             <div className="p-4 text-xs text-slate-500 font-mono animate-pulse">Loading Concept Explorer...</div>
           }>
             <ConceptExplorer />
+            <PrimitiveExplorer />
           </Suspense>
         </div>
 

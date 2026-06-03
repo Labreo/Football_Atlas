@@ -204,6 +204,54 @@ export class ComposedTacticalModule implements TacticalModule {
     return active ? active.preset : 'overview';
   }
 
+  protected applyCameraPreset(preset: string): void {
+    if (!this.engine) return;
+    const camera = (this.engine as any).camera;
+    const controls = (this.engine as any).controls;
+    if (!camera || !controls) return;
+
+    switch (preset) {
+      case 'overview':
+        camera.position.set(0, 135, 0.1);
+        controls.target.set(0, 0, 0);
+        break;
+      case 'press_trigger':
+        camera.position.set(-10, 85, 45);
+        controls.target.set(-10, 0, 0);
+        break;
+      case 'turnover':
+        camera.position.set(5, 80, 40);
+        controls.target.set(5, 0, 0);
+        break;
+      case 'central_space':
+        camera.position.set(0, 90, 50);
+        controls.target.set(0, 0, 0);
+        break;
+      case 'compactness':
+        camera.position.set(10, 85, 45);
+        controls.target.set(10, 0, 0);
+        break;
+      case 'transition':
+        camera.position.set(-15, 85, 45);
+        controls.target.set(-15, 0, -5);
+        break;
+      case 'counter_channel':
+        camera.position.set(10, 80, 50);
+        controls.target.set(10, 0, 10);
+        break;
+      case 'recovery_race':
+        camera.position.set(25, 85, 55);
+        controls.target.set(25, 0, 5);
+        break;
+      case 'summary':
+        camera.position.set(0, 135, 0.1);
+        controls.target.set(0, 0, 0);
+        break;
+    }
+    camera.updateProjectionMatrix();
+    controls.update();
+  }
+
   protected evaluateTimelineTicks(fraction: number): void {
     // 1. Phase transitions
     const phase = this.getPhaseInfo(fraction);
@@ -231,6 +279,7 @@ export class ComposedTacticalModule implements TacticalModule {
       if (this.onCameraPresetChange) {
         this.onCameraPresetChange(preset);
       }
+      this.applyCameraPreset(preset);
     }
 
     // 4. Analytics Events from decision primitives

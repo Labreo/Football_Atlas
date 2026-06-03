@@ -701,6 +701,68 @@ export const defensiveBlockSeed: TacticalConcept = {
   updated_at: '2026-05-31T00:00:00Z'
 };
 
+export const counterAttackTriggerSeed: TacticalConcept = {
+  concept_id: 'counter_attack_trigger',
+  concept_name: 'Counter-Attack Trigger',
+  category: TacticalCategory.TRANSITION,
+  complexity: ComplexityLevel.ADVANCED,
+  core_explanation: 'A transition tactic focused on the immediate moments after winning possession, exploiting the opponent\'s structural disorganization and advanced players before they can recover their defensive shape.',
+  key_principles: [
+    {
+      title: 'Transition Space Exploitation',
+      description: 'Attacking the spaces vacated by opponent full-backs and midfielders who pushed high during their attacking phase.'
+    },
+    {
+      title: 'Immediate Vertical Outlet',
+      description: 'Playing a rapid release pass to forward outlets to launch the transition, rather than safe possession recycling.'
+    },
+    {
+      title: 'Decisive Numerical Run',
+      description: 'Coordinated forward sprints creating a numerical advantage in the final third against a recovering defense.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'counter_pressing_stall',
+    title: 'Aggressive Counter-Pressing Stall',
+    description: 'Immediate ball-oriented pressure by closest attackers to delay the outlet pass and allow the backline to drop and organize.',
+    effectiveness_rating: 80,
+    advantages: [
+      'Stops the direct vertical trigger at its source',
+      'Provides crucial seconds for full-backs to sprint back'
+    ],
+    risks: [
+      'Exposes central areas if the initial press is bypassed',
+      'Requires high physical energy and coordination'
+    ]
+  },
+  animation_module: {
+    module_id: 'counter_attack_trigger',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.MOVEMENT_ARROWS, RequiredOverlay.PASSING_LANES]
+  },
+  historical_examples: [
+    {
+      match_id: 'rma_bay_2014',
+      title: 'Real Madrid\'s Lethal Counter-Attack vs. Bayern',
+      competition: 'UEFA Champions League',
+      season: '2013-14',
+      teams: 'Bayern Munich vs. Real Madrid',
+      tactical_context: 'Real Madrid defended in a deep compact block, baiting Bayern\'s high possession before triggering transitions.',
+      summary: 'Di Maria won the ball and immediately triggered Benzema, who released Ronaldo and Bale in a 3v2 sprint, executing a perfect counter-attacking goal.',
+      relevance_score: 96,
+      video_url: 'https://video.footballatlas.com/realmadrid-bayern-counter.mp4',
+      event_timestamps: [
+        { name: 'Di Maria turnover & outlet pass', timestamp: '18:14' }
+      ]
+    }
+  ],
+  related_concepts: ['high_press', 'pressing_trap', 'third_man_run', 'inverted_winger', 'transition_defending'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-05-31T00:00:00Z',
+  updated_at: '2026-05-31T00:00:00Z'
+};
+
 export const allSeeds: TacticalConcept[] = [
   false9Seed, 
   highPressSeed, 
@@ -712,6 +774,7 @@ export const allSeeds: TacticalConcept[] = [
   invertedWingerSeed,
   backThreeSeed,
   thirdManRunSeed,
-  compactnessSeed
+  compactnessSeed,
+  counterAttackTriggerSeed
 ];
 

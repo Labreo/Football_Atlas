@@ -417,11 +417,18 @@ export class LearningOrchestrator {
   }
 
   public destroy(): void {
+    // Only tear down the active module instance — do NOT clear the registry.
+    // The registry holds static module class registrations that must survive
+    // component unmount/remount cycles. Clearing it would cause all concept
+    // animations to silently fall back to LegacyPitchPlayer after any remount.
     if (this.activeModuleInstance) {
-      animationModuleRegistry.clear();
+      try { this.activeModuleInstance.destroy(); } catch (_) {}
       this.activeModuleInstance = null;
     }
     this.engine = null;
+    // Reset the booted flag so modules are re-registered on the next init,
+    // in case the registry was cleared for any other reason.
+    this.runtimeBooted = false;
     conversationContextManager.clear();
     learningStateStore.getState().reset();
     useLearningUIStore.getState().resetUIStore();

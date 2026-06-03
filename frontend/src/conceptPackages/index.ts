@@ -3,6 +3,7 @@ import { false9Package } from './false9.package';
 import { highPressPackage } from './highPress.package';
 import { defensiveBlockPackage } from './defensiveBlock.package';
 import { pressingTrapPackage } from './pressingTrap.package';
+import { midfieldOverloadPackage } from './midfieldOverload.package';
 
 // ────────────────────────────────────────────────────────────
 // ALL CONCEPT PACKAGES
@@ -19,6 +20,7 @@ export const allConceptPackages: ConceptPackage[] = [
   highPressPackage,
   defensiveBlockPackage,
   pressingTrapPackage,
+  midfieldOverloadPackage,
 ];
 
 // Re-export individual packages for direct access
@@ -26,3 +28,4 @@ export { false9Package } from './false9.package';
 export { highPressPackage } from './highPress.package';
 export { defensiveBlockPackage } from './defensiveBlock.package';
 export { pressingTrapPackage } from './pressingTrap.package';
+export { midfieldOverloadPackage } from './midfieldOverload.package';

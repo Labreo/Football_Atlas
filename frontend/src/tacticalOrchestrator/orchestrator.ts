@@ -7,17 +7,70 @@ import { ConceptRouter } from './router';
 import { analyticsTracker } from './analytics';
 import { TacticalAnimationEngine } from '../tacticalEngine/engine';
 import { useLearningUIStore } from '../stores/LearningUIStore';
+import { conceptLoader } from '../conceptRuntime/ConceptLoader';
+import { runtimeValidator } from '../conceptRuntime/RuntimeValidator';
+import { conceptGraph } from '../conceptRuntime/ConceptGraph';
+import { allConceptPackages } from '../conceptPackages';
 
 export class LearningOrchestrator {
   private engine: TacticalAnimationEngine | null = null;
   private activeModuleInstance: any = null;
+  private runtimeBooted: boolean = false;
 
   /**
    * Initializes the orchestrator with the pitch's 3D animation engine.
+   * Boots the concept runtime on first init.
    */
   public init(engine: TacticalAnimationEngine): void {
     this.engine = engine;
+
+    // Boot the runtime framework (only once)
+    if (!this.runtimeBooted) {
+      this.bootRuntime();
+    }
+
     learningStateStore.getState().setTelemetry({ sessionState: 'ready' });
+  }
+
+  /**
+   * Boots the concept runtime — validates and registers all concept packages.
+   * This replaces all hardcoded module registration.
+   */
+  private bootRuntime(): void {
+    const startTime = performance.now();
+
+    try {
+      // 1. Load and validate all concept packages
+      const loadReport = conceptLoader.loadAll(allConceptPackages);
+
+      // 2. Run full runtime health check
+      const healthReport = runtimeValidator.validate();
+
+      // 3. Build the concept graph from loaded manifests
+      conceptGraph.invalidateCache();
+
+      // 4. Track the boot event
+      const bootTime = Math.round(performance.now() - startTime);
+      analyticsTracker.track('runtime_boot', {
+        total_packages: loadReport.total,
+        loaded: loadReport.loaded,
+        rejected: loadReport.rejected,
+        load_time_ms: loadReport.total_time_ms,
+        health_valid: healthReport.valid_concepts,
+        health_invalid: healthReport.invalid_concepts,
+        total_boot_ms: bootTime,
+      });
+
+      this.runtimeBooted = true;
+
+      console.log(
+        `[LearningOrchestrator] 🚀 Runtime booted in ${bootTime}ms — ` +
+        `${loadReport.loaded} concepts ready, ${healthReport.invalid_concepts} issues`
+      );
+    } catch (err: any) {
+      console.error('[LearningOrchestrator] ❌ Runtime boot failed:', err);
+      analyticsTracker.track('runtime_error', { error: err.message, phase: 'boot' });
+    }
   }
 
   /**

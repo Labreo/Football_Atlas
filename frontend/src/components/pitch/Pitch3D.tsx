@@ -5,6 +5,7 @@ import { usePitchEngine } from '../../hooks/usePitchEngine';
 import { animationRegistry } from '../../tacticalModules';
 import { DebugTools } from '../../tacticalEngine/components/DebugTools';
 import { learningOrchestrator } from '../../tacticalOrchestrator/orchestrator';
+import { animationModuleRegistry } from '../../tacticalOrchestrator/registry';
 
 
 const InteractivePitchPlayer: React.FC = () => {
@@ -105,9 +106,11 @@ const LegacyPitchPlayer: React.FC = () => {
 
 const Pitch3D: React.FC = () => {
   const { currentConcept } = useTacticalStore();
-  const isInteractive = currentConcept?.concept_id === 'false_9' || 
-                        currentConcept?.concept_id === 'high_press' || 
-                        currentConcept?.concept_id === 'defensive_block';
+
+  // Dynamic check — any concept with a registered animation module
+  // is routed to the interactive engine. No hardcoded IDs.
+  const isInteractive = !!(currentConcept && 
+    animationModuleRegistry.getModule(currentConcept.concept_id));
 
   if (isInteractive) {
     return <InteractivePitchPlayer />;

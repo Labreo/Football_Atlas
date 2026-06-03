@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useTacticalStore } from '../stores/useTacticalStore';
 import { useLearningUIStore } from '../stores/LearningUIStore';
 import { learningOrchestrator } from '../tacticalOrchestrator/orchestrator';
@@ -6,6 +6,9 @@ import { learningStateStore } from '../tacticalOrchestrator/store';
 import ConversationalLearningInterface from '../components/chat/ConversationalLearningInterface';
 import PlaybookInterface from '../components/playbook/PlaybookInterface';
 import { tacticalApi } from '../apiClients/tacticalApi';
+
+// Lazy-load developer tools (only rendered in dev mode Settings tab)
+const ConceptExplorer = lazy(() => import('../components/dev/ConceptExplorer'));
 
 type Tab = 'playbook' | 'classroom' | 'explore' | 'history' | 'settings';
 
@@ -613,6 +616,19 @@ const SettingsTab: React.FC = () => {
           >
             Clear Store
           </button>
+        </div>
+
+        {/* Developer Tools — Concept Runtime Explorer */}
+        <div className="border-t border-[#23324C]/60 pt-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-display font-bold uppercase tracking-wider text-slate-400">Developer Tools</span>
+            <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-900/30 text-amber-400 font-mono uppercase tracking-widest">Dev</span>
+          </div>
+          <Suspense fallback={
+            <div className="p-4 text-xs text-slate-500 font-mono animate-pulse">Loading Concept Explorer...</div>
+          }>
+            <ConceptExplorer />
+          </Suspense>
         </div>
 
       </div>

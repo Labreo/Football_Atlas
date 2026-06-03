@@ -1,19 +1,20 @@
 import { TacticalModule } from '../tacticalEngine/module';
 import { TacticalAnimationEngine } from '../tacticalEngine/engine';
-import { False9Module } from '../tacticalModules/False9Module';
-import { HighPressModule } from '../tacticalModules/HighPressModule';
-import { DefensiveBlockModule } from '../tacticalModules/DefensiveBlockModule';
 
+/**
+ * AnimationModuleRegistry
+ * 
+ * Manages the lifecycle of tactical animation modules.
+ * Modules are registered dynamically by the ConceptLoader during runtime boot —
+ * no hardcoded imports needed. Adding a new concept never requires editing this file.
+ */
 export class AnimationModuleRegistry {
   private static instance: AnimationModuleRegistry;
   private modules: Map<string, new () => TacticalModule> = new Map();
   private activeInstances: Map<string, TacticalModule> = new Map();
 
   private constructor() {
-    // Register the supported interactive modules
-    this.registerModule('false_9', False9Module);
-    this.registerModule('high_press', HighPressModule);
-    this.registerModule('defensive_block', DefensiveBlockModule);
+    // Empty constructor — modules are registered dynamically by ConceptLoader.
   }
 
   public static getInstance(): AnimationModuleRegistry {
@@ -53,6 +54,13 @@ export class AnimationModuleRegistry {
     }
   }
 
+  /**
+   * Returns all registered concept IDs (for health checks).
+   */
+  public getRegisteredIds(): string[] {
+    return Array.from(this.modules.keys());
+  }
+
   public clear(): void {
     Array.from(this.activeInstances.keys()).forEach(id => this.unloadModule(id));
     this.activeInstances.clear();
@@ -60,3 +68,4 @@ export class AnimationModuleRegistry {
 }
 
 export const animationModuleRegistry = AnimationModuleRegistry.getInstance();
+

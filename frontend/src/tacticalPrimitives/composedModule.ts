@@ -247,6 +247,26 @@ export class ComposedTacticalModule implements TacticalModule {
         camera.position.set(0, 135, 0.1);
         controls.target.set(0, 0, 0);
         break;
+      case 'defensive_view':
+        camera.position.set(-20, 95, 50);
+        controls.target.set(-20, 0, 0);
+        break;
+      case 'wingback_view':
+        camera.position.set(0, 80, 55);
+        controls.target.set(5, 0, 15);
+        break;
+      case 'attacking_view':
+        camera.position.set(15, 95, 50);
+        controls.target.set(15, 0, 0);
+        break;
+      case 'transformation_view':
+        camera.position.set(0, 110, 45);
+        controls.target.set(0, 0, 0);
+        break;
+      case 'summary_view':
+        camera.position.set(0, 135, 0.1);
+        controls.target.set(0, 0, 0);
+        break;
     }
     camera.updateProjectionMatrix();
     controls.update();

@@ -14,6 +14,7 @@ export { PressingTrapModule } from './PressingTrapModule';
 export { MidfieldOverloadModule } from './MidfieldOverloadModule';
 export { CounterAttackTriggerModule } from './CounterAttackTriggerModule';
 export { InvertedWingerModule } from './InvertedWingerModule';
+export { BackThreeWingBackModule } from './BackThreeWingBackModule';
 
 export const animationRegistry: Record<string, TacticalAnimation> = {
   false9: false9Animation,

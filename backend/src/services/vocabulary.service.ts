@@ -86,7 +86,7 @@ export class ConceptVocabularyService {
       }
     },
     {
-      conceptId: 'back_three',
+      conceptId: 'back_three_wing_back',
       translations: {
         en: ['back three', 'three at the back', 'back 3', 'three central defenders'],
         de: ['dreierkette', 'drei innenverteidiger', 'dreierkette abwehr', 'back 3'],

@@ -454,68 +454,6 @@ export const invertedWingerSeed: TacticalConcept = {
   updated_at: '2026-05-31T00:00:00Z'
 };
 
-export const backThreeSeed: TacticalConcept = {
-  concept_id: 'back_three',
-  concept_name: 'Back Three',
-  category: TacticalCategory.DEFENSIVE_SHAPE,
-  complexity: ComplexityLevel.INTERMEDIATE,
-  core_explanation: 'A defensive structure utilizing three central defenders to build play and cover wide spaces, morphing into a back five in low block phases when wingbacks drop.',
-  key_principles: [
-    {
-      title: 'Wide CB Progression',
-      description: 'Left and right center-backs carrying the ball into midfield to provoke pressing responses.'
-    },
-    {
-      title: 'Wingback Cover Switch',
-      description: 'Wingbacks covering wide touchline paths, releasing central defenders to stay compact in central corridors.'
-    },
-    {
-      title: 'Central Coverage Ratio',
-      description: 'Maintaining a 3v2 overload against dual-striker setups, ensuring a spare defender is always free.'
-    }
-  ],
-  defensive_response: {
-    response_id: 'isolate_wide_cb',
-    title: 'Wide Center-back Isolate Press',
-    description: 'Pressing the side center-backs aggressively against the touchline, cutting off paths back to the central sweeper.',
-    effectiveness_rating: 75,
-    advantages: [
-      'Forces central errors far from the central anchor',
-      'Isolates side CBs in wide areas where they lack fullback support'
-    ],
-    risks: [
-      'Leaves massive diagonal channels open if the press is late',
-      'Vulnerable to long diagonal switches to opposite wingbacks'
-    ]
-  },
-  animation_module: {
-    module_id: 'backThree',
-    version: '1.0.0',
-    required_overlays: [RequiredOverlay.DEFENSIVE_LINES, RequiredOverlay.SPACE_CONTROL]
-  },
-  historical_examples: [
-    {
-      match_id: 'che_eve_2016',
-      title: 'Conte\'s 3-4-3 Shape Dismantles Everton',
-      competition: 'Premier League',
-      season: '2016-17',
-      teams: 'Chelsea vs. Everton',
-      tactical_context: 'Antonio Conte shifted Chelsea to a 3-4-3, giving Alonso and Moses complete freedom to advance as wingbacks.',
-      summary: 'Chelsea\'s back three built play comfortably, releasing Moses and Alonso wide to stretch Everton\'s defense, yielding a dominant 5-0 win.',
-      relevance_score: 93,
-      video_url: 'https://video.footballatlas.com/conte-chelsea-343.mp4',
-      event_timestamps: [
-        { name: 'Moses overlap & CB progression', timestamp: '22:10' }
-      ]
-    }
-  ],
-  related_concepts: ['low_block', 'midfield_overload'],
-  docling_chunks: [],
-  schema_version: '1.0.0',
-  created_at: '2026-05-31T00:00:00Z',
-  updated_at: '2026-05-31T00:00:00Z'
-};
-
 export const thirdManRunSeed: TacticalConcept = {
   concept_id: 'third_man_run',
   concept_name: 'Third Man Run',
@@ -763,6 +701,73 @@ export const counterAttackTriggerSeed: TacticalConcept = {
   updated_at: '2026-05-31T00:00:00Z'
 };
 
+export const backThreeWingBackSeed: TacticalConcept = {
+  concept_id: 'back_three_wing_back',
+  concept_name: 'Back 3 / Wing-Back System',
+  category: TacticalCategory.DEFENSIVE_SHAPE,
+  complexity: ComplexityLevel.INTERMEDIATE,
+  core_explanation: 'A tactical system utilizing three central defenders and two wing-backs. The shape transitions dynamically depending on possession, dropping into a compact 5-back defensive structure or expanding into a 3-2-5 attacking shape to dominate the five vertical lanes.',
+  key_principles: [
+    {
+      title: 'Wide Center-back Support',
+      description: 'Side center-backs step wide to offer passing lanes, progress the ball, and cover the channels vacated by advanced wing-backs.'
+    },
+    {
+      title: 'Dynamic Wing-back Width',
+      description: 'Wing-backs advance aggressively to stretch the opponent horizontally, maintaining numerical balance and creating wide threats.'
+    },
+    {
+      title: 'Continuous Shape Transformation',
+      description: 'The structure continuously morphs between a compact defensive block and an expansive five-lane attacking line.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'wingback_press_funnel',
+    title: 'Touchline Press Funnel',
+    description: 'Pressing the wing-backs aggressively against the touchline to isolate them from central midfielders, forcing passing errors.',
+    effectiveness_rating: 78,
+    advantages: [
+      'Forces turnovers far from the central defensive block',
+      'Restricts horizontal switches to the opposite side'
+    ],
+    risks: [
+      'Leaves massive diagonal channels open if the first line of press is bypassed',
+      'Requires rapid horizontal shifting'
+    ]
+  },
+  animation_module: {
+    module_id: 'back_three_wing_back',
+    version: '1.0.0',
+    required_overlays: [
+      RequiredOverlay.DEFENSIVE_LINES,
+      RequiredOverlay.SPACE_CONTROL,
+      RequiredOverlay.MOVEMENT_ARROWS,
+      RequiredOverlay.PASSING_LANES
+    ]
+  },
+  historical_examples: [
+    {
+      match_id: 'che_eve_2016_back3',
+      title: 'Conte\'s 3-4-3 Masterclass vs Everton',
+      competition: 'Premier League',
+      season: '2016-17',
+      teams: 'Chelsea vs. Everton',
+      tactical_context: 'Chelsea deployed a dynamic 3-4-3 shape with wing-backs Alonso and Moses pushing aggressively forward.',
+      summary: 'Chelsea transitioned seamlessly into a 3-2-5 in possession, stretching Everton horizontally and overloading their backline to secure a 5-0 win.',
+      relevance_score: 95,
+      video_url: 'https://video.footballatlas.com/conte-chelsea-343.mp4',
+      event_timestamps: [
+        { name: 'Wing-back advanced positioning', timestamp: '14:20' }
+      ]
+    }
+  ],
+  related_concepts: ['inverted_winger', 'midfield_overload', 'compactness', 'high_press', 'positional_play'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-03T00:00:00Z',
+  updated_at: '2026-06-03T00:00:00Z'
+};
+
 export const allSeeds: TacticalConcept[] = [
   false9Seed, 
   highPressSeed, 
@@ -772,9 +777,9 @@ export const allSeeds: TacticalConcept[] = [
   lowBlockSeed,
   counterAttackSeed,
   invertedWingerSeed,
-  backThreeSeed,
   thirdManRunSeed,
   compactnessSeed,
-  counterAttackTriggerSeed
+  counterAttackTriggerSeed,
+  backThreeWingBackSeed
 ];
 

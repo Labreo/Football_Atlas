@@ -512,7 +512,7 @@ export class GraniteService {
     } else if (q.includes('inverted') || q.includes('winger') || q.includes('cut inside')) {
       matchedConcept = 'inverted_winger';
     } else if (q.includes('back three') || q.includes('back 3') || q.includes('wingback') || q.includes('wing-back')) {
-      matchedConcept = 'back_three';
+      matchedConcept = 'back_three_wing_back';
     } else if (q.includes('third man') || q.includes('off-ball run') || q.includes('third-man')) {
       matchedConcept = 'third_man_run';
     } else if (q.includes('compactness') || q.includes('compact') || q.includes('lines') || q.includes('vertical distance')) {
@@ -634,10 +634,10 @@ export class GraniteService {
         examples: 'Arjen Robben, Lionel Messi (early years/right wing), Mohamed Salah, Franck Ribéry.',
         prosCons: 'Pros: Goal-scoring threat from wings, opens overlapping lanes for fullbacks, creates central overloads. Cons: Predictable if one-dimensional, leaves the flank open for counter-attacks, reduces traditional cross opportunities.'
       },
-      back_three: {
+      back_three_wing_back: {
         name: 'Back 3 / Wing-Back System',
         complexity: ComplexityLevel.INTERMEDIATE,
-        module: 'back3Wingbacks',
+        module: 'back_three_wing_back',
         overview: 'A formation using three center-backs and two advanced wing-backs, combining defensive stability with wide attacking options.',
         origin: 'Traceable to Karl Rappan\'s bolt system, later becoming the Libero/Sweeper systems in Germany and Italy. Modern back-3 was popularized by Antonio Conte at Juventus, Chelsea, and Inter.',
         defense: 'Countered by pressing the wide center-backs, overloading the flanks before the wingbacks can drop back, or occupying the spaces behind the wingbacks.',
@@ -743,7 +743,7 @@ export class GraniteService {
         examples: "Who are famous Inverted Wingers in history?",
         prosCons: "What are the pros and cons of Inverted Wingers?"
       },
-      back_three: {
+      back_three_wing_back: {
         overview: "What is a Back 3 / Wingback system?",
         origin: "Where did the Back 3 originate from?",
         defense: "How do you counter a Back 3?",

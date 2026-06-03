@@ -7,6 +7,7 @@ import { midfieldOverloadPackage } from './midfieldOverload.package';
 import { counterAttackPackage } from './counterAttack.package';
 import { counterAttackTriggerPackage } from './counterAttackTrigger.package';
 import { invertedWingerPackage } from './invertedWinger.package';
+import { backThreeWingBackPackage } from './backThreeWingBack.package';
 
 // ────────────────────────────────────────────────────────────
 // ALL CONCEPT PACKAGES
@@ -16,6 +17,7 @@ import { invertedWingerPackage } from './invertedWinger.package';
 //   1. Create a new file: myConceptName.package.ts
 //   2. Export a ConceptPackage object
 //   3. Import it here and add it to the array below
+//   4. Also export it at the bottom
 // ────────────────────────────────────────────────────────────
 
 export const allConceptPackages: ConceptPackage[] = [
@@ -27,6 +29,7 @@ export const allConceptPackages: ConceptPackage[] = [
   counterAttackPackage,
   counterAttackTriggerPackage,
   invertedWingerPackage,
+  backThreeWingBackPackage,
 ];
 
 // Re-export individual packages for direct access
@@ -38,3 +41,4 @@ export { midfieldOverloadPackage } from './midfieldOverload.package';
 export { counterAttackPackage } from './counterAttack.package';
 export { counterAttackTriggerPackage } from './counterAttackTrigger.package';
 export { invertedWingerPackage } from './invertedWinger.package';
+export { backThreeWingBackPackage } from './backThreeWingBack.package';

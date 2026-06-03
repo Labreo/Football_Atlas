@@ -13,6 +13,7 @@ export { DefensiveBlockModule } from './DefensiveBlockModule';
 export { PressingTrapModule } from './PressingTrapModule';
 export { MidfieldOverloadModule } from './MidfieldOverloadModule';
 export { CounterAttackTriggerModule } from './CounterAttackTriggerModule';
+export { InvertedWingerModule } from './InvertedWingerModule';
 
 export const animationRegistry: Record<string, TacticalAnimation> = {
   false9: false9Animation,

@@ -1,4 +1,4 @@
-import { TacticalConcept, TutorResponse, ConversationTurn } from '@football-atlas/shared';
+import { TacticalConcept, TutorResponse, ConversationTurn, HistoricalExample } from '@football-atlas/shared';
 
 const API_BASE = 'http://localhost:3001/api/tactical';
 
@@ -60,6 +60,25 @@ export const tacticalApi = {
   async searchKeyword(query: string): Promise<any[]> {
     const res = await fetch(`http://localhost:3001/search?q=${encodeURIComponent(query)}`);
     if (!res.ok) throw new Error('Search failed');
+    return res.json();
+  },
+
+  async getHistoricalExamplesByConcept(conceptId: string, complexity?: string, exclude?: string[]): Promise<HistoricalExample[]> {
+    const params = new URLSearchParams();
+    if (complexity) params.append('complexity', complexity);
+    if (exclude && exclude.length > 0) params.append('exclude', exclude.join(','));
+    const res = await fetch(`${API_BASE}/historical/concepts/${conceptId}?${params.toString()}`);
+    if (!res.ok) throw new Error(`Failed to fetch historical examples for concept: ${conceptId}`);
+    return res.json();
+  },
+
+  async searchHistoricalExamples(filters: { coach?: string; team?: string; player?: string }): Promise<HistoricalExample[]> {
+    const params = new URLSearchParams();
+    if (filters.coach) params.append('coach', filters.coach);
+    if (filters.team) params.append('team', filters.team);
+    if (filters.player) params.append('player', filters.player);
+    const res = await fetch(`${API_BASE}/historical/search?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to search historical examples');
     return res.json();
   }
 };

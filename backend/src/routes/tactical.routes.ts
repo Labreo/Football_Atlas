@@ -1,6 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { tacticalRegistry, TutorResponse, ComplexityLevel } from '@football-atlas/shared';
 import { GraniteService } from '../services/granite.service';
+import { historicalExampleService } from '../services/historicalExample.service';
+import { historicalExampleRepository } from '../repositories/historicalExample.repository';
 
 const router = Router();
 const graniteService = new GraniteService();
@@ -71,6 +73,50 @@ router.post('/tutor', async (req: Request, res: Response, next: NextFunction) =>
   } catch (error) {
     next(error);
   }
+});
+
+/**
+ * GET /api/tactical/historical/concepts/:id
+ * Returns ranked historical examples for a concept.
+ */
+router.get('/historical/concepts/:id', (req: Request, res: Response) => {
+  const conceptId = req.params.id;
+  const complexity = req.query.complexity as ComplexityLevel | undefined;
+  const exclude = req.query.exclude ? (req.query.exclude as string).split(',') : [];
+
+  const bestOnly = req.query.best === 'true';
+  if (bestOnly) {
+    const best = historicalExampleService.getBestExample(conceptId, complexity, exclude);
+    if (!best) {
+      return res.status(404).json({ error: 'Not Found', message: 'No suitable historical example found.' });
+    }
+    return res.json(best);
+  }
+
+  const examples = historicalExampleService.getExamplesByConcept(conceptId);
+  return res.json(examples);
+});
+
+/**
+ * GET /api/tactical/historical/search
+ * Filters historical examples by coach, team, player, or returns all examples.
+ */
+router.get('/historical/search', (req: Request, res: Response) => {
+  const coach = req.query.coach as string | undefined;
+  const team = req.query.team as string | undefined;
+  const player = req.query.player as string | undefined;
+
+  if (coach) {
+    return res.json(historicalExampleService.getExamplesByCoach(coach));
+  }
+  if (team) {
+    return res.json(historicalExampleService.getExamplesByTeam(team));
+  }
+  if (player) {
+    return res.json(historicalExampleService.getExamplesByPlayer(player));
+  }
+
+  return res.json(historicalExampleRepository.getAll());
 });
 
 export default router;

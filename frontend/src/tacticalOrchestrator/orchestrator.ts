@@ -105,6 +105,10 @@ export class LearningOrchestrator {
     analyticsTracker.track('question_submitted', { question });
     const startTime = performance.now();
 
+    const qLower = question.toLowerCase();
+    const isHistorical = /show me (?:a )?real example|did (?:any )?famous team|when has this happened|give me another example|another example|real example/i.test(qLower);
+    const isAlternative = /another example/i.test(qLower);
+
     try {
       const currentActiveConcept = conversationContextManager.getActiveConcept();
 
@@ -112,6 +116,14 @@ export class LearningOrchestrator {
       const isFollowUp = conversationContextManager.isFollowUp(question);
       if (isFollowUp) {
         analyticsTracker.track('follow_up_question', { question, activeConcept: currentActiveConcept });
+      }
+
+      if (isHistorical) {
+        if (isAlternative) {
+          analyticsTracker.track('alternative_example_requested', { question, activeConcept: currentActiveConcept });
+        } else {
+          analyticsTracker.track('historical_example_requested', { question, activeConcept: currentActiveConcept });
+        }
       }
 
       // 1. Call Granite AI Tutoring API
@@ -128,6 +140,17 @@ export class LearningOrchestrator {
         confidence: response.confidence_score || 0.90,
         latencyMs: latency
       });
+
+      if (isHistorical && response.explanation) {
+        analyticsTracker.track('historical_explanation_generated', {
+          concept_id: response.concept_id,
+          latencyMs: latency
+        });
+        analyticsTracker.track('example_viewed', {
+          concept_id: response.concept_id,
+          explanationLength: response.explanation.length
+        });
+      }
 
       store.setTelemetry({ graniteLatencyMs: latency });
 

@@ -38,4 +38,5 @@ export interface ConversationContext {
   last_questions: string[];
   last_concepts: string[];
   user_level: ComplexityLevel;
+  served_example_ids?: string[];
 }

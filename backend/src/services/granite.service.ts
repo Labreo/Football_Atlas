@@ -3,7 +3,9 @@ import { Logger } from '../utils/logger';
 import { parseGraniteJson } from '../utils/jsonParser';
 import { GraniteTestResponse, FootballConceptData, ConversationContext } from '../types/granite.types';
 import { TUTOR_SYSTEM_PROMPT } from '../prompts/tutor.prompt';
-import { ComplexityLevel } from '@football-atlas/shared';
+import { ComplexityLevel, tacticalRegistry } from '@football-atlas/shared';
+import { historicalExampleService } from './historicalExample.service';
+import { historicalExplanationGenerator } from './historicalExplanation.generator';
 
 export class GraniteService {
   private static cachedToken: string | null = null;
@@ -82,6 +84,137 @@ export class GraniteService {
     // Resolve session context history
     const context = this.getOrCreateContext(conversationId);
     context.last_questions.push(question);
+
+    const qLower = question.toLowerCase();
+    const isHistoricalRequest = /show me (?:a )?real example|did (?:any )?famous team|when has this happened|give me another example|another example|real example/i.test(qLower);
+
+    if (isHistoricalRequest) {
+      // 1. Resolve matched concept
+      let matchedConcept = '';
+      if (qLower.includes('false 9') || qLower.includes('false9') || qLower.includes('dropped striker')) {
+        matchedConcept = 'false_9';
+      } else if (qLower.includes('high press') || qLower.includes('gegenpress') || qLower.includes('pressing high')) {
+        matchedConcept = 'high_press';
+      } else if (qLower.includes('pressing trap') || qLower.includes('press trap')) {
+        matchedConcept = 'pressing_trap';
+      } else if (qLower.includes('overload') || qLower.includes('midfield overload')) {
+        matchedConcept = 'midfield_overload';
+      } else if (qLower.includes('defensive block') || qLower.includes('compact block')) {
+        matchedConcept = 'defensive_block';
+      } else if (qLower.includes('low block') || qLower.includes('defending deep')) {
+        matchedConcept = 'defensive_block';
+      } else if (qLower.includes('counter') || qLower.includes('transition') || qLower.includes('counter-attack')) {
+        matchedConcept = 'counter_attack_trigger';
+      } else if (qLower.includes('inverted') || qLower.includes('winger') || qLower.includes('cut inside')) {
+        matchedConcept = 'inverted_winger';
+      } else if (qLower.includes('back three') || qLower.includes('back 3') || qLower.includes('wingback') || qLower.includes('wing-back')) {
+        matchedConcept = 'back_three_wing_back';
+      } else if (qLower.includes('third man') || qLower.includes('off-ball run') || qLower.includes('third-man')) {
+        matchedConcept = 'third_man_run';
+      } else if (qLower.includes('compactness') || qLower.includes('pressing lines') || qLower.includes('compact')) {
+        matchedConcept = 'compactness_pressing_lines';
+      }
+
+      if (!matchedConcept) {
+        if (context.last_concepts && context.last_concepts.length > 0) {
+          matchedConcept = context.last_concepts[context.last_concepts.length - 1];
+        }
+      }
+
+      if (!matchedConcept) {
+        return {
+          success: true,
+          is_mocked: true,
+          mode: 'mock',
+          latency_ms: Date.now() - startTime,
+          data: {
+            needs_clarification: true,
+            clarification_question: 'Which tactical concept would you like to see a real example of? (e.g., False 9, High Press, Defensive Block)',
+          } as any
+        };
+      }
+
+      // Add concept to history
+      context.last_concepts.push(matchedConcept);
+
+      // Initialize served_example_ids if not present
+      if (!context.served_example_ids) {
+        context.served_example_ids = [];
+      }
+
+      // Retrieve best example
+      let example = historicalExampleService.getBestExample(matchedConcept, context.user_level, context.served_example_ids);
+      if (!example && context.served_example_ids.length > 0) {
+        // Reset served history to wrap around if we've shown everything
+        context.served_example_ids = [];
+        example = historicalExampleService.getBestExample(matchedConcept, context.user_level, []);
+      }
+
+      if (!example) {
+        return {
+          success: true,
+          is_mocked: true,
+          mode: 'mock',
+          latency_ms: Date.now() - startTime,
+          data: {
+            needs_clarification: false,
+            concept_id: matchedConcept,
+            concept_name: matchedConcept.replace(/_/g, ' '),
+            complexity: context.user_level,
+            user_level: context.user_level,
+            animation_module: '',
+            explanation: `I'm sorry, I don't have any curated historical examples for the concept "${matchedConcept.replace(/_/g, ' ')}" yet.`,
+            follow_up_suggestions: ['Explain how this concept works', 'Show me the 3D lesson']
+          } as any
+        };
+      }
+
+      // Track this example
+      context.served_example_ids.push(example.example_id);
+
+      // Get concept display name
+      const conceptRegistryObj = tacticalRegistry.getConcept(matchedConcept);
+      const conceptName = conceptRegistryObj?.concept_name || matchedConcept.replace(/_/g, ' ');
+
+      // Generate Granite explanation
+      const explanationText = await historicalExplanationGenerator.generateExplanation(
+        example,
+        conceptName,
+        question,
+        traceId
+      );
+
+      // Format target experience output exactly as requested
+      const formattedExplanation = `Example:
+${example.match_name}
+${example.season} ${example.competition}
+
+Player:
+${example.players.join(', ')}
+
+Tactical Context:
+${example.tactical_summary}
+
+Explanation:
+${explanationText}`;
+
+      return {
+        success: true,
+        is_mocked: this.isMockMode,
+        mode: this.isMockMode ? 'mock' : 'live',
+        latency_ms: Date.now() - startTime,
+        data: {
+          needs_clarification: false,
+          concept_id: matchedConcept,
+          concept_name: conceptName,
+          complexity: conceptRegistryObj?.complexity || context.user_level,
+          user_level: context.user_level,
+          animation_module: conceptRegistryObj?.animation_module?.module_id || '',
+          explanation: formattedExplanation,
+          follow_up_suggestions: ['Give me another example', 'Explain the defensive response', 'Show me the 3D lesson']
+        } as any
+      };
+    }
 
     // 1. Trigger mock completion if in Mock Mode
     if (this.isMockMode) {

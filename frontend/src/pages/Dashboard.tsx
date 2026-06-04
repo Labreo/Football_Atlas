@@ -10,6 +10,7 @@ import { tacticalApi } from '../apiClients/tacticalApi';
 // Lazy-load developer tools (only rendered in dev mode Settings tab)
 const ConceptExplorer = lazy(() => import('../components/dev/ConceptExplorer'));
 const PrimitiveExplorer = lazy(() => import('../components/dev/PrimitiveExplorer'));
+const HistoricalExampleExplorer = lazy(() => import('../components/dev/HistoricalExampleExplorer'));
 
 type Tab = 'playbook' | 'classroom' | 'explore' | 'history' | 'settings';
 
@@ -626,10 +627,11 @@ const SettingsTab: React.FC = () => {
             <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-900/30 text-amber-400 font-mono uppercase tracking-widest">Dev</span>
           </div>
           <Suspense fallback={
-            <div className="p-4 text-xs text-slate-500 font-mono animate-pulse">Loading Concept Explorer...</div>
+            <div className="p-4 text-xs text-slate-500 font-mono animate-pulse">Loading Developer Tools...</div>
           }>
             <ConceptExplorer />
             <PrimitiveExplorer />
+            <HistoricalExampleExplorer />
           </Suspense>
         </div>
 

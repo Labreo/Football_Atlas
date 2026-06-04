@@ -25,6 +25,8 @@ export interface TeachingMetadata {
   difficulty_rating: number;     // 1-10 scale
 }
 
+import { HistoricalExample } from './historical';
+
 // ────────────────────────────────────────────────────────────
 // CONCEPT MANIFEST
 // ────────────────────────────────────────────────────────────
@@ -40,6 +42,7 @@ export interface ConceptManifest {
   teaching_metadata: TeachingMetadata;
   granite_keywords: Record<string, string[]>;  // language code → keyword list
   estimated_duration_seconds: number;
+  historical_examples?: HistoricalExample[];
 }
 
 // ────────────────────────────────────────────────────────────

@@ -508,7 +508,7 @@ export class GraniteService {
     } else if (q.includes('low block') || q.includes('lowblock') || q.includes('defending deep')) {
       matchedConcept = 'low_block';
     } else if (q.includes('counter') || q.includes('transition') || q.includes('counter-attack') || q.includes('counter attack')) {
-      matchedConcept = 'counter_attack';
+      matchedConcept = 'counter_attack_trigger';
     } else if (q.includes('inverted') || q.includes('winger') || q.includes('cut inside')) {
       matchedConcept = 'inverted_winger';
     } else if (q.includes('back three') || q.includes('back 3') || q.includes('wingback') || q.includes('wing-back')) {
@@ -614,12 +614,12 @@ export class GraniteService {
         examples: 'Diego Simeone\'s Atletico Madrid (disciplined 4-4-2 block), Jose Mourinho\'s Chelsea (2004-05), and Claudio Ranieri\'s Leicester City (2015-16).',
         prosCons: 'Pros: High spatial protection of danger zones, low physical exertion in possession, easy to counter-attack from. Cons: Yields possession dominance to the opponent, vulnerable to early crosses and fatigue from constant shifting.'
       },
-      counter_attack: {
-        name: 'Counter-Attack',
-        complexity: ComplexityLevel.INTERMEDIATE,
-        module: 'counterTrigger',
-        overview: 'An immediate shift from defending to attacking upon winning possession, moving the ball forward quickly before the opponent can reorganize.',
-        origin: 'Part of football since its early days, but systemized by Herbert Chapman\'s W-M formation in the 1930s and refined through Italian counter-attacking traditions (Contropiede).',
+      counter_attack_trigger: {
+        name: 'Counter-Attack Trigger',
+        complexity: ComplexityLevel.ADVANCED,
+        module: 'counter_attack_trigger',
+        overview: 'A transition tactic focused on the immediate moments after winning possession, exploiting the opponent\'s structural disorganization and advanced players before they can recover their defensive shape.',
+        origin: 'Part of football since its early days, but systemized by Herbert Chapman\'s W-M formation in the 1930s and refined through Italian counter-attacking traditions (Contropiede). Modern counter-attack trigger play relies on high-speed vertical outlets and space exploitation.',
         defense: 'Prevented by aggressive counter-pressing (winning the ball back immediately), tactical fouling, or maintaining a rest-defense structure (e.g., keeping a 3+2 rest shape behind the ball).',
         examples: 'Leicester City 2015/16 (Ranieri), Real Madrid under Mourinho (2011/12), Borussia Dortmund under Klopp.',
         prosCons: 'Pros: Exploit disorganized defenses, highly efficient, simple patterns. Cons: Relies on opponent making mistakes/committing men forward, requires high pace and stamina.'
@@ -647,7 +647,7 @@ export class GraniteService {
       third_man_run: {
         name: 'Off-Ball Movement & Third Man Run',
         complexity: ComplexityLevel.ADVANCED,
-        module: 'thirdManRun',
+        module: 'third_man_run',
         overview: 'An attacking pattern where Player A passes to Player B to draw markers, while Player C makes a run to receive a one-touch pass from Player B.',
         origin: 'Fundamental concept of Ajax\'s Total Football and Cruyffian philosophy, famously summarized by Xavi Hernandez: "The third man is impossible to defend."',
         defense: 'Defended by using a compact zonal system where players pass runners between zones rather than tracking them individually, and putting pressure on the passer (Player A) to prevent the initial pass.',
@@ -729,10 +729,10 @@ export class GraniteService {
         examples: "What are famous examples of a Defensive Block?",
         prosCons: "What are the pros and cons of a Defensive Block?"
       },
-      counter_attack: {
-        overview: "What is a Counter-Attack?",
-        origin: "Where did the Counter-Attack originate from?",
-        defense: "How do you stop a Counter-Attack?",
+      counter_attack_trigger: {
+        overview: "What is a Counter-Attack Trigger?",
+        origin: "Where did the Counter-Attack Trigger originate from?",
+        defense: "How do you stop a Counter-Attack Trigger?",
         examples: "What are famous counter-attacking teams?",
         prosCons: "What are the pros and cons of counter-attacks?"
       },

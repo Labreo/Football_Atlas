@@ -4,10 +4,10 @@ import { highPressPackage } from './highPress.package';
 import { defensiveBlockPackage } from './defensiveBlock.package';
 import { pressingTrapPackage } from './pressingTrap.package';
 import { midfieldOverloadPackage } from './midfieldOverload.package';
-import { counterAttackPackage } from './counterAttack.package';
 import { counterAttackTriggerPackage } from './counterAttackTrigger.package';
 import { invertedWingerPackage } from './invertedWinger.package';
 import { backThreeWingBackPackage } from './backThreeWingBack.package';
+import { thirdManRunPackage } from './thirdManRun.package';
 
 // ────────────────────────────────────────────────────────────
 // ALL CONCEPT PACKAGES
@@ -26,10 +26,10 @@ export const allConceptPackages: ConceptPackage[] = [
   defensiveBlockPackage,
   pressingTrapPackage,
   midfieldOverloadPackage,
-  counterAttackPackage,
   counterAttackTriggerPackage,
   invertedWingerPackage,
   backThreeWingBackPackage,
+  thirdManRunPackage,
 ];
 
 // Re-export individual packages for direct access
@@ -38,7 +38,7 @@ export { highPressPackage } from './highPress.package';
 export { defensiveBlockPackage } from './defensiveBlock.package';
 export { pressingTrapPackage } from './pressingTrap.package';
 export { midfieldOverloadPackage } from './midfieldOverload.package';
-export { counterAttackPackage } from './counterAttack.package';
 export { counterAttackTriggerPackage } from './counterAttackTrigger.package';
 export { invertedWingerPackage } from './invertedWinger.package';
 export { backThreeWingBackPackage } from './backThreeWingBack.package';
+export { thirdManRunPackage } from './thirdManRun.package';

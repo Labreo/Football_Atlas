@@ -267,6 +267,38 @@ export class ComposedTacticalModule implements TacticalModule {
         camera.position.set(0, 135, 0.1);
         controls.target.set(0, 0, 0);
         break;
+      case 'triangle_view':
+        camera.position.set(-5, 90, 45);
+        controls.target.set(-5, 0, 0);
+        break;
+      case 'offball_view':
+        camera.position.set(5, 80, 50);
+        controls.target.set(5, 0, 10);
+        break;
+      case 'route_view':
+        camera.position.set(20, 85, 45);
+        controls.target.set(20, 0, -5);
+        break;
+      case 'role_view':
+        camera.position.set(12, 85, 48);
+        controls.target.set(15, 0, 18);
+        break;
+      case 'halfspace_view':
+        camera.position.set(20, 80, 48);
+        controls.target.set(20, 0, 12);
+        break;
+      case 'combination_play':
+        camera.position.set(15, 85, 45);
+        controls.target.set(18, 0, 8);
+        break;
+      case 'overlap_view':
+        camera.position.set(25, 80, 55);
+        controls.target.set(25, 0, 20);
+        break;
+      case 'attacking_third':
+        camera.position.set(30, 80, 48);
+        controls.target.set(30, 0, 8);
+        break;
     }
     camera.updateProjectionMatrix();
     controls.update();

@@ -323,69 +323,7 @@ export const lowBlockSeed: TacticalConcept = {
       ]
     }
   ],
-  related_concepts: ['compactness', 'counter_attack'],
-  docling_chunks: [],
-  schema_version: '1.0.0',
-  created_at: '2026-05-31T00:00:00Z',
-  updated_at: '2026-05-31T00:00:00Z'
-};
-
-export const counterAttackSeed: TacticalConcept = {
-  concept_id: 'counter_attack',
-  concept_name: 'Counter-Attack',
-  category: TacticalCategory.TRANSITION,
-  complexity: ComplexityLevel.INTERMEDIATE,
-  core_explanation: 'An offensive transition initiated immediately upon winning possession, moving the ball vertically and at high speed to exploit opponent disorganization before they can recover their defensive shape.',
-  key_principles: [
-    {
-      title: 'Vertical Release Pass',
-      description: 'First pass made forward out of pressure to trigger runs, rather than playing lateral safety circulations.'
-    },
-    {
-      title: 'Half-Space Exploding Runs',
-      description: 'Wingers making high-speed runs into wide channels, drawing remaining central defenders out of shape.'
-    },
-    {
-      title: 'Third-Man Support Runs',
-      description: 'Midfielders making runs from deep to create trailing shooting options at the edge of the area.'
-    }
-  ],
-  defensive_response: {
-    response_id: 'tactical_foul_rest',
-    title: 'Tactical Fouling & Rest Defense',
-    description: 'Applying immediate counter-pressing to stall transitions, or making tactical fouls in the opponent half to allow regrouping.',
-    effectiveness_rating: 85,
-    advantages: [
-      'Halts vertical breaks at their source',
-      'Keeps defensive lines high and organized'
-    ],
-    risks: [
-      'Results in multiple yellow cards for central players',
-      'Vulnerable if initial counter-pressing jumps are bypassed'
-    ]
-  },
-  animation_module: {
-    module_id: 'counterTrigger',
-    version: '1.0.0',
-    required_overlays: [RequiredOverlay.MOVEMENT_ARROWS, RequiredOverlay.PASSING_LANES]
-  },
-  historical_examples: [
-    {
-      match_id: 'lei_mci_2016',
-      title: 'Ranieri\'s Direct Transition Masterclass',
-      competition: 'Premier League',
-      season: '2015-16',
-      teams: 'Manchester City vs. Leicester City',
-      tactical_context: 'Leicester sat in a deep mid-block, baiting City\'s fullbacks forward to release Vardy on direct vertical passes.',
-      summary: 'Kante intercepted in midfield and released Mahrez, who set up Jamie Vardy behind the high City line, securing a historic 3-1 win.',
-      relevance_score: 95,
-      video_url: 'https://video.footballatlas.com/leicester-city-counter.mp4',
-      event_timestamps: [
-        { name: 'Kante interception & vertical release', timestamp: '47:18' }
-      ]
-    }
-  ],
-  related_concepts: ['low_block', 'high_press'],
+  related_concepts: ['compactness', 'counter_attack_trigger'],
   docling_chunks: [],
   schema_version: '1.0.0',
   created_at: '2026-05-31T00:00:00Z',
@@ -489,7 +427,7 @@ export const thirdManRunSeed: TacticalConcept = {
     ]
   },
   animation_module: {
-    module_id: 'thirdManRun',
+    module_id: 'third_man_run',
     version: '1.0.0',
     required_overlays: [RequiredOverlay.PASSING_LANES, RequiredOverlay.MOVEMENT_ARROWS]
   },
@@ -775,7 +713,6 @@ export const allSeeds: TacticalConcept[] = [
   pressingTrapSeed,
   midfieldOverloadSeed,
   lowBlockSeed,
-  counterAttackSeed,
   invertedWingerSeed,
   thirdManRunSeed,
   compactnessSeed,

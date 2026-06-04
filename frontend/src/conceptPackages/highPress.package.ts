@@ -12,7 +12,7 @@ export const highPressPackage: ConceptPackage = {
     category: 'PRESSING',
     complexity: 'INTERMEDIATE',
     animation_module_id: 'high_press',
-    related_concepts: ['pressing_trap', 'counter_attack', 'compactness'],
+    related_concepts: ['pressing_trap', 'counter_attack_trigger', 'compactness'],
     learning_objectives: [
       {
         id: 'hp_obj_1',
@@ -49,7 +49,7 @@ export const highPressPackage: ConceptPackage = {
         'Not recognizing when to drop off and reset the defensive shape.',
       ],
       prerequisites: [],
-      follow_up_concepts: ['pressing_trap', 'counter_attack'],
+      follow_up_concepts: ['pressing_trap', 'counter_attack_trigger'],
       difficulty_rating: 5,
     },
     granite_keywords: {

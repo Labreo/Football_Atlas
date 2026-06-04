@@ -39,8 +39,9 @@ export function interpolatePlayerPosition(
   const sorted = [...keyframes].sort((a, b) => a.time - b.time);
   
   if (time <= 0) return { x: startPos.x, z: startPos.z };
-  if (time >= 1.0) {
-    const last = sorted[sorted.length - 1];
+  
+  const last = sorted[sorted.length - 1];
+  if (time >= last.time) {
     return { x: last.x, z: last.z };
   }
 
@@ -138,8 +139,21 @@ export class PrimitiveCompiler {
       }
     };
 
-    // Compile each root primitive node
-    rootPrimitives.forEach(primitive => {
+    // Sort primitives chronologically to ensure state-dependent keyframes are resolved in order
+    const getPrimitiveStartTime = (p: any): number => {
+      if (typeof p.startTime === 'number') return p.startTime;
+      if (typeof p.time === 'number') return p.time;
+      if (typeof p.t === 'number') return p.t;
+      if (typeof p.s === 'number') return p.s;
+      return 0;
+    };
+
+    const sortedPrimitives = [...rootPrimitives].sort((a, b) => {
+      return getPrimitiveStartTime(a) - getPrimitiveStartTime(b);
+    });
+
+    // Compile each sorted primitive node
+    sortedPrimitives.forEach(primitive => {
       primitive.compile(context);
     });
 

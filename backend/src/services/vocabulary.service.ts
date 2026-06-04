@@ -36,13 +36,13 @@ export class ConceptVocabularyService {
       }
     },
     {
-      conceptId: 'counter_attack',
+      conceptId: 'counter_attack_trigger',
       translations: {
-        en: ['counter attack', 'counter-attack', 'transition goal', 'offensive transition', 'counterattack'],
-        de: ['konter', 'umschaltspiel', 'umschaltmoment', 'konterangriff', 'gegenangriff'],
-        es: ['contraataque', 'transición ofensiva', 'contragolpe', 'transicion ofensiva'],
-        fr: ['contre-attaque', 'transition offensive', 'contre attaque'],
-        it: ['contropiede', 'transizione offensiva', 'ripartenza']
+        en: ['counter attack', 'counter-attack', 'transition goal', 'offensive transition', 'counterattack', 'counter-attack trigger', 'counter attack trigger'],
+        de: ['konter', 'umschaltspiel', 'umschaltmoment', 'konterangriff', 'gegenangriff', 'konter auslöser'],
+        es: ['contraataque', 'transición ofensiva', 'contragolpe', 'transicion ofensiva', 'disparador de contraataque'],
+        fr: ['contre-attaque', 'transition offensive', 'contre attaque', 'déclencheur de contre-attaque'],
+        it: ['contropiede', 'transizione offensiva', 'ripartenza', 'innesco del contropiede']
       }
     },
     {

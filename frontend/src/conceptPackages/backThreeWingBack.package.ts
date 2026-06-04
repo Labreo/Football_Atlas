@@ -18,7 +18,7 @@ export const backThreeWingBackPackage: ConceptPackage = {
     related_concepts: [
       'inverted_winger',
       'midfield_overload',
-      'compactness',
+      'compactness_pressing_lines',
       'high_press',
       'positional_play',
     ],
@@ -56,7 +56,7 @@ export const backThreeWingBackPackage: ConceptPackage = {
         'Wide center-backs stepping too far central, leaving the flanks completely unprotected.',
         'Double-pivot midfielders failing to drop and screen, exposing the backline to direct central transitions.',
       ],
-      prerequisites: ['compactness'],
+      prerequisites: ['compactness_pressing_lines'],
       follow_up_concepts: ['inverted_winger', 'midfield_overload', 'positional_play'],
       difficulty_rating: 6,
     },

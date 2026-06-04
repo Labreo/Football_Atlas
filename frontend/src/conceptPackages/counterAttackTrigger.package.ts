@@ -12,7 +12,7 @@ export const counterAttackTriggerPackage: ConceptPackage = {
     category: 'TRANSITION',
     complexity: 'ADVANCED',
     animation_module_id: 'counter_attack_trigger',
-    related_concepts: ['high_press', 'pressing_trap', 'third_man_run', 'inverted_winger', 'compactness'],
+    related_concepts: ['high_press', 'pressing_trap', 'third_man_run', 'inverted_winger', 'compactness_pressing_lines'],
     learning_objectives: [
       {
         id: 'cat_obj_1',
@@ -47,7 +47,7 @@ export const counterAttackTriggerPackage: ConceptPackage = {
         'Delaying the first progression pass, allowing the opponent to counter-press and drop.',
         'Failing to occupy wide transition channels to stretch the recovering line.',
       ],
-      prerequisites: ['compactness'],
+      prerequisites: ['compactness_pressing_lines'],
       follow_up_concepts: ['high_press', 'pressing_trap'],
       difficulty_rating: 8,
     },

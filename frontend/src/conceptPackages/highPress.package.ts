@@ -12,7 +12,7 @@ export const highPressPackage: ConceptPackage = {
     category: 'PRESSING',
     complexity: 'INTERMEDIATE',
     animation_module_id: 'high_press',
-    related_concepts: ['pressing_trap', 'counter_attack_trigger', 'compactness'],
+    related_concepts: ['pressing_trap', 'counter_attack_trigger', 'compactness_pressing_lines'],
     learning_objectives: [
       {
         id: 'hp_obj_1',

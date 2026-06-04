@@ -299,6 +299,22 @@ export class ComposedTacticalModule implements TacticalModule {
         camera.position.set(30, 80, 48);
         controls.target.set(30, 0, 8);
         break;
+      case 'horizontal_compactness_view':
+        camera.position.set(0, 110, 30);
+        controls.target.set(0, 0, 0);
+        break;
+      case 'vertical_compactness_view':
+        camera.position.set(20, 100, 40);
+        controls.target.set(10, 0, 0);
+        break;
+      case 'pressing_structure_view':
+        camera.position.set(-15, 90, 45);
+        controls.target.set(-10, 0, 0);
+        break;
+      case 'gap_analysis_view':
+        camera.position.set(5, 95, 45);
+        controls.target.set(5, 0, 0);
+        break;
     }
     camera.updateProjectionMatrix();
     controls.update();

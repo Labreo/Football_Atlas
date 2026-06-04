@@ -106,13 +106,13 @@ export class ConceptVocabularyService {
       }
     },
     {
-      conceptId: 'compactness',
+      conceptId: 'compactness_pressing_lines',
       translations: {
-        en: ['compactness', 'staying compact', 'compact block', 'horizontal alignment'],
-        de: ['kompaktheit', 'kompakter block', 'kompakt stehen', 'kompakte staffelung'],
-        es: ['compacidad', 'bloque compacto', 'mantenerse compacto', 'compactos en bloque'],
-        fr: ['compacité', 'bloc compact', 'rester compact'],
-        it: ['compattezza', 'blocco compatto', 'squadra compatta', 'compattezza difensiva']
+        en: ['compactness & pressing lines', 'pressing lines', 'defensive distance', 'line distance', 'team depth', 'shifting block', 'defensive lines', 'compactness', 'staying compact', 'compact block', 'horizontal alignment'],
+        de: ['kompaktheit & presslinien', 'presslinien', 'defensive distanz', 'linienabstand', 'mannschaftstiefe', 'verschiebeblock', 'defensivlinien', 'kompaktheit', 'kompakter block', 'kompakt stehen', 'kompakte staffelung'],
+        es: ['compacidad y líneas de presión', 'lineas de presion', 'distancia defensiva', 'distancia entre lineas', 'profundidad del equipo', 'bloque de basculación', 'lineas defensivas', 'compacidad', 'bloque compacto', 'mantenerse compacto', 'compactos en bloque'],
+        fr: ['compacité et lignes de pressing', 'lignes de pressing', 'distance défensive', 'distance entre les lignes', 'profondeur de l\'équipe', 'bloc coulissant', 'lignes défensives', 'compacité', 'bloc compact', 'rester compact'],
+        it: ['compattezza e linee di pressing', 'linee di pressing', 'distanza difensiva', 'distanza tra le linee', 'profondità della squadra', 'blocco di scivolamento', 'linee difensive', 'compattezza', 'blocco compatto', 'squadra compatta', 'compattezza difensiva']
       }
     }
   ];

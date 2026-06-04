@@ -12,7 +12,7 @@ export const midfieldOverloadPackage: ConceptPackage = {
     category: 'ATTACKING_SHAPE',
     complexity: 'ADVANCED',
     animation_module_id: 'midfield_overload',
-    related_concepts: ['false_9', 'third_man_run', 'positional_play', 'inverted_winger', 'compactness'],
+    related_concepts: ['false_9', 'third_man_run', 'positional_play', 'inverted_winger', 'compactness_pressing_lines'],
     learning_objectives: [
       {
         id: 'mo_obj_1',
@@ -47,7 +47,7 @@ export const midfieldOverloadPackage: ConceptPackage = {
         'Failing to find the free player once the numerical advantage is established.',
         'Keeping possession within the overload without looking for forward progression paths.',
       ],
-      prerequisites: ['compactness'],
+      prerequisites: ['compactness_pressing_lines'],
       follow_up_concepts: ['false_9', 'third_man_run'],
       difficulty_rating: 8,
     },

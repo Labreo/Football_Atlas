@@ -12,7 +12,7 @@ export const pressingTrapPackage: ConceptPackage = {
     category: 'PRESSING',
     complexity: 'ADVANCED',
     animation_module_id: 'pressing_trap',
-    related_concepts: ['high_press', 'compactness', 'counter_press', 'defensive_block'],
+    related_concepts: ['high_press', 'compactness_pressing_lines', 'counter_press', 'defensive_block'],
     learning_objectives: [
       {
         id: 'pt_obj_1',
@@ -47,7 +47,7 @@ export const pressingTrapPackage: ConceptPackage = {
         'Defenders not acting simultaneously, leaving escape routes open.',
         'Failing to block backpasses, letting the opponent recycle possession easily.',
       ],
-      prerequisites: ['high_press', 'compactness'],
+      prerequisites: ['high_press', 'compactness_pressing_lines'],
       follow_up_concepts: ['counter_press', 'defensive_block'],
       difficulty_rating: 8,
     },

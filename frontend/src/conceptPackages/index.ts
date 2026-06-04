@@ -8,6 +8,7 @@ import { counterAttackTriggerPackage } from './counterAttackTrigger.package';
 import { invertedWingerPackage } from './invertedWinger.package';
 import { backThreeWingBackPackage } from './backThreeWingBack.package';
 import { thirdManRunPackage } from './thirdManRun.package';
+import { compactnessPressingLinesPackage } from './compactnessPressingLines.package';
 
 // ────────────────────────────────────────────────────────────
 // ALL CONCEPT PACKAGES
@@ -30,6 +31,7 @@ export const allConceptPackages: ConceptPackage[] = [
   invertedWingerPackage,
   backThreeWingBackPackage,
   thirdManRunPackage,
+  compactnessPressingLinesPackage,
 ];
 
 // Re-export individual packages for direct access
@@ -42,3 +44,4 @@ export { counterAttackTriggerPackage } from './counterAttackTrigger.package';
 export { invertedWingerPackage } from './invertedWinger.package';
 export { backThreeWingBackPackage } from './backThreeWingBack.package';
 export { thirdManRunPackage } from './thirdManRun.package';
+export { compactnessPressingLinesPackage } from './compactnessPressingLines.package';

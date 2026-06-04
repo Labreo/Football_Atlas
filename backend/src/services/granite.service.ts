@@ -515,8 +515,8 @@ export class GraniteService {
       matchedConcept = 'back_three_wing_back';
     } else if (q.includes('third man') || q.includes('off-ball run') || q.includes('third-man')) {
       matchedConcept = 'third_man_run';
-    } else if (q.includes('compactness') || q.includes('compact') || q.includes('lines') || q.includes('vertical distance')) {
-      matchedConcept = 'compactness';
+    } else if (q.includes('compactness') || q.includes('compact') || q.includes('lines') || q.includes('vertical distance') || q.includes('pressing lines') || q.includes('defensive distance') || q.includes('line distance') || q.includes('pressing line') || q.includes('team depth')) {
+      matchedConcept = 'compactness_pressing_lines';
     }
 
     // Adapt user level based on keyword signals
@@ -654,10 +654,10 @@ export class GraniteService {
         examples: 'Barcelona under Guardiola (Busquets to Messi to Xavi), Arrigo Sacchi\'s Milan.',
         prosCons: 'Pros: Dynamically breaks defensive lines, impossible to mark manually, high-speed ball progression. Cons: Requires perfect timing, coordination, and high technical quality.'
       },
-      compactness: {
+      compactness_pressing_lines: {
         name: 'Compactness & Pressing Lines',
-        complexity: ComplexityLevel.INTERMEDIATE,
-        module: 'compactnessPressing',
+        complexity: ComplexityLevel.ADVANCED,
+        module: 'compactness_pressing_lines',
         overview: 'The distance between the forward pressing line and the back line, kept short (10-15m) to limit central passing options.',
         origin: 'Mastered and codified by Arrigo Sacchi in AC Milan (vertical distance kept under 25 meters) using active offside traps.',
         defense: 'Countered by playing long diagonal balls over the block, stretching the field with wide wingers, or using rapid vertical combinations.',
@@ -757,7 +757,7 @@ export class GraniteService {
         examples: "What are famous examples of Third Man Runs?",
         prosCons: "What are the pros and cons of Third Man Runs?"
       },
-      compactness: {
+      compactness_pressing_lines: {
         overview: "What is Compactness?",
         origin: "Where did defensive Compactness originate from?",
         defense: "How do you counter defensive Compactness?",

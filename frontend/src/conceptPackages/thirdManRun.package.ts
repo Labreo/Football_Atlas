@@ -56,7 +56,7 @@ export const thirdManRunPackage: ConceptPackage = {
         'Lay-off player taking too many touches, stalling the momentum and allowing defenders to adjust.',
         'Initial pass made under too much pressure, resulting in an immediate midfield turnover.',
       ],
-      prerequisites: ['compactness'],
+      prerequisites: ['compactness_pressing_lines'],
       follow_up_concepts: ['midfield_overload', 'positional_play', 'counter_attack_trigger'],
       difficulty_rating: 7,
     },

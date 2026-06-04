@@ -125,7 +125,7 @@ export const highPressSeed: TacticalConcept = {
       ]
     }
   ],
-  related_concepts: ['pressing_trap', 'compactness'],
+  related_concepts: ['pressing_trap', 'compactness_pressing_lines'],
   docling_chunks: [
     {
       chunk_id: 'doc_press_klopp_09',
@@ -193,7 +193,7 @@ export const pressingTrapSeed: TacticalConcept = {
       ]
     }
   ],
-  related_concepts: ['high_press', 'compactness'],
+  related_concepts: ['high_press', 'compactness_pressing_lines'],
   docling_chunks: [
     {
       chunk_id: 'doc_mourinho_tactics_04',
@@ -261,7 +261,7 @@ export const midfieldOverloadSeed: TacticalConcept = {
       ]
     }
   ],
-  related_concepts: ['false_9', 'compactness'],
+  related_concepts: ['false_9', 'compactness_pressing_lines'],
   docling_chunks: [],
   schema_version: '1.0.0',
   created_at: '2026-05-31T00:00:00Z',
@@ -323,7 +323,7 @@ export const lowBlockSeed: TacticalConcept = {
       ]
     }
   ],
-  related_concepts: ['compactness', 'counter_attack_trigger'],
+  related_concepts: ['compactness_pressing_lines', 'counter_attack_trigger'],
   docling_chunks: [],
   schema_version: '1.0.0',
   created_at: '2026-05-31T00:00:00Z',
@@ -454,67 +454,7 @@ export const thirdManRunSeed: TacticalConcept = {
   updated_at: '2026-05-31T00:00:00Z'
 };
 
-export const compactnessSeed: TacticalConcept = {
-  concept_id: 'compactness',
-  concept_name: 'Compactness',
-  category: TacticalCategory.DEFENSIVE_SHAPE,
-  complexity: ComplexityLevel.BEGINNER,
-  core_explanation: 'Minimizing the vertical and horizontal distance between defending players to restrict internal passing lanes and force opponents to play around the shape.',
-  key_principles: [
-    {
-      title: 'Vertical Distance control',
-      description: 'Restricting the distance between the striker and center-backs to under 30 meters when out of possession.'
-    },
-    {
-      title: 'Horizontal Block Shifting',
-      description: 'The entire block shifting synchronously towards the ball side to crowd half-spaces and prevent turns.'
-    },
-    {
-      title: 'Cover Shadow Discipline',
-      description: 'Defenders positioning themselves in the path of progressive targets to block vertical paths passive-aggressively.'
-    }
-  ],
-  defensive_response: {
-    response_id: 'switch_play_overload',
-    title: 'Rapid Switch of Play Overload',
-    description: 'Attracting the compact block to one side, then quickly switching play using diagonal long balls to an isolated wide winger.',
-    effectiveness_rating: 80,
-    advantages: [
-      'Catches the compact block mid-slide, creating temporary wide channels',
-      'Exposes full-backs in 1v1 situations without support'
-    ],
-    risks: [
-      'Gives up possession if diagonal passes lack accuracy',
-      'Requires wingers with high-level 1v1 skills'
-    ]
-  },
-  animation_module: {
-    module_id: 'compactness',
-    version: '1.0.0',
-    required_overlays: [RequiredOverlay.DEFENSIVE_LINES, RequiredOverlay.SPACE_CONTROL]
-  },
-  historical_examples: [
-    {
-      match_id: 'atm_rma_2014',
-      title: 'Simeone\'s Compact Block Squeezes Real Madrid',
-      competition: 'La Liga',
-      season: '2013-14',
-      teams: 'Atletico Madrid vs. Real Madrid',
-      tactical_context: 'Atletico defended in an extremely compact 4-4-2 block, denying Modric and Ronaldo space in half-spaces.',
-      summary: 'Gabi and Tiago sat right in front of the center-backs, keeping lines under 20m. Ronaldo had to settle for speculative shots, giving Atletico a 1-0 derby win.',
-      relevance_score: 95,
-      video_url: 'https://video.footballatlas.com/atletico-madrid-compact.mp4',
-      event_timestamps: [
-        { name: 'Tiago interception & block shifting', timestamp: '54:12' }
-      ]
-    }
-  ],
-  related_concepts: ['low_block', 'high_press'],
-  docling_chunks: [],
-  schema_version: '1.0.0',
-  created_at: '2026-05-31T00:00:00Z',
-  updated_at: '2026-05-31T00:00:00Z'
-};
+
 
 export const defensiveBlockSeed: TacticalConcept = {
   concept_id: 'defensive_block',
@@ -570,7 +510,7 @@ export const defensiveBlockSeed: TacticalConcept = {
       ]
     }
   ],
-  related_concepts: ['compactness', 'low_block', 'high_press', 'pressing_trap', 'transition_defending'],
+  related_concepts: ['compactness_pressing_lines', 'low_block', 'high_press', 'pressing_trap', 'transition_defending'],
   docling_chunks: [],
   schema_version: '1.0.0',
   created_at: '2026-05-31T00:00:00Z',
@@ -699,11 +639,63 @@ export const backThreeWingBackSeed: TacticalConcept = {
       ]
     }
   ],
-  related_concepts: ['inverted_winger', 'midfield_overload', 'compactness', 'high_press', 'positional_play'],
+  related_concepts: ['inverted_winger', 'midfield_overload', 'compactness_pressing_lines', 'high_press', 'positional_play'],
   docling_chunks: [],
   schema_version: '1.0.0',
   created_at: '2026-06-03T00:00:00Z',
   updated_at: '2026-06-03T00:00:00Z'
+};
+
+export const compactnessPressingLinesSeed: TacticalConcept = {
+  concept_id: 'compactness_pressing_lines',
+  concept_name: 'Compactness & Pressing Lines',
+  category: TacticalCategory.DEFENSIVE_SHAPE,
+  complexity: ComplexityLevel.ADVANCED,
+  core_explanation: 'A collective defensive strategy focused on maintaining short horizontal and vertical distances between lines and players to restrict space, closing passing channels and enabling coordinated pressing.',
+  key_principles: [
+    {
+      title: 'Horizontal Compactness',
+      description: 'Defensive blocks shifting horizontally as a single unit to compress space near the ball, forcing play to wide, low-risk areas.'
+    },
+    {
+      title: 'Vertical Compactness',
+      description: 'Minimizing the vertical space between the defensive, midfield, and forward lines to prevent opponents from receiving between the lines.'
+    },
+    {
+      title: 'Pressing Line Coordination',
+      description: 'Synchronized forward pressure where the first line presses while supporting lines step higher to close spaces and cover passing options.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'break_compactness_switch',
+    title: 'Rapid Horizontal Switches',
+    description: 'Using quick, long diagonal passes to switch the attack to the underloaded flank, forcing the compact block to shift across a wide distance.',
+    effectiveness_rating: 82,
+    advantages: [
+      'Forces block to sprint and adjust over long distances',
+      'Opens temporary channels if players shift at different speeds'
+    ],
+    risks: [
+      'Allows interception if pass is slow or inaccurate',
+      'Requires excellent long-range passing quality'
+    ]
+  },
+  animation_module: {
+    module_id: 'compactness_pressing_lines',
+    version: '1.0.0',
+    required_overlays: [
+      RequiredOverlay.DEFENSIVE_LINES,
+      RequiredOverlay.SPACE_CONTROL,
+      RequiredOverlay.MOVEMENT_ARROWS,
+      RequiredOverlay.PASSING_LANES
+    ]
+  },
+  historical_examples: [], // Placeholder as requested by system
+  related_concepts: ['high_press', 'defensive_block', 'pressing_trap', 'counter_attack_trigger'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-04T00:00:00Z',
+  updated_at: '2026-06-04T00:00:00Z'
 };
 
 export const allSeeds: TacticalConcept[] = [
@@ -715,8 +707,8 @@ export const allSeeds: TacticalConcept[] = [
   lowBlockSeed,
   invertedWingerSeed,
   thirdManRunSeed,
-  compactnessSeed,
   counterAttackTriggerSeed,
-  backThreeWingBackSeed
+  backThreeWingBackSeed,
+  compactnessPressingLinesSeed
 ];
 

@@ -16,6 +16,7 @@ export { CounterAttackTriggerModule } from './CounterAttackTriggerModule';
 export { InvertedWingerModule } from './InvertedWingerModule';
 export { BackThreeWingBackModule } from './BackThreeWingBackModule';
 export { ThirdManRunModule } from './ThirdManRunModule';
+export { CompactnessPressingLinesModule } from './CompactnessPressingLinesModule';
 
 export const animationRegistry: Record<string, TacticalAnimation> = {
   false9: false9Animation,

@@ -12,7 +12,7 @@ export const defensiveBlockPackage: ConceptPackage = {
     category: 'DEFENSIVE_SHAPE',
     complexity: 'INTERMEDIATE',
     animation_module_id: 'defensive_block',
-    related_concepts: ['low_block', 'compactness', 'pressing_trap'],
+    related_concepts: ['low_block', 'compactness_pressing_lines', 'pressing_trap'],
     learning_objectives: [
       {
         id: 'db_obj_1',
@@ -49,7 +49,7 @@ export const defensiveBlockPackage: ConceptPackage = {
         'Sitting too deep and allowing the opposition to build play unchallenged.',
       ],
       prerequisites: [],
-      follow_up_concepts: ['low_block', 'compactness'],
+      follow_up_concepts: ['low_block', 'compactness_pressing_lines'],
       difficulty_rating: 5,
     },
     granite_keywords: {

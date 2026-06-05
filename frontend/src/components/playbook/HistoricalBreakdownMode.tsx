@@ -77,9 +77,8 @@ export const HistoricalBreakdownMode: React.FC<HistoricalBreakdownModeProps> = (
   };
 
   const handleConceptJump = async (relatedConceptId: string) => {
-    analyticsTracker.track('related_concept_opened', {
+    analyticsTracker.trackRelatedConceptOpened(currentExample.concept_id || '', relatedConceptId, {
       from_example: currentExample.example_id,
-      concept_id: relatedConceptId,
     });
     // Stop the breakdown, navigate to related concept
     stopBreakdown();

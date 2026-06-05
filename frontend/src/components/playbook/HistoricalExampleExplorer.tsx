@@ -153,9 +153,8 @@ const HistoricalExampleExplorer: React.FC<HistoricalExampleExplorerProps> = ({
   const handleConceptJump = (targetConceptId: string) => {
     const matchedConcept = concepts.find(c => c.concept_id === targetConceptId);
     if (matchedConcept) {
-      analyticsTracker.track('related_concept_opened', {
+      analyticsTracker.trackRelatedConceptOpened(selectedExample?.concept_id || '', targetConceptId, {
         source_concept_id: selectedExample?.concept_id,
-        target_concept_id: targetConceptId,
       });
       setSelectedExample(null);
       onSelectConcept(targetConceptId);

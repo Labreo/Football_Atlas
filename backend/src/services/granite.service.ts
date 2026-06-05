@@ -6,8 +6,6 @@ import { TUTOR_SYSTEM_PROMPT } from '../prompts/tutor.prompt';
 import { ComplexityLevel, tacticalRegistry } from '@football-atlas/shared';
 import { historicalExampleService } from './historicalExample.service';
 import { historicalExplanationGenerator } from './historicalExplanation.generator';
-import { learningJourneyService } from './learningJourney.service';
-import { learningRecommendationService } from './learningRecommendation.service';
 
 export class GraniteService {
   private static cachedToken: string | null = null;
@@ -89,51 +87,6 @@ export class GraniteService {
 
     const qLower = question.toLowerCase();
     const isHistoricalRequest = /show me (?:a )?real example|did (?:any )?famous team|when has this happened|give me another example|another example|real example/i.test(qLower);
-    const isJourneyRequest = /what (?:should i|to) learn next|recommend (?:a |the next )?lesson|how is my progress|my learning path|what's next|what is next|give me a recommendation|recommend next/i.test(qLower);
-
-    if (isJourneyRequest) {
-      const profile = learningJourneyService.getOrCreateProfile('local-user');
-      const masteries = learningJourneyService.getMasteries('local-user');
-      const recs = learningRecommendationService.generateRecommendations(profile, masteries);
-      
-      let nextConceptName = 'None';
-      if (recs.next_concept_id) {
-        nextConceptName = tacticalRegistry.getConcept(recs.next_concept_id)?.concept_name || recs.next_concept_id;
-      }
-      
-      let nextExampleName = 'None';
-      if (recs.next_example_id) {
-        nextExampleName = recs.next_example_id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      }
-
-      const explanationText = `Based on your learner profile and current concept mastery:
-- **Completed Concepts:** ${profile.completed_concepts.length > 0 ? profile.completed_concepts.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ') : 'None yet'}
-- **Current Active Path:** ${profile.active_path_id ? profile.active_path_id.replace(/_/g, ' ').toUpperCase() : 'None active'}
-
-**Recommended Next Steps:**
-1. **Next Concept:** **${nextConceptName}**
-   *Why:* ${recs.explanation}
-2. **Recommended Match Example/Breakdown:** **${nextExampleName}**
-
-Let's begin! You can jump directly to the **My Journey** dashboard to activate paths, or click on the Playbook tab to select your next concept.`;
-
-      return {
-        success: true,
-        is_mocked: this.isMockMode,
-        mode: this.isMockMode ? 'mock' : 'live',
-        latency_ms: Date.now() - startTime,
-        data: {
-          needs_clarification: false,
-          concept_id: recs.next_concept_id || 'false_9',
-          concept_name: nextConceptName,
-          complexity: ComplexityLevel.BEGINNER,
-          user_level: profile.difficulty_level,
-          animation_module: recs.next_concept_id ? recs.next_concept_id.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) : 'false9',
-          explanation: explanationText,
-          follow_up_suggestions: ['Show me the 3D lesson', 'Explain the active path', 'Go to My Journey']
-        } as any
-      };
-    }
 
     if (isHistoricalRequest) {
       // 1. Resolve matched concept
@@ -334,7 +287,6 @@ ${explanationText}`;
         if (parsedData && !parsedData.needs_clarification && parsedData.concept_id) {
           context.last_concepts.push(parsedData.concept_id);
           context.user_level = parsedData.user_level as ComplexityLevel;
-          learningJourneyService.trackQuestionAsked('local-user', parsedData.concept_id);
         }
 
         return {
@@ -412,7 +364,6 @@ ${explanationText}`;
         if (parsedData && !parsedData.needs_clarification && parsedData.concept_id) {
           context.last_concepts.push(parsedData.concept_id);
           context.user_level = parsedData.user_level as ComplexityLevel;
-          learningJourneyService.trackQuestionAsked('local-user', parsedData.concept_id);
         }
 
         return {
@@ -493,7 +444,6 @@ ${explanationText}`;
       if (parsedData && !parsedData.needs_clarification && parsedData.concept_id) {
         context.last_concepts.push(parsedData.concept_id);
         context.user_level = parsedData.user_level as ComplexityLevel;
-        learningJourneyService.trackQuestionAsked('local-user', parsedData.concept_id);
       }
 
       return {
@@ -852,9 +802,6 @@ ${explanationText}`;
     const concept = mockDatabase[matchedConcept];
     const explanation = concept[intent] || concept.overview;
     const suggestions = this.getSuggestionsForConcept(matchedConcept, intent);
-
-    // Track question asked in mock mode
-    learningJourneyService.trackQuestionAsked('local-user', matchedConcept);
 
     return {
       needs_clarification: false,

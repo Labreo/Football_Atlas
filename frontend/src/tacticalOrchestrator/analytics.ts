@@ -53,54 +53,48 @@ export class AnalyticsTracker {
   // ──────────────── Typed Event Methods ────────────────
 
   /**
-   * Tracks when a concept package is successfully loaded during runtime boot.
+   * Tracks when a concept is opened.
    */
-  public trackConceptLoaded(conceptId: string, loadTimeMs: number): void {
-    this.track('concept_loaded', { concept_id: conceptId, load_time_ms: loadTimeMs });
+  public trackConceptOpened(conceptId: string, data: any = {}): void {
+    this.track('concept_opened', { concept_id: conceptId, ...data });
   }
 
   /**
-   * Tracks when a lesson starts for a specific concept.
+   * Tracks when a breakdown is started.
    */
-  public trackLessonStarted(conceptId: string, lessonId?: string): void {
-    this.track('lesson_started', { concept_id: conceptId, lesson_id: lessonId });
+  public trackBreakdownStarted(breakdownId: string, data: any = {}): void {
+    this.track('breakdown_started', { breakdown_id: breakdownId, ...data });
   }
 
   /**
-   * Tracks when a lesson completes for a specific concept.
+   * Tracks when a historical example is viewed.
    */
-  public trackLessonCompleted(conceptId: string, lessonId?: string, durationMs?: number): void {
-    this.track('lesson_completed', {
-      concept_id: conceptId,
-      lesson_id: lessonId,
-      duration_ms: durationMs,
-    });
+  public trackHistoricalExampleViewed(exampleId: string, data: any = {}): void {
+    this.track('historical_example_viewed', { example_id: exampleId, ...data });
   }
 
   /**
-   * Tracks when a user abandons a concept before completing the lesson.
+   * Tracks when a match is opened.
    */
-  public trackConceptAbandoned(conceptId: string, reason?: string): void {
-    this.track('concept_abandoned', { concept_id: conceptId, reason });
+  public trackMatchOpened(matchId: string, data: any = {}): void {
+    this.track('match_opened', { match_id: matchId, ...data });
   }
 
   /**
-   * Tracks when a user selects a follow-up concept suggestion.
+   * Tracks when a question is asked in the classroom.
    */
-  public trackFollowUpSelected(fromConceptId: string, toConceptId: string): void {
-    this.track('follow_up_selected', {
+  public trackQuestionAsked(question: string, data: any = {}): void {
+    this.track('question_asked', { question, ...data });
+  }
+
+  /**
+   * Tracks when a related concept is opened.
+   */
+  public trackRelatedConceptOpened(fromConceptId: string, toConceptId: string, data: any = {}): void {
+    this.track('related_concept_opened', {
       from_concept_id: fromConceptId,
       to_concept_id: toConceptId,
-    });
-  }
-
-  /**
-   * Tracks when a user switches between concepts.
-   */
-  public trackConceptSwitched(fromConceptId: string | null, toConceptId: string): void {
-    this.track('concept_switched', {
-      from_concept_id: fromConceptId,
-      to_concept_id: toConceptId,
+      ...data
     });
   }
 

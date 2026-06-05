@@ -43,14 +43,13 @@ export const useHistoricalExplorerStore = create<HistoricalExplorerState>((set) 
   setSelectedExample: (example) => {
     set({ selectedExample: example });
     if (example) {
-      analyticsTracker.track('historical_example_selected', {
-        example_id: example.example_id,
+      analyticsTracker.trackHistoricalExampleViewed(example.example_id, {
         concept_id: example.concept_id,
         match_name: example.match_name,
       });
-      analyticsTracker.track('historical_example_viewed', {
-        example_id: example.example_id,
+      analyticsTracker.trackMatchOpened(example.example_id, {
         concept_id: example.concept_id,
+        match_name: example.match_name,
       });
     }
   },
@@ -61,32 +60,16 @@ export const useHistoricalExplorerStore = create<HistoricalExplorerState>((set) 
         ...state.activeFilters,
         [key]: value,
       };
-      
-      analyticsTracker.track('historical_example_filtered', {
-        filter_key: key,
-        filter_value: value,
-        active_filters: updatedFilters,
-      });
-
       return { activeFilters: updatedFilters };
     });
   },
 
   clearFilters: () => {
     set({ activeFilters: { ...initialFilters } });
-    analyticsTracker.track('historical_example_filtered', {
-      action: 'clear_all',
-      active_filters: { ...initialFilters },
-    });
   },
 
   setSearchQuery: (query) => {
     set({ searchQuery: query });
-    if (query.trim().length > 2) {
-      analyticsTracker.track('historical_example_searched', {
-        search_query: query,
-      });
-    }
   },
 
   setCurrentConceptId: (conceptId) => {

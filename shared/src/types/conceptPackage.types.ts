@@ -113,16 +113,12 @@ export interface RuntimeHealthReport {
 // ────────────────────────────────────────────────────────────
 
 export type AnalyticsEventType =
-  | 'concept_loaded'
-  | 'concept_switched'
-  | 'lesson_started'
-  | 'lesson_completed'
-  | 'lesson_step_reached'
-  | 'concept_abandoned'
-  | 'follow_up_selected'
-  | 'runtime_boot'
-  | 'runtime_error'
-  | 'validation_failure';
+  | 'concept_opened'
+  | 'breakdown_started'
+  | 'historical_example_viewed'
+  | 'match_opened'
+  | 'question_asked'
+  | 'related_concept_opened';
 
 export interface AnalyticsEvent {
   event: AnalyticsEventType;

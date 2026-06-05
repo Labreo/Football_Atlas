@@ -5,7 +5,6 @@ import { learningOrchestrator } from '../tacticalOrchestrator/orchestrator';
 import { useTacticalStore } from './useTacticalStore';
 import { analyticsTracker } from '../tacticalOrchestrator/analytics';
 import * as THREE from 'three';
-import { useLearningJourneyStore } from './useLearningJourneyStore';
 
 interface BreakdownState {
   currentExample: HistoricalExample | null;
@@ -86,7 +85,7 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
         });
 
         // Track analytics
-        analyticsTracker.track('breakdown_started', {
+        analyticsTracker.trackBreakdownStarted(breakdown.breakdown_id, {
           example_id: example.example_id,
           concept_id: example.concept_id,
           mode: get().learningMode,
@@ -122,35 +121,16 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
                 const nextIdx = get().currentMomentIndex + 1;
                 set({ currentMomentIndex: nextIdx });
                 get().applyCameraPreset(nextMoment.camera_view);
-                analyticsTracker.track('moment_viewed', {
-                  breakdown_id: currentBrk.breakdown_id,
-                  moment_id: nextMoment.moment_id,
-                  index: nextIdx,
-                });
               }
 
               // Check if play finished (near 1.0)
               if (progress >= 0.98 && get().playbackState === 'playing') {
                 set({ playbackState: 'paused' });
-                analyticsTracker.track('breakdown_completed', {
-                  breakdown_id: currentBrk.breakdown_id,
-                });
-                const example = get().currentExample;
-                if (example) {
-                  useLearningJourneyStore.getState().completeBreakdown(example.concept_id, example.example_id);
-                }
               }
             } else if (get().learningMode === 'free' && get().playbackState === 'playing') {
               // Check if play finished (near 1.0)
               if (progress >= 0.98) {
                 set({ playbackState: 'paused' });
-                analyticsTracker.track('breakdown_completed', {
-                  breakdown_id: currentBrk.breakdown_id,
-                });
-                const example = get().currentExample;
-                if (example) {
-                  useLearningJourneyStore.getState().completeBreakdown(example.concept_id, example.example_id);
-                }
               } else {
                 // Free Explore Mode: Auto-pause at the next moment threshold
                 const nextMoment = currentBrk.key_moments[get().currentMomentIndex + 1];
@@ -163,11 +143,6 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
                     engine.seek(nextMoment.timestamp);
                   }
                   get().applyCameraPreset(nextMoment.camera_view);
-                  analyticsTracker.track('moment_viewed', {
-                    breakdown_id: currentBrk.breakdown_id,
-                    moment_id: nextMoment.moment_id,
-                    index: nextIdx,
-                  });
                 }
               }
             }
@@ -193,12 +168,6 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
       }
 
       get().applyCameraPreset(moment.camera_view);
-
-      analyticsTracker.track('moment_viewed', {
-        breakdown_id: breakdown.breakdown_id,
-        moment_id: moment.moment_id,
-        index,
-      });
     },
 
     replayMoment: (index: number) => {
@@ -216,12 +185,6 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
       }
 
       get().applyCameraPreset(moment.camera_view);
-
-      analyticsTracker.track('moment_replayed', {
-        breakdown_id: breakdown.breakdown_id,
-        moment_id: moment.moment_id,
-        index,
-      });
     },
 
     setPlaybackState: (state: 'playing' | 'paused' | 'stopped') => {
@@ -243,10 +206,7 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
     setLearningMode: (mode: 'guided' | 'free') => {
       set({ learningMode: mode });
 
-      const breakdown = get().currentBreakdown;
-      analyticsTracker.track(mode === 'guided' ? 'guided_mode_used' : 'free_mode_used', {
-        breakdown_id: breakdown?.breakdown_id,
-      });
+      // Removed learning mode analytics tracking to align with allowed event list
     },
 
     updateProgress: (progress: number) => {

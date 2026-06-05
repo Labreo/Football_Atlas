@@ -12,7 +12,6 @@ import { conceptLoader } from '../../conceptRuntime/ConceptLoader';
 import HistoricalExampleExplorer from './HistoricalExampleExplorer';
 import { useBreakdownStore } from '../../stores/useBreakdownStore';
 import { HistoricalBreakdownMode } from './HistoricalBreakdownMode';
-import { useLearningJourneyStore } from '../../stores/useLearningJourneyStore';
 
 const PlaybookInterface: React.FC = () => {
   const {
@@ -35,11 +34,7 @@ const PlaybookInterface: React.FC = () => {
 
   const { currentBreakdown } = useBreakdownStore();
 
-  const mastery = useLearningJourneyStore((state) => 
-    state.masteries.find((m) => m.concept_id === current_concept?.concept_id)
-  );
-  const profile = useLearningJourneyStore((state) => state.profile);
-  const paths = useLearningJourneyStore((state) => state.paths);
+
 
   const [branch, setBranch] = useState<'A' | 'B'>('A');
   const [activeSubTab, setActiveSubTab] = useState<'lecture' | 'examples'>('lecture');
@@ -47,12 +42,11 @@ const PlaybookInterface: React.FC = () => {
   // Load concepts on mount (no autoplay — board starts clean)
   useEffect(() => {
     fetchConcepts();
-    useLearningJourneyStore.getState().loadJourney();
   }, []);
 
   // Direct playbook concept selection, bypassing Granite LLM
   const handlePlaybookSelect = async (conceptId: string) => {
-    analyticsTracker.track('concept_changed', { conceptId, source: 'playbook_click' });
+    analyticsTracker.trackConceptOpened(conceptId, { source: 'playbook_click' });
     
     // Set UI loading
     useLearningUIStore.getState().setLoading(true);
@@ -86,7 +80,6 @@ const PlaybookInterface: React.FC = () => {
       
       if (resolvedModule) {
         useLearningUIStore.getState().setAnimationState('playing');
-        analyticsTracker.track('lesson_started', { conceptId });
       } else {
         useLearningUIStore.getState().setAnimationState('stopped');
       }
@@ -103,7 +96,6 @@ const PlaybookInterface: React.FC = () => {
     const activeModule = learningOrchestrator.getActiveModule();
     if (activeModule && activeModule.setBranch) {
       activeModule.setBranch(newBranch);
-      analyticsTracker.track('branch_toggled', { conceptId: 'false_9', branch: newBranch });
     }
   };
 
@@ -420,120 +412,7 @@ const PlaybookInterface: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Learning Journey Progress & Mastery */}
-                    <div className="bg-[#131926] border border-[#23324C]/60 p-4 rounded-xl space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                          My Journey Progress
-                        </h4>
-                        {mastery && (
-                          <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
-                            mastery.completion_percentage === 100
-                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                              : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
-                          }`}>
-                            {mastery.completion_percentage === 100 ? 'Mastered' : 'In Progress'}
-                          </span>
-                        )}
-                      </div>
 
-                      {mastery && (
-                        <div className="space-y-3">
-                          {/* Progress bar */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                              <span>Lesson Progress</span>
-                              <span className="font-bold text-slate-200">{mastery.completion_percentage}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden flex items-center">
-                              <div
-                                className="h-full bg-gradient-to-r from-[#10B981] to-[#00F3FF] transition-all duration-300"
-                                style={{ width: `${mastery.completion_percentage}%` }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Confidence */}
-                          <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
-                            <span>Mastery Confidence</span>
-                            <span className="font-bold text-emerald-400">{mastery.confidence_score}%</span>
-                          </div>
-
-                          {/* Path Membership */}
-                          {profile?.active_path_id && (() => {
-                            const activePathObj = paths.find(p => p.path_id === profile.active_path_id);
-                            if (!activePathObj) return null;
-                            const inPath = activePathObj.ordered_concepts.includes(current_concept.concept_id);
-                            if (!inPath) return null;
-                            return (
-                              <div className="text-[10px] bg-slate-900 border border-[#23324C]/40 px-2.5 py-1.5 rounded-lg text-slate-400">
-                                🎯 Part of your active path: <span className="font-bold text-slate-200">"{activePathObj.title}"</span>
-                              </div>
-                            );
-                          })()}
-
-                          {/* Action Button: Mark Completed */}
-                          {mastery.completion_percentage < 100 && (
-                            <button
-                              onClick={() => useLearningJourneyStore.getState().completeConcept(current_concept.concept_id)}
-                              className="w-full py-2 bg-[#10B981] text-white font-display text-[10px] font-extrabold uppercase tracking-widest rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-md"
-                            >
-                              ✓ Mark Concept Completed
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Prerequisites */}
-                      {manifest?.teaching_metadata?.prerequisites && manifest.teaching_metadata.prerequisites.length > 0 && (
-                        <div className="space-y-1.5 pt-2 border-t border-[#23324C]/30">
-                          <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-wider block">
-                            Prerequisites
-                          </span>
-                          <div className="flex flex-col gap-1">
-                            {manifest.teaching_metadata.prerequisites.map((prereqId) => {
-                              const isCompleted = profile?.completed_concepts.includes(prereqId);
-                              const name = concepts.find(c => c.concept_id === prereqId)?.concept_name || prereqId;
-                              return (
-                                <div key={prereqId} className="flex items-center justify-between text-[10px]">
-                                  <span className="text-slate-300 font-medium">{name}</span>
-                                  <span className={`font-bold uppercase tracking-wider text-[8px] px-1.5 py-0.5 rounded ${
-                                    isCompleted
-                                      ? 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-400'
-                                      : 'bg-red-500/10 border border-red-500/25 text-red-400'
-                                  }`}>
-                                    {isCompleted ? '✓ Met' : '⚠ Locked'}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Recommended Next Concepts */}
-                      {manifest?.teaching_metadata?.follow_up_concepts && manifest.teaching_metadata.follow_up_concepts.length > 0 && (
-                        <div className="space-y-1.5 pt-2 border-t border-[#23324C]/30">
-                          <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-wider block">
-                            Recommended Next
-                          </span>
-                          <div className="flex flex-wrap gap-1">
-                            {manifest.teaching_metadata.follow_up_concepts.map((followId) => {
-                              const name = concepts.find(c => c.concept_id === followId)?.concept_name || followId;
-                              return (
-                                <button
-                                  key={followId}
-                                  onClick={() => handlePlaybookSelect(followId)}
-                                  className="px-2 py-1 rounded bg-[#182235] hover:bg-slate-700 border border-slate-700 text-slate-300 text-[9px] font-mono transition-all"
-                                >
-                                  {name} &rarr;
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
 
                     {/* Related Concepts */}
                     {current_concept.related_concepts.length > 0 && (

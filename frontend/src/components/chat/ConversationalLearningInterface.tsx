@@ -44,7 +44,7 @@ const ConversationalLearningInterface: React.FC = () => {
 
   // Trigger lesson from follow-up or suggestion click
   const handleSuggestionClick = (questionText: string) => {
-    analyticsTracker.track('follow_up_clicked', { question: questionText });
+    analyticsTracker.trackQuestionAsked(questionText, { source: 'follow_up_clicked' });
     setInput('');
     learningOrchestrator.askQuestion(questionText);
   };
@@ -57,7 +57,6 @@ const ConversationalLearningInterface: React.FC = () => {
     const activeModule = learningOrchestrator.getActiveModule();
     if (activeModule && activeModule.setBranch) {
       activeModule.setBranch(newBranch);
-      analyticsTracker.track('branch_toggled', { conceptId: 'false_9', branch: newBranch });
     }
   };
 

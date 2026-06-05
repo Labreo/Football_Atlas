@@ -1,7 +1,9 @@
+import * as THREE from 'three';
 import { TacticalModule } from '../tacticalEngine/module';
 import { TacticalAnimationEngine } from '../tacticalEngine/engine';
 import { PrimitiveCompiler, CompileResult } from './compiler';
 import { TacticalPrimitive } from './types';
+import { transitionManager } from '../tacticalOrchestrator/TransitionManager';
 
 export interface ComposedModuleOptions {
   id: string;
@@ -75,13 +77,20 @@ export class ComposedTacticalModule implements TacticalModule {
       );
     }
 
-    this.engine.loadConcept({
+    let conceptData = {
       players: this.compiledData.players,
       arrows: this.compiledData.arrows,
       overlays: this.compiledData.overlays,
       ball: this.compiledData.ball,
       duration: this.options.durationSeconds
-    });
+    };
+
+    // Smooth transition from previous coordinates if players exist in engine
+    if (this.engine.getPlayerManager().getPlayers().size > 0) {
+      conceptData = transitionManager.prepareTransition(this.engine, conceptData);
+    }
+
+    this.engine.loadConcept(conceptData);
   }
 
   private subscribeToTimelineEvents(): void {
@@ -210,114 +219,120 @@ export class ComposedTacticalModule implements TacticalModule {
     const controls = (this.engine as any).controls;
     if (!camera || !controls) return;
 
+    const targetPos = new THREE.Vector3();
+    const targetLookAt = new THREE.Vector3();
+
     switch (preset) {
       case 'overview':
-        camera.position.set(0, 135, 0.1);
-        controls.target.set(0, 0, 0);
+        targetPos.set(0, 135, 0.1);
+        targetLookAt.set(0, 0, 0);
         break;
       case 'press_trigger':
-        camera.position.set(-10, 85, 45);
-        controls.target.set(-10, 0, 0);
+        targetPos.set(-10, 85, 45);
+        targetLookAt.set(-10, 0, 0);
         break;
       case 'turnover':
-        camera.position.set(5, 80, 40);
-        controls.target.set(5, 0, 0);
+        targetPos.set(5, 80, 40);
+        targetLookAt.set(5, 0, 0);
         break;
       case 'central_space':
-        camera.position.set(0, 90, 50);
-        controls.target.set(0, 0, 0);
+        targetPos.set(0, 90, 50);
+        targetLookAt.set(0, 0, 0);
         break;
       case 'compactness':
-        camera.position.set(10, 85, 45);
-        controls.target.set(10, 0, 0);
+        targetPos.set(10, 85, 45);
+        targetLookAt.set(10, 0, 0);
         break;
       case 'transition':
-        camera.position.set(-15, 85, 45);
-        controls.target.set(-15, 0, -5);
+        targetPos.set(-15, 85, 45);
+        targetLookAt.set(-15, 0, -5);
         break;
       case 'counter_channel':
-        camera.position.set(10, 80, 50);
-        controls.target.set(10, 0, 10);
+        targetPos.set(10, 80, 50);
+        targetLookAt.set(10, 0, 10);
         break;
       case 'recovery_race':
-        camera.position.set(25, 85, 55);
-        controls.target.set(25, 0, 5);
+        targetPos.set(25, 85, 55);
+        targetLookAt.set(25, 0, 5);
         break;
       case 'summary':
-        camera.position.set(0, 135, 0.1);
-        controls.target.set(0, 0, 0);
+        targetPos.set(0, 135, 0.1);
+        targetLookAt.set(0, 0, 0);
         break;
       case 'defensive_view':
-        camera.position.set(-20, 95, 50);
-        controls.target.set(-20, 0, 0);
+        targetPos.set(-20, 95, 50);
+        targetLookAt.set(-20, 0, 0);
         break;
       case 'wingback_view':
-        camera.position.set(0, 80, 55);
-        controls.target.set(5, 0, 15);
+        targetPos.set(0, 80, 55);
+        targetLookAt.set(5, 0, 15);
         break;
       case 'attacking_view':
-        camera.position.set(15, 95, 50);
-        controls.target.set(15, 0, 0);
+        targetPos.set(15, 95, 50);
+        targetLookAt.set(15, 0, 0);
         break;
       case 'transformation_view':
-        camera.position.set(0, 110, 45);
-        controls.target.set(0, 0, 0);
+        targetPos.set(0, 110, 45);
+        targetLookAt.set(0, 0, 0);
         break;
       case 'summary_view':
-        camera.position.set(0, 135, 0.1);
-        controls.target.set(0, 0, 0);
+        targetPos.set(0, 135, 0.1);
+        targetLookAt.set(0, 0, 0);
         break;
       case 'triangle_view':
-        camera.position.set(-5, 90, 45);
-        controls.target.set(-5, 0, 0);
+        targetPos.set(-5, 90, 45);
+        targetLookAt.set(-5, 0, 0);
         break;
       case 'offball_view':
-        camera.position.set(5, 80, 50);
-        controls.target.set(5, 0, 10);
+        targetPos.set(5, 80, 50);
+        targetLookAt.set(5, 0, 10);
         break;
       case 'route_view':
-        camera.position.set(20, 85, 45);
-        controls.target.set(20, 0, -5);
+        targetPos.set(20, 85, 45);
+        targetLookAt.set(20, 0, -5);
         break;
       case 'role_view':
-        camera.position.set(12, 85, 48);
-        controls.target.set(15, 0, 18);
+        targetPos.set(12, 85, 48);
+        targetLookAt.set(15, 0, 18);
         break;
       case 'halfspace_view':
-        camera.position.set(20, 80, 48);
-        controls.target.set(20, 0, 12);
+        targetPos.set(20, 80, 48);
+        targetLookAt.set(20, 0, 12);
         break;
       case 'combination_play':
-        camera.position.set(15, 85, 45);
-        controls.target.set(18, 0, 8);
+        targetPos.set(15, 85, 45);
+        targetLookAt.set(18, 0, 8);
         break;
       case 'overlap_view':
-        camera.position.set(25, 80, 55);
-        controls.target.set(25, 0, 20);
+        targetPos.set(25, 80, 55);
+        targetLookAt.set(25, 0, 20);
         break;
       case 'attacking_third':
-        camera.position.set(30, 80, 48);
-        controls.target.set(30, 0, 8);
+        targetPos.set(30, 80, 48);
+        targetLookAt.set(30, 0, 8);
         break;
       case 'horizontal_compactness_view':
-        camera.position.set(0, 110, 30);
-        controls.target.set(0, 0, 0);
+        targetPos.set(0, 110, 30);
+        targetLookAt.set(0, 0, 0);
         break;
       case 'vertical_compactness_view':
-        camera.position.set(20, 100, 40);
-        controls.target.set(10, 0, 0);
+        targetPos.set(20, 100, 40);
+        targetLookAt.set(10, 0, 0);
         break;
       case 'pressing_structure_view':
-        camera.position.set(-15, 90, 45);
-        controls.target.set(-10, 0, 0);
+        targetPos.set(-15, 90, 45);
+        targetLookAt.set(-10, 0, 0);
         break;
       case 'gap_analysis_view':
-        camera.position.set(5, 95, 45);
-        controls.target.set(5, 0, 0);
+        targetPos.set(5, 95, 45);
+        targetLookAt.set(5, 0, 0);
         break;
+      default:
+        targetPos.set(0, 135, 0.1);
+        targetLookAt.set(0, 0, 0);
     }
-    camera.updateProjectionMatrix();
-    controls.update();
+
+    transitionManager.transitionCamera(camera, controls, targetPos, targetLookAt, 1200);
   }
 
   protected evaluateTimelineTicks(fraction: number): void {

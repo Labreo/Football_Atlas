@@ -118,7 +118,12 @@ export type AnalyticsEventType =
   | 'historical_example_viewed'
   | 'match_opened'
   | 'question_asked'
-  | 'related_concept_opened';
+  | 'related_concept_opened'
+  | 'concept_chain_started'
+  | 'concept_transition'
+  | 'context_recovered'
+  | 'clarification_requested'
+  | 'conversation_completed';
 
 export interface AnalyticsEvent {
   event: AnalyticsEventType;

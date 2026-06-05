@@ -43,6 +43,10 @@ interface TacticalState {
   triggerCameraReset: () => void;
   panCamera: (dir: 'up' | 'down' | 'left' | 'right') => void;
   setCameraZoom: (zoom: number) => void;
+
+  // Concept Chaining visual thread
+  tacticalThread: string[];
+  setTacticalThread: (thread: string[]) => void;
 }
 
 export const useTacticalStore = create<TacticalState>((set) => ({
@@ -78,6 +82,7 @@ export const useTacticalStore = create<TacticalState>((set) => ({
   cameraResetTrigger: 0,
   cameraPanDirection: { dir: null, count: 0 },
   cameraZoom: 1.0,
+  tacticalThread: [],
 
   fetchConcepts: async () => {
     set({ isLoading: true, error: null });
@@ -117,6 +122,8 @@ export const useTacticalStore = create<TacticalState>((set) => ({
     cameraPanDirection: { dir, count: state.cameraPanDirection.count + 1 }
   })),
   setCameraZoom: (cameraZoom) => set({ cameraZoom }),
+
+  setTacticalThread: (tacticalThread) => set({ tacticalThread }),
 
   askQuestion: async (prompt: string) => {
     // Delegate fully to the orchestrator layer to handle the end-to-end loop

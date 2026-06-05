@@ -1,18 +1,18 @@
 import { envConfig } from '../config/env.config';
 import { Logger } from '../utils/logger';
 import { parseGraniteJson } from '../utils/jsonParser';
-import { GraniteTestResponse, FootballConceptData, ConversationContext } from '../types/granite.types';
-import { TUTOR_SYSTEM_PROMPT } from '../prompts/tutor.prompt';
-import { ComplexityLevel, tacticalRegistry } from '@football-atlas/shared';
+import { GraniteTestResponse, FootballConceptData } from '../types/granite.types';
+import { ComplexityLevel, tacticalRegistry, ConversationContext } from '@football-atlas/shared';
 import { historicalExampleService } from './historicalExample.service';
 import { historicalExplanationGenerator } from './historicalExplanation.generator';
+import { contextManager } from './context.manager';
+import { conceptChainEngine } from './chainEngine.service';
+import { conversationSummarizer } from './summarizer.service';
+import { conceptVocabularyService } from './vocabulary.service';
 
 export class GraniteService {
   private static cachedToken: string | null = null;
   private static tokenExpiry: number = 0;
-
-  // Track simple session memory mapping for future multi-turn support
-  private static conversationMemory: Record<string, ConversationContext> = {};
 
   private isMockMode: boolean;
   private isHFMode: boolean;
@@ -27,6 +27,70 @@ export class GraniteService {
     if (this.isHFMode || this.isOpenRouterMode) {
       this.isMockMode = false;
     }
+  }
+
+  /**
+   * Helper that builds the dynamic system prompt containing the session's conversational context.
+   */
+  private buildSystemPrompt(context: ConversationContext): string {
+    const conceptIds = conceptVocabularyService.getSupportedConceptIds();
+    const conceptListStr = conceptIds.map((id) => `- ${id}`).join('\n');
+    const numConcepts = conceptIds.length;
+
+    let contextSection = '';
+    if (context.active_concept) {
+      contextSection += `ACTIVE CONCEPT IN PLAY: ${context.active_concept}\n`;
+    }
+    if (context.previous_concepts && context.previous_concepts.length > 0) {
+      contextSection += `PREVIOUS DISCUSSIONS CONCEPTS: ${context.previous_concepts.join(', ')}\n`;
+    }
+    if (context.conversation_summary) {
+      contextSection += `TACTICAL CONTEXT SUMMARY: ${context.conversation_summary}\n`;
+    }
+    if (context.active_example) {
+      contextSection += `CURRENT EXAMPLE INDEX: ${context.active_example}\n`;
+    }
+    if (context.active_breakdown) {
+      contextSection += `CURRENT BREAKDOWN VIEW: ${context.active_breakdown}\n`;
+    }
+
+    return `You are the Football Atlas AI Tactical Tutor, an elite football coach (UEFA Pro License analyst level), tactical educator, and visual explainer.
+Your job is to analyze the user's question, detect their level of football knowledge, and map their query to one of our supported tactical concepts.
+
+You must maintain continuity across multiple conversational turns. Use the tactical context provided below to resolve implicit pronouns like "that", "this", "it" or questions like "why does that happen" or "what happens next" without requiring concept names.
+
+SUPPORTED CONCEPT LIST (All outputs MUST map to one of these IDs):
+${conceptListStr}
+
+${contextSection ? `CURRENT CONVERSATION CONTEXT:\n${contextSection}\n` : ''}
+
+CRITICAL PERSONAL & EXPLANATION INSTRUCTIONS:
+1. Persona: Speak with professional coaching authority, but remain accessible. Explain in terms of visual spatial movements on a pitch (e.g., "player drops into midfield, drawing the center-back and leaving space behind"). Avoid dry spreadsheets or generic football clichés ("give 110%").
+2. Level Detection: Analyze the user's question. If they use terms like "Zone 14", "half-spaces", "pressing trigger", detect "advanced". If they use standard tactical terms like "defensive block", "overlap", detect "intermediate". If they ask basic terms like "what does a winger do", detect "beginner". Calibrate your explanation complexity to match this level.
+3. JSON CONTRACT:
+Your output MUST be a valid JSON object. Do not wrap the JSON object in markdown blocks (do NOT output \`\`\`json ... \`\`\`), and do not write any introductory or trailing conversational text. Respond ONLY with the JSON object.
+
+If you have high confidence (>75% probability) that the question is about one of our supported concepts (either explicitly mentioned or inferred from the tactical context):
+{
+  "needs_clarification": false,
+  "concept_id": "one_of_the_${numConcepts}_ids_above",
+  "concept_name": "Readable Name (e.g., 'False 9')",
+  "complexity": "beginner" | "intermediate" | "advanced",
+  "user_level": "detected_user_level_from_question",
+  "animation_module": "matching_module_id_e.g._false9_or_highPress",
+  "explanation": "Your visual and educational explanation calibrating to the user_level. Detail player runs and spacing.",
+  "follow_up_suggestions": [
+    "Follow-up question about related concepts 1",
+    "Follow-up question 2",
+    "Follow-up question 3"
+  ]
+}
+
+If you have low confidence, or the user's query is highly ambiguous, or is completely unrelated to football/tactics:
+{
+  "needs_clarification": true,
+  "clarification_question": "A specific, helpful clarifying question to guide the user back to the tactical discussion (e.g., 'Would you like to explore how defenders respond to the False 9, or look at midfield overloads?')"
+}`;
   }
 
   /**
@@ -81,9 +145,24 @@ export class GraniteService {
   ): Promise<GraniteTestResponse> {
     const startTime = Date.now();
     
-    // Resolve session context history
-    const context = this.getOrCreateContext(conversationId);
-    context.last_questions.push(question);
+    // Resolve session context history using the unified Context Manager
+    const session = contextManager.getOrCreateSessionContext(conversationId);
+    const context = session.context;
+
+    // Auto-summarize if conversation depth exceeds 5 turns
+    if (session.last_questions.length > 5) {
+      try {
+        const summary = await conversationSummarizer.summarize(
+          session.last_questions,
+          session.last_answers,
+          context.active_concept,
+          traceId
+        );
+        contextManager.updateContext(conversationId, { conversation_summary: summary });
+      } catch (sumErr) {
+        Logger.error('Failed to auto-summarize session history', sumErr, { trace_id: traceId });
+      }
+    }
 
     const qLower = question.toLowerCase();
     const isHistoricalRequest = /show me (?:a )?real example|did (?:any )?famous team|when has this happened|give me another example|another example|real example/i.test(qLower);
@@ -116,9 +195,7 @@ export class GraniteService {
       }
 
       if (!matchedConcept) {
-        if (context.last_concepts && context.last_concepts.length > 0) {
-          matchedConcept = context.last_concepts[context.last_concepts.length - 1];
-        }
+        matchedConcept = context.active_concept || '';
       }
 
       if (!matchedConcept) {
@@ -134,20 +211,12 @@ export class GraniteService {
         };
       }
 
-      // Add concept to history
-      context.last_concepts.push(matchedConcept);
-
-      // Initialize served_example_ids if not present
-      if (!context.served_example_ids) {
-        context.served_example_ids = [];
-      }
-
       // Retrieve best example
-      let example = historicalExampleService.getBestExample(matchedConcept, context.user_level, context.served_example_ids);
-      if (!example && context.served_example_ids.length > 0) {
+      let example = historicalExampleService.getBestExample(matchedConcept, session.user_level, session.served_example_ids);
+      if (!example && session.served_example_ids.length > 0) {
         // Reset served history to wrap around if we've shown everything
-        context.served_example_ids = [];
-        example = historicalExampleService.getBestExample(matchedConcept, context.user_level, []);
+        session.served_example_ids = [];
+        example = historicalExampleService.getBestExample(matchedConcept, session.user_level, []);
       }
 
       if (!example) {
@@ -160,8 +229,8 @@ export class GraniteService {
             needs_clarification: false,
             concept_id: matchedConcept,
             concept_name: matchedConcept.replace(/_/g, ' '),
-            complexity: context.user_level,
-            user_level: context.user_level,
+            complexity: session.user_level,
+            user_level: session.user_level,
             animation_module: '',
             explanation: `I'm sorry, I don't have any curated historical examples for the concept "${matchedConcept.replace(/_/g, ' ')}" yet.`,
             follow_up_suggestions: ['Explain how this concept works', 'Show me the 3D lesson']
@@ -170,7 +239,7 @@ export class GraniteService {
       }
 
       // Track this example
-      context.served_example_ids.push(example.example_id);
+      session.served_example_ids.push(example.example_id);
 
       // Get concept display name
       const conceptRegistryObj = tacticalRegistry.getConcept(matchedConcept);
@@ -198,6 +267,13 @@ ${example.tactical_summary}
 Explanation:
 ${explanationText}`;
 
+      // Update context state
+      contextManager.updateContext(conversationId, {
+        active_concept: matchedConcept,
+        active_example: example.example_id
+      });
+      contextManager.addTurn(conversationId, question, formattedExplanation);
+
       return {
         success: true,
         is_mocked: this.isMockMode,
@@ -207,8 +283,8 @@ ${explanationText}`;
           needs_clarification: false,
           concept_id: matchedConcept,
           concept_name: conceptName,
-          complexity: conceptRegistryObj?.complexity || context.user_level,
-          user_level: context.user_level,
+          complexity: conceptRegistryObj?.complexity || session.user_level,
+          user_level: session.user_level,
           animation_module: conceptRegistryObj?.animation_module?.module_id || '',
           explanation: formattedExplanation,
           follow_up_suggestions: ['Give me another example', 'Explain the defensive response', 'Show me the 3D lesson']
@@ -221,7 +297,16 @@ ${explanationText}`;
       Logger.warn('IBM_API_KEY is not set or is a mock key — running in MOCK mode. Responses are NOT from a real AI model.', { trace_id: traceId });
       const latency = Math.floor(Math.random() * 400) + 200;
       await new Promise((r) => setTimeout(r, latency));
-      const mockResult = this.generateMockResponse(question, context);
+      const mockResult = this.generateMockResponse(question, conversationId);
+
+      if (mockResult && !mockResult.needs_clarification && mockResult.concept_id) {
+        contextManager.updateContext(conversationId, {
+          active_concept: mockResult.concept_id
+        });
+        contextManager.addTurn(conversationId, question, mockResult.explanation);
+      } else if (mockResult && mockResult.needs_clarification) {
+        contextManager.addTurn(conversationId, question, mockResult.clarification_question);
+      }
 
       return {
         success: true,
@@ -232,6 +317,9 @@ ${explanationText}`;
       };
     }
 
+    // Prepare system prompt with injected context variables
+    const systemPrompt = this.buildSystemPrompt(context);
+
     // 2. Trigger Hugging Face API if in Hugging Face mode
     if (this.isHFMode) {
       try {
@@ -241,7 +329,7 @@ ${explanationText}`;
         });
 
         const url = `https://${envConfig.ibmBaseUrl}/models/${envConfig.ibmGraniteModel}`;
-        const promptText = `<|system|>\n${TUTOR_SYSTEM_PROMPT}\n<|user|>\n${question}\n<|assistant|>\n`;
+        const promptText = `<|system|>\n${systemPrompt}\n<|user|>\n${question}\n<|assistant|>\n`;
 
         const payload = {
           inputs: promptText,
@@ -284,9 +372,16 @@ ${explanationText}`;
 
         const parsedData = parseGraniteJson(rawText, traceId);
 
-        if (parsedData && !parsedData.needs_clarification && parsedData.concept_id) {
-          context.last_concepts.push(parsedData.concept_id);
-          context.user_level = parsedData.user_level as ComplexityLevel;
+        if (parsedData) {
+          if (!parsedData.needs_clarification && parsedData.concept_id) {
+            contextManager.updateContext(conversationId, {
+              active_concept: parsedData.concept_id
+            });
+            session.user_level = parsedData.user_level as ComplexityLevel;
+            contextManager.addTurn(conversationId, question, parsedData.explanation);
+          } else if (parsedData.needs_clarification) {
+            contextManager.addTurn(conversationId, question, parsedData.clarification_question);
+          }
         }
 
         return {
@@ -301,7 +396,15 @@ ${explanationText}`;
         Logger.warn(`Hugging Face API error: ${err.message}. Falling back to local mock generator. Responses are NOT from a real AI model.`, {
           trace_id: traceId,
         });
-        const mockResult = this.generateMockResponse(question, context);
+        const mockResult = this.generateMockResponse(question, conversationId);
+        if (mockResult && !mockResult.needs_clarification && mockResult.concept_id) {
+          contextManager.updateContext(conversationId, {
+            active_concept: mockResult.concept_id
+          });
+          contextManager.addTurn(conversationId, question, mockResult.explanation);
+        } else if (mockResult && mockResult.needs_clarification) {
+          contextManager.addTurn(conversationId, question, mockResult.clarification_question);
+        }
         return {
           success: true,
           is_mocked: true,
@@ -327,7 +430,7 @@ ${explanationText}`;
         const payload = {
           model: envConfig.ibmGraniteModel,
           messages: [
-            { role: 'system', content: TUTOR_SYSTEM_PROMPT },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: question }
           ],
           temperature: 0.1,
@@ -361,9 +464,16 @@ ${explanationText}`;
 
         const parsedData = parseGraniteJson(rawText, traceId);
 
-        if (parsedData && !parsedData.needs_clarification && parsedData.concept_id) {
-          context.last_concepts.push(parsedData.concept_id);
-          context.user_level = parsedData.user_level as ComplexityLevel;
+        if (parsedData) {
+          if (!parsedData.needs_clarification && parsedData.concept_id) {
+            contextManager.updateContext(conversationId, {
+              active_concept: parsedData.concept_id
+            });
+            session.user_level = parsedData.user_level as ComplexityLevel;
+            contextManager.addTurn(conversationId, question, parsedData.explanation);
+          } else if (parsedData.needs_clarification) {
+            contextManager.addTurn(conversationId, question, parsedData.clarification_question);
+          }
         }
 
         return {
@@ -378,7 +488,15 @@ ${explanationText}`;
         Logger.warn(`OpenRouter API error: ${err.message}. Falling back to local mock generator. Responses are NOT from a real AI model.`, {
           trace_id: traceId,
         });
-        const mockResult = this.generateMockResponse(question, context);
+        const mockResult = this.generateMockResponse(question, conversationId);
+        if (mockResult && !mockResult.needs_clarification && mockResult.concept_id) {
+          contextManager.updateContext(conversationId, {
+            active_concept: mockResult.concept_id
+          });
+          contextManager.addTurn(conversationId, question, mockResult.explanation);
+        } else if (mockResult && mockResult.needs_clarification) {
+          contextManager.addTurn(conversationId, question, mockResult.clarification_question);
+        }
         return {
           success: true,
           is_mocked: true,
@@ -394,7 +512,7 @@ ${explanationText}`;
       const token = await this.getAccessToken(traceId);
       const url = `https://${envConfig.ibmBaseUrl}/ml/v1/text/generation?version=2023-05-29`;
       
-      const promptText = `<|system|>\n${TUTOR_SYSTEM_PROMPT}\n<|user|>\n${question}\n<|assistant|>\n`;
+      const promptText = `<|system|>\n${systemPrompt}\n<|user|>\n${question}\n<|assistant|>\n`;
 
       const payload = {
         model_id: envConfig.ibmGraniteModel,
@@ -440,10 +558,16 @@ ${explanationText}`;
       // Parse generated output to JSON structure
       const parsedData = parseGraniteJson(rawText, traceId);
 
-      // Track active concept memory
-      if (parsedData && !parsedData.needs_clarification && parsedData.concept_id) {
-        context.last_concepts.push(parsedData.concept_id);
-        context.user_level = parsedData.user_level as ComplexityLevel;
+      if (parsedData) {
+        if (!parsedData.needs_clarification && parsedData.concept_id) {
+          contextManager.updateContext(conversationId, {
+            active_concept: parsedData.concept_id
+          });
+          session.user_level = parsedData.user_level as ComplexityLevel;
+          contextManager.addTurn(conversationId, question, parsedData.explanation);
+        } else if (parsedData.needs_clarification) {
+          contextManager.addTurn(conversationId, question, parsedData.clarification_question);
+        }
       }
 
       return {
@@ -459,7 +583,15 @@ ${explanationText}`;
         trace_id: traceId,
       });
 
-      const mockResult = this.generateMockResponse(question, context);
+      const mockResult = this.generateMockResponse(question, conversationId);
+      if (mockResult && !mockResult.needs_clarification && mockResult.concept_id) {
+        contextManager.updateContext(conversationId, {
+          active_concept: mockResult.concept_id
+        });
+        contextManager.addTurn(conversationId, question, mockResult.explanation);
+      } else if (mockResult && mockResult.needs_clarification) {
+        contextManager.addTurn(conversationId, question, mockResult.clarification_question);
+      }
       return {
         success: true,
         is_mocked: true,
@@ -606,79 +738,46 @@ ${explanationText}`;
   }
 
   /**
-   * Resolves or initializes session memory.
+   * Evaluates user question against concept tags and returns high-fidelity fallback objects in mock mode.
    */
-  private getOrCreateContext(conversationId: string): ConversationContext {
-    if (!GraniteService.conversationMemory[conversationId]) {
-      GraniteService.conversationMemory[conversationId] = {
-        conversation_id: conversationId,
-        last_questions: [],
-        last_concepts: [],
-        user_level: ComplexityLevel.BEGINNER,
-      };
-    }
-    return GraniteService.conversationMemory[conversationId];
-  }
-
-  /**
-   * Evaluates user question against concept tags and returns high-fidelity fallback objects.
-   */
-  private generateMockResponse(question: string, context: ConversationContext): any {
+  private generateMockResponse(question: string, conversationId: string): any {
     const q = question.toLowerCase();
+    const session = contextManager.getOrCreateSessionContext(conversationId);
+    const context = session.context;
 
-    // 1. Resolve matched concept (with typo tolerance and keyword mapping)
-    let matchedConcept = '';
-    if (q.includes('false 9') || q.includes('false9') || q.includes('flase 9') || q.includes('flase9') || q.includes('dropped striker')) {
-      matchedConcept = 'false_9';
-    } else if (q.includes('high press') || q.includes('gegenpress') || q.includes('gegen press') || q.includes('pressing high')) {
-      matchedConcept = 'high_press';
-    } else if (q.includes('pressing trap') || q.includes('press trap') || (q.includes('trap') && q.includes('press'))) {
-      matchedConcept = 'pressing_trap';
-    } else if (q.includes('overload') || q.includes('midfield overload')) {
-      matchedConcept = 'midfield_overload';
-    } else if (q.includes('defensive block') || q.includes('defensiveblock') || q.includes('4-4-2 block') || q.includes('442 block') || q.includes('compact block')) {
-      matchedConcept = 'defensive_block';
-    } else if (q.includes('low block') || q.includes('lowblock') || q.includes('defending deep')) {
-      matchedConcept = 'low_block';
-    } else if (q.includes('counter') || q.includes('transition') || q.includes('counter-attack') || q.includes('counter attack')) {
-      matchedConcept = 'counter_attack_trigger';
-    } else if (q.includes('inverted') || q.includes('winger') || q.includes('cut inside')) {
-      matchedConcept = 'inverted_winger';
-    } else if (q.includes('back three') || q.includes('back 3') || q.includes('wingback') || q.includes('wing-back')) {
-      matchedConcept = 'back_three_wing_back';
-    } else if (q.includes('third man') || q.includes('off-ball run') || q.includes('third-man')) {
-      matchedConcept = 'third_man_run';
-    } else if (q.includes('compactness') || q.includes('compact') || q.includes('lines') || q.includes('vertical distance') || q.includes('pressing lines') || q.includes('defensive distance') || q.includes('line distance') || q.includes('pressing line') || q.includes('team depth')) {
-      matchedConcept = 'compactness_pressing_lines';
-    }
+    // Use ChainEngine to evaluate transition
+    const transitionOutcome = conceptChainEngine.evaluateTransition(question, context);
+    let matchedConcept = transitionOutcome.conceptId;
 
     // Adapt user level based on keyword signals
     if (q.includes('zone 14') || q.includes('half-space') || q.includes('catenaccio')) {
-      context.user_level = ComplexityLevel.ADVANCED;
+      session.user_level = ComplexityLevel.ADVANCED;
     } else if (q.includes('trigger') || q.includes('structure') || q.includes('tactical')) {
-      context.user_level = ComplexityLevel.INTERMEDIATE;
+      session.user_level = ComplexityLevel.INTERMEDIATE;
     }
 
+    // Failsafe: if we couldn't resolve a concept and there's no active concept
     if (!matchedConcept) {
-      // Context-aware fallback: if the user typed a typo or follow-up, use the last discussed concept!
-      if (context.last_concepts.length > 0) {
-        matchedConcept = context.last_concepts[context.last_concepts.length - 1];
-      } else {
-        return {
-          needs_clarification: true,
-          clarification_question: 'Are you asking about pressing high up the pitch (High Press) or defending deep (Low Block)?',
-        };
-      }
+      return {
+        needs_clarification: true,
+        clarification_question: 'Are you asking about pressing high up the pitch (High Press) or defending deep (Low Block)?',
+      };
     }
 
-    // Store concept memory
-    context.last_concepts.push(matchedConcept);
+    // Check if the chain engine triggered a clarification or if it's low confidence
+    const isUnrelated = !q.includes('press') && !q.includes('block') && !q.includes('false') && !q.includes('overload') && !q.includes('third') && !q.includes('back') && !q.includes('compact') && !q.includes('trigger') && !context.active_concept;
+    if (isUnrelated) {
+      return {
+        needs_clarification: true,
+        clarification_question: 'Are you asking about pressing high up the pitch (High Press) or defending deep (Low Block)?',
+      };
+    }
 
-    // 2. Classify Intent
+    // Classify Intent
     let intent: 'overview' | 'origin' | 'defense' | 'examples' | 'prosCons' = 'overview';
     if (q.includes('originate') || q.includes('history') || q.includes('invented') || q.includes('where did') || q.includes('who came up') || q.includes('first time') || q.includes('origins') || q.includes('where does') || q.includes('where deos') || q.includes('creator') || q.includes('invent')) {
       intent = 'origin';
-    } else if (q.includes('defend') || q.includes('stop') || q.includes('counter') || q.includes('prevent') || q.includes('deal with') || q.includes('combat') || q.includes('neutralize') || q.includes('limit')) {
+    } else if (q.includes('defend') || q.includes('stop') || q.includes('counter') || q.includes('prevent') || q.includes('deal with') || q.includes('combat') || q.includes('neutralize') || q.includes('limit') || q.includes('respond')) {
       intent = 'defense';
     } else if (q.includes('player') || q.includes('example') || q.includes('who played') || q.includes('messi') || q.includes('totti') || q.includes('cruyff') || q.includes('firmino') || q.includes('guardiola') || q.includes('klopp') || q.includes('famous') || q.includes('team') || q.includes('match') || q.includes('coach')) {
       intent = 'examples';
@@ -775,7 +874,7 @@ ${explanationText}`;
         origin: 'Traceable to Karl Rappan\'s bolt system, later becoming the Libero/Sweeper systems in Germany and Italy. Modern back-3 was popularized by Antonio Conte at Juventus, Chelsea, and Inter.',
         defense: 'Countered by pressing the wide center-backs, overloading the flanks before the wingbacks can drop back, or occupying the spaces behind the wingbacks.',
         examples: 'Antonio Conte\'s Chelsea (2016/17), Gian Piero Gasperini\'s Atalanta, Thomas Tuchel\'s Chelsea (2021).',
-        prosCons: 'Pros: Defensive solidity, structural flexibility in possession, high-pressing fullbacks. Cons: Vulnerable to quick diagonal switches, high physical demands on wingbacks, can become a defensive back-5 if pinned down.'
+        prosCons: 'Pros: Defensive solidity, structural flexibility in possession, high-pressing fullbacks. Cons: Vulnerability to quick diagonal switches, high physical demands on wingbacks, can become a defensive back-5 if pinned down.'
       },
       third_man_run: {
         name: 'Off-Ball Movement & Third Man Run',
@@ -800,7 +899,16 @@ ${explanationText}`;
     };
 
     const concept = mockDatabase[matchedConcept];
-    const explanation = concept[intent] || concept.overview;
+    let explanation = concept[intent] || concept.overview;
+
+    // Special behavior override for Target Experience Chain 1:
+    // If we transition to midfield overload or third man run, explain that
+    if (transitionOutcome.intent === 'midfield_impact') {
+      explanation = `By dropping deep, the False 9 draws the opposing center-back out, creating a midfield overload. This numerical superiority (e.g. 4v3) allows extra passing lanes and lets the team dominate central spaces, causing defensive confusion.`;
+    } else if (transitionOutcome.intent === 'attacking_progression') {
+      explanation = `The numerical advantage in midfield facilitates Third Man Runs. When Player A passes to Player B (the False 9), the defenders shift focus, allowing Player C to run off-the-ball into the vacated space behind to receive a quick combination pass.`;
+    }
+
     const suggestions = this.getSuggestionsForConcept(matchedConcept, intent);
 
     return {
@@ -808,7 +916,7 @@ ${explanationText}`;
       concept_id: matchedConcept,
       concept_name: concept.name,
       complexity: concept.complexity,
-      user_level: context.user_level,
+      user_level: session.user_level,
       animation_module: concept.module,
       explanation: explanation,
       follow_up_suggestions: suggestions,

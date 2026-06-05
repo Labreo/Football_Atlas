@@ -98,6 +98,26 @@ export class AnalyticsTracker {
     });
   }
 
+  public trackConceptChainStarted(conceptId: string, data: any = {}): void {
+    this.track('concept_chain_started', { concept_id: conceptId, ...data });
+  }
+
+  public trackConceptTransition(fromConceptId: string, toConceptId: string, data: any = {}): void {
+    this.track('concept_transition', { from_concept_id: fromConceptId, to_concept_id: toConceptId, ...data });
+  }
+
+  public trackContextRecovered(conceptId: string, data: any = {}): void {
+    this.track('context_recovered', { concept_id: conceptId, ...data });
+  }
+
+  public trackClarificationRequested(question: string, data: any = {}): void {
+    this.track('clarification_requested', { question, ...data });
+  }
+
+  public trackConversationCompleted(data: any = {}): void {
+    this.track('conversation_completed', data);
+  }
+
   // ──────────────── Session Buffer ────────────────
 
   /**

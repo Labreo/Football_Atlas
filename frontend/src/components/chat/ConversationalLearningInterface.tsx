@@ -24,6 +24,7 @@ const ConversationalLearningInterface: React.FC = () => {
     detectedLevel,
     followUpSuggestions,
     triggerCameraReset,
+    tacticalThread,
   } = useTacticalStore();
 
   const orchestratorStore = learningStateStore((state) => state.telemetry);
@@ -95,6 +96,31 @@ const ConversationalLearningInterface: React.FC = () => {
             Interactive Tactical Board
           </span>
         </div>
+
+        {/* Sleek Glassmorphism Tactical Thread Flow Tracker */}
+        {tacticalThread && tacticalThread.length > 0 && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-[#121826]/80 backdrop-blur-md border border-[#23324C]/60 px-4 py-2 rounded-full shadow-2xl max-w-[80%] overflow-x-auto scrollbar-thin">
+            <span className="text-[9px] uppercase font-extrabold text-[#10B981] tracking-widest font-mono border-r border-[#23324C]/60 pr-2">
+              Thread
+            </span>
+            <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap">
+              {tacticalThread.map((step, idx) => (
+                <React.Fragment key={idx}>
+                  {idx > 0 && (
+                    <svg className="w-2.5 h-2.5 text-slate-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                  <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${
+                    idx === tacticalThread.length - 1 ? 'text-slate-100 font-extrabold' : 'text-slate-500'
+                  }`}>
+                    {step}
+                  </span>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Top-Right Tools Trigger (Debug & Camera Controls) */}
         <div className="absolute top-4 right-6 z-20 flex items-center gap-2">

@@ -32,3 +32,14 @@ export interface TutorResponse {
   follow_up_suggestions: string[];
   confidence_score?: number;
 }
+
+export interface ConversationContext {
+  active_concept: string | null;
+  previous_concepts: string[];
+  active_match: string | null;
+  active_breakdown: string | null;
+  active_example: string | null;
+  conversation_summary: string;
+  user_intent: string | null;
+  conversation_depth: number;
+}

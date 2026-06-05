@@ -127,12 +127,36 @@ export class LearningOrchestrator {
 
       if (conceptId) {
         conversationContextManager.addTurn(question, response.explanation, conceptId);
+        this.updateTacticalThread(conceptId, question);
+
+        // Core Analytics Event tracking
+        const currentActiveConcept = useTacticalStore.getState().currentConcept;
+        const fromConceptId = currentActiveConcept?.concept_id || null;
+
+        if (fromConceptId && fromConceptId !== conceptId) {
+          // Concept transition
+          analyticsTracker.trackConceptTransition(fromConceptId, conceptId);
+        } else if (!fromConceptId) {
+          // Concept chain started
+          analyticsTracker.trackConceptChainStarted(conceptId);
+        } else if (fromConceptId === conceptId) {
+          // Context recovered from implicit pronoun check
+          const isImplicit = /\b(that|this|it|they|them|these|next|then)\b/i.test(question) || 
+                             /how would|what happens|why does|what problems/i.test(question);
+          if (isImplicit) {
+            analyticsTracker.trackContextRecovered(conceptId);
+          }
+        }
+
+        const depth = useTacticalStore.getState().conversation.length / 2;
+        if (depth >= 10) {
+          analyticsTracker.trackConversationCompleted();
+        }
 
         if (confidence >= store.config.autoPlayThreshold) {
           // Check if the same concept is already active — if so, this is a follow-up
           // and we should NOT reset the running animation.
-          const currentActiveConcept2 = useTacticalStore.getState().currentConcept;
-          const isSameConcept = currentActiveConcept2?.concept_id === conceptId;
+          const isSameConcept = fromConceptId === conceptId;
 
           if (isSameConcept && this.activeModuleInstance) {
             // Follow-up on the same concept: update explanation only, keep animation running
@@ -141,6 +165,15 @@ export class LearningOrchestrator {
             useLearningUIStore.getState().setCurrentExplanation(response.explanation);
             useLearningUIStore.getState().setLoading(false);
             store.setCurrentConcept(concept);
+
+            // Update branch selection if they asked about defender choices
+            if (this.activeModuleInstance.setBranch) {
+              const q = question.toLowerCase();
+              if (q.includes('defend') || q.includes('respond') || q.includes('counter') || q.includes('reaction')) {
+                const branch = (q.includes('hold') || q.includes('free')) ? 'B' : 'A';
+                this.activeModuleInstance.setBranch(branch);
+              }
+            }
           } else if (this.engine) {
             // Different concept — load the new animation
             await this.loadConceptAnimation(conceptId);
@@ -164,6 +197,7 @@ export class LearningOrchestrator {
           }
         } else if (confidence >= store.config.clarificationThreshold) {
           // Ask for clarification
+          analyticsTracker.trackClarificationRequested(question);
           store.setTelemetry({ sessionState: 'awaiting_clarification' });
           useTacticalStore.setState((state) => ({
             conversation: [
@@ -176,11 +210,13 @@ export class LearningOrchestrator {
           }));
         } else {
           // Fallback state below 0.50
+          analyticsTracker.trackClarificationRequested(question);
           this.handleLowConfidence();
         }
       } else {
         // No concept resolved
         conversationContextManager.addTurn(question, response.explanation, null);
+        analyticsTracker.trackClarificationRequested(question);
         this.handleUnknownConcept();
       }
 
@@ -260,6 +296,15 @@ export class LearningOrchestrator {
       // 3. Load via registry
       const instance = animationModuleRegistry.loadModule(resolvedModule, this.engine);
       this.activeModuleInstance = instance;
+
+      // Set initial branch if applicable based on the question text
+      if (instance.setBranch) {
+        const q = store.currentQuestion?.toLowerCase() || '';
+        if (q.includes('defend') || q.includes('respond') || q.includes('counter') || q.includes('reaction')) {
+          const branch = (q.includes('hold') || q.includes('free')) ? 'B' : 'A';
+          instance.setBranch(branch);
+        }
+      }
 
       // 4. Set listeners
       instance.onPhaseChange = (index: number, name: string) => {
@@ -371,6 +416,55 @@ export class LearningOrchestrator {
     return this.activeModuleInstance?.getPhases() || [];
   }
 
+  /**
+   * Helper to build/append to the tactical thread
+   */
+  private updateTacticalThread(conceptId: string, question: string): void {
+    const globalStore = useTacticalStore.getState();
+    const currentThread = [...globalStore.tacticalThread];
+    const q = question.toLowerCase();
+
+    // Mapping of concepts to user-friendly names
+    const conceptNames: Record<string, string> = {
+      false_9: 'False 9',
+      midfield_overload: 'Midfield Overload',
+      third_man_run: 'Third Man Run',
+      high_press: 'High Press',
+      pressing_trap: 'Pressing Trap',
+      compactness_pressing_lines: 'Compactness',
+      defensive_block: 'Defensive Block',
+      counter_attack_trigger: 'Counter Attack Trigger',
+      back_three_wing_back: 'Back Three Recovery',
+      inverted_winger: 'Inverted Winger'
+    };
+
+    const friendlyName = conceptNames[conceptId] || conceptId.replace(/_/g, ' ');
+
+    if (currentThread.length === 0) {
+      currentThread.push(friendlyName);
+    } else {
+      const lastItem = currentThread[currentThread.length - 1];
+
+      // Check if we are doing a defensive response follow-up on False 9
+      if (conceptId === 'false_9' && /\b(defend|defender|defensive|respond|response|reaction|counter|follow|hold|choice|choose)\b/i.test(q)) {
+        if (!currentThread.includes('Defensive Response')) {
+          const f9Idx = currentThread.indexOf('False 9');
+          if (f9Idx !== -1) {
+            currentThread.splice(f9Idx + 1, 0, 'Defensive Response');
+          } else {
+            currentThread.push('Defensive Response');
+          }
+        }
+      } else {
+        if (lastItem !== friendlyName && !currentThread.includes(friendlyName)) {
+          currentThread.push(friendlyName);
+        }
+      }
+    }
+
+    useTacticalStore.setState({ tacticalThread: currentThread });
+  }
+
   public destroy(): void {
     // Only tear down the active module instance — do NOT clear the registry.
     // The registry holds static module class registrations that must survive
@@ -387,6 +481,7 @@ export class LearningOrchestrator {
     conversationContextManager.clear();
     learningStateStore.getState().reset();
     useLearningUIStore.getState().resetUIStore();
+    useTacticalStore.setState({ tacticalThread: [] });
   }
 }
 

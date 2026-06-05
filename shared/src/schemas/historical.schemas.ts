@@ -41,3 +41,30 @@ export const HistoricalScenarioDefinitionSchema = z.object({
     event: z.string().min(3).max(200)
   }))
 });
+
+export const BreakdownMomentSchema = z.object({
+  moment_id: z.string().min(3),
+  timestamp: z.number().min(0).max(1),
+  title: z.string().min(3),
+  description: z.string().min(5),
+  camera_view: z.enum(['overview', 'player_focus', 'tactical_shape', 'passing_lane', 'space_creation']),
+  animation_sequence: z.string(),
+  granite_context: z.string(),
+  annotations: z.array(z.object({
+    type: z.enum(['arrow', 'passing_lane', 'player_highlight', 'space_highlight', 'shape_overlay', 'note']),
+    target: z.string(),
+    color: z.string().optional()
+  }))
+});
+
+export const HistoricalBreakdownSchema = z.object({
+  breakdown_id: z.string().min(3),
+  example_id: z.string().min(3),
+  concept_id: z.string().min(3),
+  title: z.string().min(3),
+  description: z.string().min(10),
+  timeline: z.array(z.number()),
+  key_moments: z.array(BreakdownMomentSchema),
+  commentary: z.array(z.string()),
+  learning_goals: z.array(z.string())
+});

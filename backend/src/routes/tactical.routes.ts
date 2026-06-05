@@ -3,6 +3,7 @@ import { tacticalRegistry, TutorResponse, ComplexityLevel } from '@football-atla
 import { GraniteService } from '../services/granite.service';
 import { historicalExampleService } from '../services/historicalExample.service';
 import { historicalExampleRepository } from '../repositories/historicalExample.repository';
+import { historicalBreakdownService } from '../services/historicalBreakdown.service';
 
 const router = Router();
 const graniteService = new GraniteService();
@@ -117,6 +118,19 @@ router.get('/historical/search', (req: Request, res: Response) => {
   }
 
   return res.json(historicalExampleRepository.getAll());
+});
+
+/**
+ * GET /api/tactical/historical/breakdowns/:exampleId
+ * Returns the interactive tactical breakdown for a historical match example.
+ */
+router.get('/historical/breakdowns/:exampleId', (req: Request, res: Response) => {
+  const exampleId = req.params.exampleId;
+  const breakdown = historicalBreakdownService.getBreakdownByExampleId(exampleId);
+  if (!breakdown) {
+    return res.status(404).json({ error: 'Not Found', message: 'No tactical breakdown found for this historical example.' });
+  }
+  return res.json(breakdown);
 });
 
 export default router;

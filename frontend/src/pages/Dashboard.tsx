@@ -6,13 +6,17 @@ import { learningStateStore } from '../tacticalOrchestrator/store';
 import ConversationalLearningInterface from '../components/chat/ConversationalLearningInterface';
 import PlaybookInterface from '../components/playbook/PlaybookInterface';
 import { tacticalApi } from '../apiClients/tacticalApi';
+import { useBreakdownStore } from '../stores/useBreakdownStore';
+import { ConceptRouter } from '../tacticalOrchestrator/router';
+import { JourneyDashboard } from '../components/journey/JourneyDashboard';
+import { useLearningJourneyStore } from '../stores/useLearningJourneyStore';
 
 // Lazy-load developer tools (only rendered in dev mode Settings tab)
 const ConceptExplorer = lazy(() => import('../components/dev/ConceptExplorer'));
 const PrimitiveExplorer = lazy(() => import('../components/dev/PrimitiveExplorer'));
 const HistoricalExampleExplorer = lazy(() => import('../components/dev/HistoricalExampleExplorer'));
 
-type Tab = 'playbook' | 'classroom' | 'explore' | 'history' | 'settings';
+type Tab = 'playbook' | 'classroom' | 'explore' | 'journey' | 'settings';
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('playbook');
@@ -23,9 +27,62 @@ const Dashboard: React.FC = () => {
     fetchConcepts();
   }, [fetchConcepts]);
 
+  const selectConceptGlobally = async (conceptId: string) => {
+    useLearningUIStore.getState().setLoading(true);
+    useLearningUIStore.getState().setError(null);
+    try {
+      const concept = await tacticalApi.getConceptById(conceptId);
+      useLearningUIStore.getState().setCurrentConcept(concept);
+      useLearningUIStore.getState().setCurrentExplanation(concept.core_explanation);
+      useLearningUIStore.getState().setPhaseInfo(1, 'Initial Shape');
+      useLearningUIStore.getState().setPhaseAnnotation('');
+      useLearningUIStore.getState().clearFollowUpChain();
+
+      const resolvedModule = ConceptRouter.resolveAnimationModule(conceptId);
+      useTacticalStore.setState({ 
+        currentConcept: concept, 
+        playState: resolvedModule ? 'playing' : 'stopped' 
+      });
+      learningStateStore.getState().setCurrentConcept(concept);
+      learningStateStore.getState().setCurrentAnimation(resolvedModule);
+      learningStateStore.getState().setAnimationStatus(resolvedModule ? 'playing' : 'stopped');
+      
+      if (resolvedModule) {
+        useLearningUIStore.getState().setAnimationState('playing');
+      } else {
+        useLearningUIStore.getState().setAnimationState('stopped');
+      }
+
+      // Track concept view on journey store
+      await useLearningJourneyStore.getState().trackConceptView(conceptId);
+    } catch (err: any) {
+      useLearningUIStore.getState().setError(`Failed to load concept: ${err.message}`);
+    } finally {
+      useLearningUIStore.getState().setLoading(false);
+    }
+  };
+
+  const launchBreakdownGlobally = async (exampleId: string, conceptId: string) => {
+    // 1. Select the concept first
+    await selectConceptGlobally(conceptId);
+    // 2. Fetch and start breakdown
+    try {
+      const examples = await tacticalApi.searchHistoricalExamples({});
+      const example = examples.find(e => e.example_id === exampleId);
+      if (example) {
+        await useBreakdownStore.getState().startBreakdown(example);
+      }
+    } catch (_) {}
+  };
+
   // Reset the board to a clean default state whenever the user switches tabs.
   // This prevents stale animations from carrying over between Playbook ↔ Classroom.
   useEffect(() => {
+    // Bypass clear if we are navigating to playbook with a concept already selected
+    if (activeTab === 'playbook' && useTacticalStore.getState().currentConcept) {
+      return;
+    }
+
     // Clear global concept selection
     useTacticalStore.setState({
       currentConcept: null,
@@ -108,20 +165,20 @@ const Dashboard: React.FC = () => {
             <span className="text-[9px] font-medium tracking-wide">Explore</span>
           </button>
 
-          {/* History Tab */}
+          {/* Journey Tab */}
           <button
-            onClick={() => setActiveTab('history')}
+            onClick={() => setActiveTab('journey')}
             className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-1 group transition-all duration-200 ${
-              activeTab === 'history'
+              activeTab === 'journey'
                 ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 shadow-md shadow-[#10B981]/10'
                 : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40'
             }`}
-            title="Tactical History"
+            title="My Journey"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
-            <span className="text-[9px] font-medium tracking-wide">History</span>
+            <span className="text-[9px] font-medium tracking-wide">Journey</span>
           </button>
 
         </div>
@@ -163,8 +220,18 @@ const Dashboard: React.FC = () => {
           <ExploreTab />
         )}
 
-        {activeTab === 'history' && (
-          <HistoryTab />
+        {activeTab === 'journey' && (
+          <JourneyDashboard
+            onNavigateToConcept={(conceptId) => {
+              selectConceptGlobally(conceptId);
+              setActiveTab('playbook');
+            }}
+            onNavigateToBreakdown={(exampleId, conceptId) => {
+              launchBreakdownGlobally(exampleId, conceptId);
+              setActiveTab('playbook');
+            }}
+            onNavigateToTab={(tab) => setActiveTab(tab)}
+          />
         )}
 
         {activeTab === 'settings' && (
@@ -504,53 +571,7 @@ const ExploreTab: React.FC = () => {
 // ────────────────────────────────────────────────────────────
 // HISTORICAL ACTIVITY LOG FEED COMPONENT
 // ────────────────────────────────────────────────────────────
-const HistoryTab: React.FC = () => {
-  return (
-    <div className="flex-1 w-full p-8 overflow-y-auto max-w-4xl mx-auto flex flex-col gap-6 bg-[#0A0D14] h-full">
-      <div>
-        <h2 className="font-display font-extrabold text-2xl tracking-wider text-slate-100 uppercase">
-          Tactical History Logs
-        </h2>
-        <p className="text-xs text-slate-400 leading-relaxed mt-1 font-display">
-          Trace previous AI tutor queries and document ingestion pipeline runs.
-        </p>
-      </div>
-
-      <div className="bg-[#121826]/70 border border-[#23324C]/60 rounded-2xl p-6 shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-[#23324C]/60 pb-3">
-          <span className="text-xs font-display font-bold uppercase tracking-wider text-[#10B981]">Recent Activity</span>
-          <span className="text-[10px] font-mono text-slate-500">Auto-refreshing</span>
-        </div>
-
-        <div className="space-y-3 font-mono text-xs text-slate-300">
-          <div className="flex items-start gap-4 p-3 rounded-xl bg-[#182235]/40 border border-[#23324C]/20">
-            <span className="text-emerald-500 font-bold shrink-0">[13:20:17]</span>
-            <div className="flex-1">
-              <div className="font-bold text-slate-200">Document Ingested successfully</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">File: original_Leitfaden_Torwartspiel.md | Chunks: 317 | Lang: de</div>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4 p-3 rounded-xl bg-[#182235]/40 border border-[#23324C]/20">
-            <span className="text-emerald-500 font-bold shrink-0">[13:19:37]</span>
-            <div className="flex-1">
-              <div className="font-bold text-slate-200">Document Ingested successfully</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">File: tactical_analysis_guardiola.md | Chunks: 4 | Lang: en</div>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4 p-3 rounded-xl bg-[#182235]/40 border border-[#23324C]/20">
-            <span className="text-indigo-400 font-bold shrink-0">[13:18:44]</span>
-            <div className="flex-1">
-              <div className="font-bold text-slate-200">Tutor API POST Query Successful</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">Q: "Why is a False 9 hard to defend?" | Concept detected: false_9 | Mode: live</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+// HistoryTab has been removed and replaced by JourneyDashboard
 
 // ────────────────────────────────────────────────────────────
 // SYSTEM CONFIGURATIONS SETTINGS TAB COMPONENT

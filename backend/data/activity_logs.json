@@ -1,0 +1,18 @@
+{
+  "local-user": [
+    {
+      "id": "wgxwjm6",
+      "userId": "local-user",
+      "activity_type": "path_started",
+      "path_id": "pressing_systems",
+      "timestamp": "2026-06-04T05:58:00.682Z"
+    },
+    {
+      "id": "xz38lep",
+      "userId": "local-user",
+      "activity_type": "path_started",
+      "path_id": "beginner_football_iq",
+      "timestamp": "2026-06-04T05:57:52.476Z"
+    }
+  ]
+}

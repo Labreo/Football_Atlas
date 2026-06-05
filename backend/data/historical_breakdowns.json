@@ -1,0 +1,264 @@
+[
+  {
+    "breakdown_id": "breakdown_barca_2009",
+    "example_id": "barcelona_2009_f9",
+    "concept_id": "false_9",
+    "title": "Messi's False 9 Masterclass vs Manchester United",
+    "description": "Pep Guardiola's tactical masterstroke in the 2009 Champions League Final. Lionel Messi drops deep to overload the midfield, leaving Ferdinand and Vidic out of position.",
+    "timeline": [0.10, 0.30, 0.50, 0.70, 0.90],
+    "key_moments": [
+      {
+        "moment_id": "barca_2009_m1",
+        "timestamp": 0.10,
+        "title": "Starting Setup",
+        "description": "Messi starts centrally on the striker line, with Eto'o and Henry wide. United's defensive shape is compact and structured.",
+        "camera_view": "overview",
+        "animation_sequence": "initial_state",
+        "granite_context": "Messi occupies a standard center-forward position initially, pinning United's defense.",
+        "annotations": []
+      },
+      {
+        "moment_id": "barca_2009_m2",
+        "timestamp": 0.30,
+        "title": "Messi Drops Deep",
+        "description": "Messi withdraws into midfield, leaving Ferdinand and Vidic with no striker to mark.",
+        "camera_view": "player_focus",
+        "animation_sequence": "f9_dropping",
+        "granite_context": "Messi leaves the striker line. Ferdinand now faces a decision: follow him or maintain shape.",
+        "annotations": [
+          {
+            "type": "arrow",
+            "target": "arrow_f9_drop",
+            "color": "#39FF14"
+          },
+          {
+            "type": "player_highlight",
+            "target": "att_false9",
+            "color": "#39FF14"
+          }
+        ]
+      },
+      {
+        "moment_id": "barca_2009_m3",
+        "timestamp": 0.50,
+        "title": "Ferdinand's Dilemma",
+        "description": "As Messi drops, Ferdinand is drawn out of the defensive line to close him down, leaving a massive gap behind.",
+        "camera_view": "tactical_shape",
+        "animation_sequence": "defender_follows",
+        "granite_context": "Ferdinand follows Messi into midfield. This breaks United's defensive compactness.",
+        "annotations": [
+          {
+            "type": "arrow",
+            "target": "arrow_cb_follow",
+            "color": "#DC2626"
+          },
+          {
+            "type": "shape_overlay",
+            "target": "overlay_defensive_gap",
+            "color": "#FF0055"
+          }
+        ]
+      },
+      {
+        "moment_id": "barca_2009_m4",
+        "timestamp": 0.70,
+        "title": "Space Exploited",
+        "description": "Eto'o makes a diagonal run into the gap created by Ferdinand's movement.",
+        "camera_view": "space_creation",
+        "animation_sequence": "space_opened",
+        "granite_context": "With Ferdinand drawn out, a huge space opens in the center of United's defense. Eto'o moves into this void.",
+        "annotations": [
+          {
+            "type": "space_highlight",
+            "target": "overlay_vacated_space",
+            "color": "#39FF14"
+          },
+          {
+            "type": "arrow",
+            "target": "arrow_winger_run",
+            "color": "#39FF14"
+          }
+        ]
+      },
+      {
+        "moment_id": "barca_2009_m5",
+        "timestamp": 0.90,
+        "title": "The Through Ball",
+        "description": "Messi slots a perfect pass through to Eto'o running behind the defensive line.",
+        "camera_view": "passing_lane",
+        "animation_sequence": "final_pass",
+        "granite_context": "Messi finds Eto'o with a precise through ball, completing the False 9 exploitation.",
+        "annotations": [
+          {
+            "type": "passing_lane",
+            "target": "pass_lane_2",
+            "color": "#00F3FF"
+          }
+        ]
+      }
+    ],
+    "commentary": [
+      "Barcelona start in a 4-3-3 with Messi as the nominal central forward.",
+      "Messi drops deep, overloading Carrick and Anderson in midfield.",
+      "Ferdinand steps up to follow Messi, leaving a massive gap behind him.",
+      "Eto'o makes an inside run to exploit the space vacated by Ferdinand.",
+      "Messi plays Eto'o through on goal, dismantling United's defense."
+    ],
+    "learning_goals": [
+      "Understand how a False 9 draws central defenders out of shape.",
+      "Analyze numerical superiority created in the midfield zone.",
+      "Observe third-man runs exploiting vacated defensive spaces."
+    ]
+  },
+  {
+    "breakdown_id": "breakdown_spain_2012",
+    "example_id": "spain_2012_f9",
+    "concept_id": "false_9",
+    "title": "Strikerless Spain Overloads Italy",
+    "description": "Del Bosque deploys Cesc Fàbregas as a False 9, overloading Pirlo and De Rossi to control the Euro 2012 Final.",
+    "timeline": [0.20, 0.55, 0.85],
+    "key_moments": [
+      {
+        "moment_id": "spain_2012_m1",
+        "timestamp": 0.20,
+        "title": "Fàbregas Drops Centrally",
+        "description": "Fàbregas moves off the defensive line to create a 4v3 overload in central midfield.",
+        "camera_view": "overview",
+        "animation_sequence": "initial_overload",
+        "granite_context": "Fàbregas drops deep. Chiellini and Bonucci decide to hold their positions rather than follow.",
+        "annotations": [
+          {
+            "type": "player_highlight",
+            "target": "att_false9",
+            "color": "#39FF14"
+          }
+        ]
+      },
+      {
+        "moment_id": "spain_2012_m2",
+        "timestamp": 0.55,
+        "title": "Midfield Superiority",
+        "description": "With the Italian defenders holding deep, Spain easily circulates the ball through Fàbregas.",
+        "camera_view": "tactical_shape",
+        "animation_sequence": "midfield_circulation",
+        "granite_context": "Italy's midfielders Pirlo and De Rossi are overloaded. Spain dictates the tempo between the lines.",
+        "annotations": [
+          {
+            "type": "space_highlight",
+            "target": "overlay_between_lines",
+            "color": "#39FF14"
+          }
+        ]
+      },
+      {
+        "moment_id": "spain_2012_m3",
+        "timestamp": 0.85,
+        "title": "Exploitative Run",
+        "description": "Silva exploits the space between the lines to receive and progress the attack.",
+        "camera_view": "passing_lane",
+        "animation_sequence": "Silva_run",
+        "granite_context": "Fàbregas turns and finds David Silva making a diagonal run behind.",
+        "annotations": [
+          {
+            "type": "passing_lane",
+            "target": "pass_lane_2",
+            "color": "#00F3FF"
+          }
+        ]
+      }
+    ],
+    "commentary": [
+      "Fàbregas starts centrally but drops off, leaving Italy's center-backs with no one to mark.",
+      "Spain overload Italy's midfield trio, gaining complete control in central areas.",
+      "Fàbregas turns in space and plays a key pass to David Silva to progress the attack."
+    ],
+    "learning_goals": [
+      "Understand how a False 9 links midfield play in a strikerless system.",
+      "Observe midfield overloading against a compact defensive structure.",
+      "Analyze how holding center-backs are bypassed by midfield runners."
+    ]
+  },
+  {
+    "breakdown_id": "breakdown_liverpool_2018",
+    "example_id": "liverpool_2018_hp",
+    "concept_id": "high_press",
+    "title": "Liverpool's Gegenpressing Trap vs Man City",
+    "description": "Jürgen Klopp's intense high press traps City's build-up, forcing high-risk lateral passes and creating quick transition goals.",
+    "timeline": [0.15, 0.45, 0.80],
+    "key_moments": [
+      {
+        "moment_id": "lfc_2018_m1",
+        "timestamp": 0.15,
+        "title": "Press Triggered",
+        "description": "Firmino aggressively presses Otamendi as the ball is passed to City's left center-back.",
+        "camera_view": "player_focus",
+        "animation_sequence": "firmino_press",
+        "granite_context": "Firmino triggers the press on Otamendi, steering the play toward the sideline.",
+        "annotations": [
+          {
+            "type": "arrow",
+            "target": "blue_cf",
+            "color": "#EAB308"
+          },
+          {
+            "type": "space_highlight",
+            "target": "overlay_trigger_area",
+            "color": "#EAB308"
+          }
+        ]
+      },
+      {
+        "moment_id": "lfc_2018_m2",
+        "timestamp": 0.45,
+        "title": "Lanes Blocked",
+        "description": "Salah and Mané use their cover shadows to block vertical passes to Fernandinho, forcing a lateral pass.",
+        "camera_view": "passing_lane",
+        "animation_sequence": "lanes_blocked",
+        "granite_context": "Salah and Mané block the passing lanes. Otamendi faces a lateral passing dilemma.",
+        "annotations": [
+          {
+            "type": "passing_lane",
+            "target": "arrow_blocked_lane_dm",
+            "color": "#EF4444"
+          },
+          {
+            "type": "passing_lane",
+            "target": "arrow_blocked_lane_rcb",
+            "color": "#EF4444"
+          }
+        ]
+      },
+      {
+        "moment_id": "lfc_2018_m3",
+        "timestamp": 0.80,
+        "title": "Intercept and Exploit",
+        "description": "Salah intercepts the panicked lateral pass and immediately sets up Firmino for a shot.",
+        "camera_view": "space_creation",
+        "animation_sequence": "turnover_shot",
+        "granite_context": "Salah intercepts the pass in the final third and plays it through to Firmino for a goal.",
+        "annotations": [
+          {
+            "type": "player_highlight",
+            "target": "blue_cm_r",
+            "color": "#39FF14"
+          },
+          {
+            "type": "arrow",
+            "target": "arrow_shot_vector",
+            "color": "#EAB308"
+          }
+        ]
+      }
+    ],
+    "commentary": [
+      "Firmino triggers the press, forcing Otamendi to play to the left back.",
+      "Salah and Mané squeeze the space, blocking all vertical passing options.",
+      "The trapped defender makes a high-risk pass which Salah intercepts to score."
+    ],
+    "learning_goals": [
+      "Analyze how a forward line triggers a coordinated press.",
+      "Understand how cover shadows block vertical escape passing lanes.",
+      "Observe the transition from winning the ball to a direct shot on goal."
+    ]
+  }
+]

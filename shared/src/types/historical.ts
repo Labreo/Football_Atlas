@@ -33,3 +33,30 @@ export interface HistoricalScenarioDefinition {
     event: string;
   }>;
 }
+
+export interface BreakdownMoment {
+  moment_id: string;
+  timestamp: number;
+  title: string;
+  description: string;
+  camera_view: 'overview' | 'player_focus' | 'tactical_shape' | 'passing_lane' | 'space_creation';
+  animation_sequence: string;
+  granite_context: string;
+  annotations: Array<{
+    type: 'arrow' | 'passing_lane' | 'player_highlight' | 'space_highlight' | 'shape_overlay' | 'note';
+    target: string;
+    color?: string;
+  }>;
+}
+
+export interface HistoricalBreakdown {
+  breakdown_id: string;
+  example_id: string;
+  concept_id: string;
+  title: string;
+  description: string;
+  timeline: number[];
+  key_moments: BreakdownMoment[];
+  commentary: string[];
+  learning_goals: string[];
+}

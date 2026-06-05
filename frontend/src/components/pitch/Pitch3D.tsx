@@ -6,10 +6,12 @@ import { animationRegistry } from '../../tacticalModules';
 import { DebugTools } from '../../tacticalEngine/components/DebugTools';
 import { learningOrchestrator } from '../../tacticalOrchestrator/orchestrator';
 import { animationModuleRegistry } from '../../tacticalOrchestrator/registry';
+import { useBreakdownStore } from '../../stores/useBreakdownStore';
 
 
 const InteractivePitchPlayer: React.FC = () => {
   const { playState, playSpeed, overlays, currentConcept } = useTacticalStore();
+  const { currentBreakdown } = useBreakdownStore();
 
   const [moduleInstance, setModuleInstance] = useState<any | null>(null);
 
@@ -49,7 +51,7 @@ const InteractivePitchPlayer: React.FC = () => {
 
   // Synchronize playback timeline controls from Zustand store to our Engine
   useEffect(() => {
-    if (!engine || !moduleInstance) return;
+    if (!engine || !moduleInstance || currentBreakdown) return;
 
     if (playState === 'playing') {
       engine.play();
@@ -59,7 +61,7 @@ const InteractivePitchPlayer: React.FC = () => {
       engine.reset();
       moduleInstance.reset();
     }
-  }, [playState, engine, moduleInstance]);
+  }, [playState, engine, moduleInstance, currentBreakdown]);
 
   // Synchronize speed rates
   useEffect(() => {

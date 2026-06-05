@@ -6,6 +6,7 @@ import healthRoutes from './routes/health.routes';
 import graniteRoutes from './routes/granite.routes';
 import documentRoutes from './routes/document.routes';
 import tacticalRoutes from './routes/tactical.routes';
+import learningJourneyRoutes from './routes/learningJourney.routes';
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(requestLogger);
 // Mount routing boundaries
 app.use('/health', healthRoutes);
 app.use('/api/granite', graniteRoutes);
+app.use('/api/tactical/journey', learningJourneyRoutes);
 app.use('/api/tactical', tacticalRoutes);
 app.use('/', documentRoutes);
 

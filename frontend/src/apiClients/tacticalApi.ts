@@ -1,4 +1,4 @@
-import { TacticalConcept, TutorResponse, ConversationTurn, HistoricalExample } from '@football-atlas/shared';
+import { TacticalConcept, TutorResponse, ConversationTurn, HistoricalExample, HistoricalBreakdown } from '@football-atlas/shared';
 
 const API_BASE = 'http://localhost:3001/api/tactical';
 
@@ -79,6 +79,112 @@ export const tacticalApi = {
     if (filters.player) params.append('player', filters.player);
     const res = await fetch(`${API_BASE}/historical/search?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to search historical examples');
+    return res.json();
+  },
+
+  async getHistoricalBreakdown(exampleId: string): Promise<HistoricalBreakdown> {
+    const res = await fetch(`${API_BASE}/historical/breakdowns/${exampleId}`);
+    if (!res.ok) throw new Error(`Failed to fetch historical breakdown for example: ${exampleId}`);
+    return res.json();
+  },
+
+  async getJourneyProfile(): Promise<any> {
+    const res = await fetch(`${API_BASE}/journey/profile`);
+    if (!res.ok) throw new Error('Failed to fetch journey profile');
+    return res.json();
+  },
+
+  async updateJourneyProfile(difficultyLevel: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/journey/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ difficulty_level: difficultyLevel })
+    });
+    if (!res.ok) throw new Error('Failed to update journey profile');
+    return res.json();
+  },
+
+  async startJourneyPath(pathId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/journey/start-path`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pathId })
+    });
+    if (!res.ok) throw new Error('Failed to start learning path');
+    return res.json();
+  },
+
+  async getJourneyMasteries(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/journey/mastery`);
+    if (!res.ok) throw new Error('Failed to fetch concept masteries');
+    return res.json();
+  },
+
+  async trackConceptView(conceptId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/journey/concept/view`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conceptId })
+    });
+    if (!res.ok) throw new Error('Failed to track concept view');
+    return res.json();
+  },
+
+  async completeConcept(conceptId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/journey/concept/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conceptId })
+    });
+    if (!res.ok) throw new Error('Failed to complete concept');
+    return res.json();
+  },
+
+  async completeBreakdown(conceptId: string, exampleId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/journey/breakdown/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conceptId, exampleId })
+    });
+    if (!res.ok) throw new Error('Failed to complete breakdown');
+    return res.json();
+  },
+
+  async trackQuestion(conceptId: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/journey/track-question`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conceptId })
+    });
+    if (!res.ok) throw new Error('Failed to track question');
+    return res.json();
+  },
+
+  async addStudyTime(minutes: number): Promise<any> {
+    const res = await fetch(`${API_BASE}/journey/add-time`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ minutes })
+    });
+    if (!res.ok) throw new Error('Failed to add study time');
+    return res.json();
+  },
+
+  async getJourneyPaths(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/journey/paths`);
+    if (!res.ok) throw new Error('Failed to fetch learning paths');
+    return res.json();
+  },
+
+  async getJourneyRecommendations(): Promise<any> {
+    const res = await fetch(`${API_BASE}/journey/recommendations`);
+    if (!res.ok) throw new Error('Failed to fetch learning recommendations');
+    return res.json();
+  },
+
+  async getJourneyActivities(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/journey/activities`);
+    if (!res.ok) throw new Error('Failed to fetch activities');
     return res.json();
   }
 };

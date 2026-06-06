@@ -11,6 +11,7 @@ import { conceptLoader } from '../conceptRuntime/ConceptLoader';
 import { runtimeValidator } from '../conceptRuntime/RuntimeValidator';
 import { conceptGraph } from '../conceptRuntime/ConceptGraph';
 import { allConceptPackages } from '../conceptPackages';
+import { useBreakdownStore } from '../stores/useBreakdownStore';
 
 export class LearningOrchestrator {
   private engine: TacticalAnimationEngine | null = null;
@@ -95,8 +96,28 @@ export class LearningOrchestrator {
     const startTime = performance.now();
 
     try {
+      // 1. Log query intent analytics before calling API
+      const qLower = question.toLowerCase();
+      if (qLower.includes('breakdown')) {
+        analyticsTracker.track('breakdown_requested', { question });
+      }
+      if (qLower.includes('example') || qLower.includes('real match') || qLower.includes('actual match')) {
+        analyticsTracker.track('historical_example_requested', { question });
+      }
+      if (/messi|robben|salah|firmino|fabregas|totti/i.test(qLower)) {
+        analyticsTracker.track('player_example_requested', { question });
+      }
+      if (/guardiola|klopp|simeone|mourinho/i.test(qLower)) {
+        analyticsTracker.track('coach_example_requested', { question });
+      }
+      if (qLower.includes('match') || qLower.includes('fixture') || qLower.includes('game')) {
+        analyticsTracker.track('match_example_requested', { question });
+      }
+      if (qLower.includes('next') || qLower.includes('chain') || qLower.includes('then what')) {
+        analyticsTracker.track('concept_chain_triggered', { question });
+      }
 
-      // 1. Call Granite AI Tutoring API
+      // 2. Call Granite AI Tutoring API
       const response = await tacticalApi.askTutor(question, globalStore.conversation);
       const endTime = performance.now();
       const latency = Math.round(endTime - startTime);
@@ -106,12 +127,12 @@ export class LearningOrchestrator {
 
       store.setTelemetry({ graniteLatencyMs: latency });
 
-      // 2. Append turn in chat console
+      // 3. Append turn in chat console with actions payload
       useTacticalStore.setState((state) => ({
         conversation: [
           ...state.conversation,
           { role: 'user', content: question },
-          { role: 'assistant', content: response.explanation }
+          { role: 'assistant', content: response.explanation, actions: response.actions }
         ],
         detectedLevel: response.detected_level,
         followUpSuggestions: response.follow_up_suggestions && response.follow_up_suggestions.length > 0
@@ -119,11 +140,31 @@ export class LearningOrchestrator {
           : state.followUpSuggestions
       }));
 
-      // 3. Evaluate Confidence and Concept Routing
+      // 4. Evaluate Confidence and Concept Routing
       const confidence = response.confidence_score || 0.90;
       const conceptId = response.concept_id;
 
       store.setTelemetry({ confidenceScore: confidence, activeConceptId: conceptId || 'none' });
+
+      // 5. Automatic Action Routing under High Confidence (>= 0.85)
+      if (confidence >= 0.85 && response.actions && response.actions.length > 0) {
+        const autoLaunchable = response.actions.find(act => act.type === 'LAUNCH_HISTORICAL_BREAKDOWN');
+        if (autoLaunchable && autoLaunchable.payload.example_id) {
+          analyticsTracker.track('breakdown_launched', { example_id: autoLaunchable.payload.example_id });
+          setTimeout(async () => {
+            try {
+              const examples = await tacticalApi.getHistoricalExamplesByConcept(autoLaunchable.payload.concept_id || '');
+              const targetEx = examples.find(e => e.example_id === autoLaunchable.payload.example_id);
+              if (targetEx) {
+                console.log('[AutoLaunch] Launching historical breakdown simulation:', targetEx.example_id);
+                useBreakdownStore.getState().startBreakdown(targetEx);
+              }
+            } catch (autoErr) {
+              console.error('[AutoLaunch Error] Failed to start breakdown:', autoErr);
+            }
+          }, 400);
+        }
+      }
 
       if (conceptId) {
         conversationContextManager.addTurn(question, response.explanation, conceptId);
@@ -211,13 +252,17 @@ export class LearningOrchestrator {
         } else {
           // Fallback state below 0.50
           analyticsTracker.trackClarificationRequested(question);
-          this.handleLowConfidence();
+          if (!response.explanation) {
+            this.handleLowConfidence();
+          }
         }
       } else {
         // No concept resolved
         conversationContextManager.addTurn(question, response.explanation, null);
         analyticsTracker.trackClarificationRequested(question);
-        this.handleUnknownConcept();
+        if (!response.explanation) {
+          this.handleUnknownConcept();
+        }
       }
 
     } catch (err: any) {

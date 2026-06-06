@@ -2,6 +2,7 @@ import React from 'react';
 import { useTacticalStore } from '../../stores/useTacticalStore';
 import { useLearningUIStore } from '../../stores/LearningUIStore';
 import { learningOrchestrator } from '../../tacticalOrchestrator/orchestrator';
+import { useBreakdownStore } from '../../stores/useBreakdownStore';
 
 const PitchControls: React.FC = () => {
   const { 
@@ -17,15 +18,59 @@ const PitchControls: React.FC = () => {
   } = useTacticalStore();
 
   const { current_phase_index } = useLearningUIStore();
-  const isLoaded = !!currentConcept;
+  
+  const {
+    currentBreakdown,
+    currentMomentIndex,
+    playbackState: breakdownPlayState,
+    setMoment,
+    setPlaybackState: setBreakdownPlayState,
+    stopBreakdown,
+  } = useBreakdownStore();
+
+  const isBreakdownActive = !!currentBreakdown;
+  const isLoaded = isBreakdownActive ? true : !!currentConcept;
 
   const activeModule = learningOrchestrator.getActiveModule();
   const phases = activeModule ? activeModule.getPhases() : [];
 
   return (
     <div className="flex flex-col gap-4 select-none w-full">
-      {/* 1. Stop-Motion Phase Navigation Timeline */}
-      {isLoaded && phases.length > 0 && (
+      {/* 1. Stop-Motion Phase Navigation Timeline / Breakdown Moments */}
+      {isBreakdownActive && currentBreakdown?.key_moments && (
+        <div className="flex items-center gap-2 border-b border-[#1E293B]/45 pb-3">
+          <span className="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-widest shrink-0">
+            Breakdown Moments:
+          </span>
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {currentBreakdown.key_moments.map((moment: any, idx: number) => (
+              <button
+                key={moment.moment_id}
+                onClick={() => {
+                  setMoment(idx);
+                  setBreakdownPlayState('paused'); // Pause to allow stop-motion inspection
+                }}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wide uppercase transition-all border ${
+                  currentMomentIndex === idx
+                    ? 'bg-[#10B981]/25 border-[#10B981] text-[#10B981] shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                    : 'bg-[#111622] border-[#222E45]/60 text-slate-400 hover:text-slate-200 hover:border-slate-500'
+                }`}
+                title={moment.description}
+              >
+                Moment {idx + 1}: {moment.title}
+              </button>
+            ))}
+            <button
+              onClick={() => stopBreakdown()}
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all ml-auto"
+            >
+              ✕ Exit Breakdown
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isBreakdownActive && isLoaded && phases.length > 0 && (
         <div className="flex items-center gap-2 border-b border-[#1E293B]/45 pb-3">
           <span className="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-widest shrink-0">
             Timeline Steps:
@@ -57,19 +102,31 @@ const PitchControls: React.FC = () => {
         {/* Playback Controls & Speed Group */}
         <div className="flex items-center gap-3 bg-[#111622]/85 border border-[#222E45]/40 rounded-xl p-1.5 shrink-0">
           <button
-            onClick={() => setPlayState(playState === 'playing' ? 'paused' : 'playing')}
+            onClick={() => {
+              if (isBreakdownActive) {
+                setBreakdownPlayState(breakdownPlayState === 'playing' ? 'paused' : 'playing');
+              } else {
+                setPlayState(playState === 'playing' ? 'paused' : 'playing');
+              }
+            }}
             disabled={!isLoaded}
             className={`flex items-center justify-center h-8 px-4 rounded-lg font-display text-xs font-bold transition-all ${
-              playState === 'playing'
+              (isBreakdownActive ? breakdownPlayState : playState) === 'playing'
                 ? 'bg-[#00F3FF] text-[#090D14] shadow-[0_0_12px_rgba(0,243,255,0.25)] hover:brightness-110'
                 : 'bg-[#182235] text-slate-200 hover:bg-[#222E45]'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
           >
-            {playState === 'playing' ? '⏸ Pause' : '▶ Play'}
+            {(isBreakdownActive ? breakdownPlayState : playState) === 'playing' ? '⏸ Pause' : '▶ Play'}
           </button>
 
           <button
-            onClick={() => setPlayState('stopped')}
+            onClick={() => {
+              if (isBreakdownActive) {
+                setBreakdownPlayState('stopped');
+              } else {
+                setPlayState('stopped');
+              }
+            }}
             disabled={!isLoaded}
             className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#182235] text-slate-400 hover:text-slate-200 hover:bg-[#222E45] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             title="Reset Animation"

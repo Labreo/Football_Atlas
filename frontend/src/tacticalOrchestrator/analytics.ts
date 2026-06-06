@@ -59,6 +59,34 @@ export class AnalyticsTracker {
     this.track('concept_opened', { concept_id: conceptId, ...data });
   }
 
+  public trackBreakdownRequested(question: string, data: any = {}): void {
+    this.track('breakdown_requested', { question, ...data });
+  }
+
+  public trackBreakdownLaunched(exampleId: string, data: any = {}): void {
+    this.track('breakdown_launched', { example_id: exampleId, ...data });
+  }
+
+  public trackHistoricalExampleRequested(question: string, data: any = {}): void {
+    this.track('historical_example_requested', { question, ...data });
+  }
+
+  public trackPlayerExampleRequested(question: string, data: any = {}): void {
+    this.track('player_example_requested', { question, ...data });
+  }
+
+  public trackCoachExampleRequested(question: string, data: any = {}): void {
+    this.track('coach_example_requested', { question, ...data });
+  }
+
+  public trackMatchExampleRequested(question: string, data: any = {}): void {
+    this.track('match_example_requested', { question, ...data });
+  }
+
+  public trackConceptChainTriggered(question: string, data: any = {}): void {
+    this.track('concept_chain_triggered', { question, ...data });
+  }
+
   /**
    * Tracks when a breakdown is started.
    */

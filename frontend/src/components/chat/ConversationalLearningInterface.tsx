@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTacticalStore } from '../../stores/useTacticalStore';
 import { useLearningUIStore } from '../../stores/LearningUIStore';
 import { learningOrchestrator } from '../../tacticalOrchestrator/orchestrator';
 import { learningStateStore } from '../../tacticalOrchestrator/store';
 import { analyticsTracker } from '../../tacticalOrchestrator/analytics';
+import { useBreakdownStore } from '../../stores/useBreakdownStore';
+import { tacticalApi } from '../../apiClients/tacticalApi';
+import { ClassroomAction } from '@football-atlas/shared';
+import { HistoricalBreakdownMode } from '../playbook/HistoricalBreakdownMode';
 import Pitch3D from '../pitch/Pitch3D';
 import PitchControls from '../pitch/PitchControls';
 
 const ConversationalLearningInterface: React.FC = () => {
   const {
     current_concept,
-    current_explanation,
-    animation_state,
     current_phase_index,
     current_phase_name,
     current_phase_annotation,
     loading,
-    error,
   } = useLearningUIStore();
 
   const {
@@ -28,10 +29,10 @@ const ConversationalLearningInterface: React.FC = () => {
   } = useTacticalStore();
 
   const orchestratorStore = learningStateStore((state) => state.telemetry);
+  const { currentBreakdown } = useBreakdownStore();
 
   const [input, setInput] = useState('');
   const [showDebug, setShowDebug] = useState(false);
-  const [branch, setBranch] = useState<'A' | 'B'>('A');
 
   // Submit new user prompt to the orchestrator loop
   const handleQuerySubmit = (e?: React.FormEvent) => {
@@ -50,22 +51,6 @@ const ConversationalLearningInterface: React.FC = () => {
     learningOrchestrator.askQuestion(questionText);
   };
 
-
-
-  // Toggle Branch scenarios dynamically for False 9
-  const handleBranchChange = (newBranch: 'A' | 'B') => {
-    setBranch(newBranch);
-    const activeModule = learningOrchestrator.getActiveModule();
-    if (activeModule && activeModule.setBranch) {
-      activeModule.setBranch(newBranch);
-    }
-  };
-
-  // Automatically sync branch state if concept shifts
-  useEffect(() => {
-    setBranch('A');
-  }, [current_concept?.concept_id]);
-
   // On mount, ensure the classroom starts with a clean slate —
   // no autoplay of stale concept animations from previous tab visits.
   useEffect(() => {
@@ -75,6 +60,66 @@ const ConversationalLearningInterface: React.FC = () => {
       playState: 'stopped',
     });
   }, []);
+
+  // Scroll to bottom of chat feed when new turns are added
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [conversation.length]);
+
+  const handleLaunchHistoricalBreakdown = async (exampleId: string, conceptId?: string) => {
+    analyticsTracker.track('breakdown_launched', { example_id: exampleId });
+    try {
+      let example;
+      if (conceptId) {
+        const examples = await tacticalApi.getHistoricalExamplesByConcept(conceptId);
+        example = examples.find(e => e.example_id === exampleId);
+      }
+      if (!example) {
+        const allEx = await tacticalApi.searchHistoricalExamples({});
+        example = allEx.find(e => e.example_id === exampleId);
+      }
+      if (example) {
+        await useBreakdownStore.getState().startBreakdown(example);
+      } else {
+        console.error('Historical example not found:', exampleId);
+      }
+    } catch (err) {
+      console.error('Failed to launch historical breakdown:', err);
+    }
+  };
+
+  const handleActionClick = async (action: ClassroomAction) => {
+    switch (action.type) {
+      case 'LAUNCH_CONCEPT':
+        if (action.payload.concept_id) {
+          analyticsTracker.trackConceptOpened(action.payload.concept_id);
+          await learningOrchestrator.loadConceptAnimation(action.payload.concept_id);
+        }
+        break;
+      case 'LAUNCH_HISTORICAL_BREAKDOWN':
+        if (action.payload.example_id) {
+          await handleLaunchHistoricalBreakdown(action.payload.example_id, action.payload.concept_id);
+        }
+        break;
+      case 'OPEN_RELATED_CONCEPT':
+        if (action.payload.concept_id) {
+          analyticsTracker.trackRelatedConceptOpened(
+            current_concept?.concept_id || 'unknown',
+            action.payload.concept_id
+          );
+          await learningOrchestrator.loadConceptAnimation(action.payload.concept_id);
+        }
+        break;
+      case 'LAUNCH_MATCH':
+        // Reset target views
+        useBreakdownStore.getState().stopBreakdown();
+        triggerCameraReset();
+        break;
+      default:
+        console.warn('Unhandled action type:', action.type);
+    }
+  };
 
   return (
     <div className="h-full w-full flex bg-[#0A0D14] text-slate-100 overflow-hidden font-sans relative">
@@ -272,208 +317,274 @@ const ConversationalLearningInterface: React.FC = () => {
       {/* RIGHT COLUMN (20-30% viewport): The Learning Panel           */}
       {/* ──────────────────────────────────────────────────────────── */}
       <div className="w-[340px] md:w-[380px] h-full bg-[#0C0F17] border-l border-[#1E293B]/70 flex flex-col shrink-0 z-10 shadow-2xl relative select-none">
-        
-        {/* Panel Header */}
-        <div className="p-5 border-b border-[#1E293B]/70 bg-[#0E1320] flex items-center justify-between shrink-0">
-          <h2 className="font-display font-bold text-xs tracking-wider text-slate-300 uppercase">
-            Tactical Analysis
-          </h2>
-          {current_concept && (
-            <span className="text-[9px] bg-[#1B253B] text-slate-400 font-bold px-2 py-0.5 rounded border border-[#2B3B5E]/30 uppercase tracking-wider font-mono">
-              {current_concept.complexity}
-            </span>
-          )}
-        </div>
-
-
-
-        {/* Content Feed Container */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6">
-
-          {/* 1. Loading Slate */}
-          {loading && !current_concept && (
-            <div className="h-full flex flex-col items-center justify-center text-center py-20 space-y-3">
-              <div className="w-8 h-8 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin" />
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-300">Formulating Tactical Report...</p>
-                <p className="text-[10px] text-slate-500">Querying Granite AI Layer</p>
-              </div>
-            </div>
-          )}
-
-          {/* 2. Error Message Container */}
-          {error && (
-            <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-xs text-slate-300 space-y-3">
-              <div className="flex items-center gap-2 text-red-400 font-bold font-display uppercase tracking-wide">
-                <span>⚠️ Tactical Query Error</span>
-              </div>
-              <p className="leading-relaxed">
-                {error.includes('identify') 
-                  ? "I couldn't confidently identify the tactical idea you're asking about. Try asking about one of our supported concepts:"
-                  : error.includes('timeout') || error.includes('longer')
-                  ? "Tactical analysis is taking longer than expected. Please check your connectivity."
-                  : error}
-              </p>
-              
-              {/* Error Actions & Retry */}
-              {error.includes('identify') ? (
-                <div className="flex flex-col gap-1.5 pt-1.5">
-                  <button
-                    onClick={() => handleSuggestionClick("Why is a False 9 hard to defend?")}
-                    className="w-full text-left py-1.5 px-2.5 rounded bg-slate-900 border border-[#23324C] hover:border-[#10B981] text-[11px] font-semibold text-slate-300 transition-all"
-                  >
-                    ⚽ False 9
-                  </button>
-                  <button
-                    onClick={() => handleSuggestionClick("How does a high press create chances?")}
-                    className="w-full text-left py-1.5 px-2.5 rounded bg-slate-900 border border-[#23324C] hover:border-[#10B981] text-[11px] font-semibold text-slate-300 transition-all"
-                  >
-                    ⚡ High Press
-                  </button>
-                  <button
-                    onClick={() => handleSuggestionClick("How does a defensive block work?")}
-                    className="w-full text-left py-1.5 px-2.5 rounded bg-slate-900 border border-[#23324C] hover:border-[#10B981] text-[11px] font-semibold text-slate-300 transition-all"
-                  >
-                    🛡️ Defensive Block
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => handleQuerySubmit()}
-                  className="px-3 py-1 bg-red-500/20 border border-red-500 text-red-400 text-[10px] font-bold rounded hover:bg-red-500/30 transition-all"
-                >
-                  Retry Analysis
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* 3. Empty state (Introductory prompt) */}
-          {!current_concept && !loading && !error && (
-            <div className="h-full flex flex-col items-center justify-center text-center py-20 px-4 space-y-3 select-none">
-              <span className="text-3xl filter grayscale opacity-45">📖</span>
-              <p className="text-xs text-slate-400 max-w-[240px] leading-relaxed">
-                Welcome to the Tactical Board. Select a concept from the playbook catalog above or ask a question to start.
-              </p>
-            </div>
-          )}
-
-          {/* 4. Active Concept Visualizer */}
-          {current_concept && (
-            <div className="space-y-6">
-              
-              {/* Title & Classification header */}
-              <div>
-                <span className="text-[9px] text-[#10B981] font-mono tracking-widest uppercase font-bold block mb-1">
-                  {current_concept.category.replace('_', ' ')}
+        {currentBreakdown ? (
+          <HistoricalBreakdownMode onNavigateToConcept={async (id) => {
+            await learningOrchestrator.loadConceptAnimation(id);
+          }} />
+        ) : (
+          <>
+            {/* Panel Header */}
+            <div className="p-5 border-b border-[#1E293B]/70 bg-[#0E1320] flex items-center justify-between shrink-0">
+              <h2 className="font-display font-bold text-xs tracking-wider text-slate-300 uppercase">
+                Classroom Chat
+              </h2>
+              {current_concept && (
+                <span className="text-[9px] bg-[#1B253B] text-slate-400 font-bold px-2 py-0.5 rounded border border-[#2B3B5E]/30 uppercase tracking-wider font-mono">
+                  {current_concept.complexity}
                 </span>
-                <h3 className="font-display font-extrabold text-lg text-slate-100 tracking-tight leading-tight">
-                  {current_concept.concept_name}
-                </h3>
-              </div>
+              )}
+            </div>
 
-              {/* Dynamic Phase / Interactive Branch Scenario Toggle */}
-              {current_concept.concept_id === 'false_9' && (
-                <div className="bg-[#131926] border border-[#23324C]/60 p-3 rounded-xl space-y-2">
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase font-bold text-slate-400">
-                    <span>Active Scenario:</span>
-                    <span className="text-[#10B981]">Interactive Toggle</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <button
-                      onClick={() => handleBranchChange('A')}
-                      className={`py-2 rounded-lg text-[10px] font-bold tracking-wide transition-all border ${
-                        branch === 'A'
-                          ? 'bg-[#FF0055]/10 border-[#FF0055]/30 text-[#FF0055]'
-                          : 'bg-[#0B0F19] border-transparent text-slate-400 hover:text-slate-200'
+            {/* Content Feed Container */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
+              {conversation.map((turn, turnIdx) => {
+                const isUser = turn.role === 'user';
+                return (
+                  <div
+                    key={turnIdx}
+                    className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} space-y-1`}
+                  >
+                    {/* Header (Sender Name) */}
+                    <span className="text-[9px] font-mono text-slate-500 uppercase px-1">
+                      {isUser ? 'You' : 'Granite AI Analyst'}
+                    </span>
+
+                    {/* Message Bubble */}
+                    <div
+                      className={`max-w-[90%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed font-sans ${
+                        isUser
+                          ? 'bg-[#1E293B]/50 border border-[#334155]/45 text-slate-200 rounded-tr-none'
+                          : 'bg-[#0E1624] border border-[#23324C]/50 text-slate-300 rounded-tl-none shadow-md'
                       }`}
                     >
-                      CB Follows (Gap)
-                    </button>
-                    <button
-                      onClick={() => handleBranchChange('B')}
-                      className={`py-2 rounded-lg text-[10px] font-bold tracking-wide transition-all border ${
-                        branch === 'B'
-                          ? 'bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]'
-                          : 'bg-[#0B0F19] border-transparent text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      CB Holds (Free)
-                    </button>
-                  </div>
-                </div>
-              )}
+                      {turn.content}
 
-              {/* Dynamic Step phase tracking display */}
-              {animation_state !== 'stopped' && (
-                <div className="bg-[#121826]/40 border border-[#222E45]/40 rounded-xl p-3 flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block font-mono">
-                      Animation Progress
-                    </span>
-                    <span className="text-xs font-bold text-slate-200 font-display">
-                      {current_phase_name}
-                    </span>
-                  </div>
-                  <span className="text-[10px] bg-slate-900 border border-[#222E45] px-2 py-0.5 rounded text-amber-500 font-bold font-mono">
-                    Phase {current_phase_index}
-                  </span>
-                </div>
-              )}
-
-              {/* Concept explanation block */}
-              <div className="space-y-2">
-                <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">
-                  Tactics Lecture
-                </h4>
-                <p className="text-xs text-slate-300 leading-relaxed font-sans font-light bg-[#121826]/30 border border-[#222E45]/30 p-3.5 rounded-xl">
-                  {current_explanation || current_concept.core_explanation}
-                </p>
-              </div>
-
-              {/* Key Takeaways list */}
-              <div className="space-y-2.5">
-                <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">
-                  Key Principles
-                </h4>
-                <div className="space-y-2">
-                  {current_concept.key_principles.map((principle, index) => (
-                    <div key={index} className="flex items-start gap-2 text-xs bg-[#121826]/20 border border-[#222E45]/20 p-3 rounded-xl leading-relaxed">
-                      <span className="text-[#10B981] font-bold select-none pt-0.5">✦</span>
-                      <div className="space-y-0.5">
-                        <span className="font-bold text-slate-200 block font-display">{principle.title}</span>
-                        <span className="text-slate-400 text-[11px] font-sans font-light leading-normal block">{principle.description}</span>
-                      </div>
+                      {/* Contextual Action Cards */}
+                      {!isUser && turn.actions && turn.actions.length > 0 && (
+                        <div className="mt-3.5 space-y-2.5">
+                          {turn.actions.map((action, actionIdx) => {
+                            if (action.type === 'LAUNCH_MATCH') {
+                              return (
+                                <MatchCard
+                                  key={actionIdx}
+                                  action={action}
+                                  onLaunchBreakdown={handleLaunchHistoricalBreakdown}
+                                />
+                              );
+                            }
+                            return (
+                              <ActionButton
+                                key={actionIdx}
+                                action={action}
+                                onActionClick={handleActionClick}
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                );
+              })}
 
-              {/* Related Concepts & follow-up prompts */}
-              <div className="space-y-2.5 pt-2">
-                <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">
-                  Explore Related Areas
-                </h4>
-                <div className="flex flex-col gap-1.5">
+              {/* Loading indicator when assistant is writing */}
+              {loading && (
+                <div className="flex flex-col items-start space-y-1">
+                  <span className="text-[9px] font-mono text-slate-500 uppercase px-1">
+                    Granite AI Analyst
+                  </span>
+                  <div className="bg-[#0E1624] border border-[#23324C]/50 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Anchor to scroll to */}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Bottom Suggested follow-ups */}
+            {followUpSuggestions.length > 0 && (
+              <div className="p-4 border-t border-[#1E293B]/70 bg-[#0A0D15] space-y-2 shrink-0">
+                <span className="text-[9px] text-slate-500 font-mono font-bold uppercase tracking-wider block">
+                  Suggested Follow-ups
+                </span>
+                <div className="flex flex-col gap-1.5 max-h-[100px] overflow-y-auto scrollbar-thin">
                   {followUpSuggestions.map((suggestion, i) => (
                     <button
                       key={i}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left py-2 px-3 rounded-xl bg-[#121826]/40 border border-[#222E45]/60 hover:border-[#10B981] text-xs font-semibold text-slate-300 hover:text-[#10B981] transition-all truncate"
+                      className="w-full text-left py-1.5 px-3 rounded-lg bg-[#121826]/40 border border-[#222E45]/60 hover:border-[#10B981]/50 text-[11px] font-semibold text-slate-300 hover:text-[#10B981] transition-all truncate"
                     >
                       💡 {suggestion}
                     </button>
                   ))}
                 </div>
               </div>
-
-            </div>
-          )}
-
-        </div>
-
+            )}
+          </>
+        )}
       </div>
 
+    </div>
+  );
+};
+
+// ────────────────────────────────────────────────────────────
+// ACTION CARD & MATCH CARD HELPER COMPONENTS
+// ────────────────────────────────────────────────────────────
+
+interface ActionButtonProps {
+  action: ClassroomAction;
+  onActionClick: (action: ClassroomAction) => void;
+}
+
+const ActionButton: React.FC<ActionButtonProps> = ({ action, onActionClick }) => {
+  const handleClick = () => {
+    onActionClick(action);
+  };
+
+  const getIcon = () => {
+    switch (action.type) {
+      case 'LAUNCH_CONCEPT':
+        return (
+          <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      case 'LAUNCH_HISTORICAL_BREAKDOWN':
+        return (
+          <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+        );
+      case 'OPEN_RELATED_CONCEPT':
+        return (
+          <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      type="button"
+      className="w-full flex items-center gap-3 px-4 py-3 bg-[#111827]/40 hover:bg-[#1f2937]/60 border border-emerald-500/20 hover:border-emerald-500/40 rounded-xl text-xs font-semibold text-slate-200 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_12px_rgba(0,0,0,0.15)] backdrop-blur-md"
+    >
+      <span className="shrink-0 p-1.5 rounded-lg bg-slate-900/60 border border-slate-700/30">
+        {getIcon()}
+      </span>
+      <span className="flex-1 text-left truncate leading-tight">{action.label}</span>
+      <svg className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  );
+};
+
+interface MatchCardProps {
+  action: ClassroomAction;
+  onLaunchBreakdown: (exampleId: string, conceptId?: string) => void;
+}
+
+const MatchCard: React.FC<MatchCardProps> = ({ action, onLaunchBreakdown }) => {
+  const [matchDetails, setMatchDetails] = useState<any | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchMatchDetails = async () => {
+      if (!action.payload.example_id) return;
+      setLoading(true);
+      try {
+        const allEx = await tacticalApi.searchHistoricalExamples({});
+        const ex = allEx.find(e => e.example_id === action.payload.example_id);
+        if (ex) {
+          setMatchDetails(ex);
+        }
+      } catch (err) {
+        console.error('Error fetching match details for card:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMatchDetails();
+  }, [action.payload.example_id]);
+
+  if (loading) {
+    return (
+      <div className="w-full p-4 rounded-xl border border-slate-700/30 bg-[#0B0F19]/40 backdrop-blur-md flex items-center justify-center py-6">
+        <div className="w-5 h-5 rounded-full border border-slate-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!matchDetails) {
+    return (
+      <div className="w-full p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-slate-400 text-[11px] leading-relaxed">
+        Could not load match metadata for {action.payload.example_id}.
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full rounded-xl border border-[#23324C]/60 bg-[#121826]/75 backdrop-blur-md overflow-hidden shadow-2xl transition-all hover:border-[#10B981]/40 duration-300">
+      <div className="px-4 py-3 bg-[#162032]/45 border-b border-[#23324C]/40 flex items-center justify-between">
+        <span className="text-[10px] text-emerald-400 font-mono font-bold uppercase tracking-wider">
+          {matchDetails.concept_id.replace(/_/g, ' ')} Match
+        </span>
+        <span className="text-[9px] text-slate-500 font-mono uppercase">
+          Match Card
+        </span>
+      </div>
+
+      <div className="p-4 space-y-3">
+        <div>
+          <h4 className="text-slate-100 font-display font-extrabold text-sm tracking-tight leading-snug">
+            {matchDetails.match_name}
+          </h4>
+          <span className="text-[10px] text-slate-400 font-sans block mt-0.5">
+            Coach: <strong className="text-slate-300 font-semibold">{matchDetails.coach}</strong>
+          </span>
+        </div>
+
+        <p className="text-[11px] text-slate-300 leading-relaxed font-sans font-light">
+          {matchDetails.description}
+        </p>
+
+        <div className="space-y-1">
+          <span className="text-[9px] text-slate-500 font-mono uppercase tracking-wide">Key Players</span>
+          <div className="flex flex-wrap gap-1">
+            {matchDetails.players.map((p: string, idx: number) => (
+              <span key={idx} className="px-2 py-0.5 rounded-md bg-[#1B253B] border border-[#2B3B5E]/30 text-slate-300 text-[10px] font-medium">
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={() => onLaunchBreakdown(matchDetails.example_id, matchDetails.concept_id)}
+          type="button"
+          className="w-full mt-2 py-2 bg-gradient-to-r from-[#10B981] to-[#059669] hover:from-[#11C489] hover:to-[#05A372] text-slate-950 font-display font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] shadow-lg flex items-center justify-center gap-1.5"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          View Tactical Breakdown
+        </button>
+      </div>
     </div>
   );
 };

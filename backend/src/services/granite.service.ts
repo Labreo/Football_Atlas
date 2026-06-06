@@ -2,13 +2,15 @@ import { envConfig } from '../config/env.config';
 import { Logger } from '../utils/logger';
 import { parseGraniteJson } from '../utils/jsonParser';
 import { GraniteTestResponse, FootballConceptData } from '../types/granite.types';
-import { ComplexityLevel, tacticalRegistry, ConversationContext } from '@football-atlas/shared';
+import { ComplexityLevel, tacticalRegistry, ConversationContext, ConversationTurn } from '@football-atlas/shared';
 import { historicalExampleService } from './historicalExample.service';
 import { historicalExplanationGenerator } from './historicalExplanation.generator';
 import { contextManager } from './context.manager';
 import { conceptChainEngine } from './chainEngine.service';
 import { conversationSummarizer } from './summarizer.service';
 import { conceptVocabularyService } from './vocabulary.service';
+import { classroomIntentEngine } from './classroomIntentEngine.service';
+import { historicalExampleRepository } from '../repositories/historicalExample.repository';
 
 export class GraniteService {
   private static cachedToken: string | null = null;
@@ -83,6 +85,17 @@ If you have high confidence (>75% probability) that the question is about one of
     "Follow-up question about related concepts 1",
     "Follow-up question 2",
     "Follow-up question 3"
+  ],
+  "actions": [
+    {
+      "type": "LAUNCH_CONCEPT" | "LAUNCH_MATCH" | "LAUNCH_HISTORICAL_EXAMPLE" | "LAUNCH_HISTORICAL_BREAKDOWN" | "OPEN_RELATED_CONCEPT",
+      "label": "Clickable Button Label",
+      "payload": {
+        "concept_id": "concept_id_string",
+        "example_id": "example_id_string",
+        "breakdown_id": "breakdown_id_string"
+      }
+    }
   ]
 }
 
@@ -141,7 +154,8 @@ If you have low confidence, or the user's query is highly ambiguous, or is compl
   public async queryTutor(
     question: string,
     conversationId: string = 'default-session',
-    traceId: string = 'system-request'
+    traceId: string = 'system-request',
+    history?: ConversationTurn[]
   ): Promise<GraniteTestResponse> {
     const startTime = Date.now();
     
@@ -165,7 +179,7 @@ If you have low confidence, or the user's query is highly ambiguous, or is compl
     }
 
     const qLower = question.toLowerCase();
-    const isHistoricalRequest = /show me (?:a )?real example|did (?:any )?famous team|when has this happened|give me another example|another example|real example/i.test(qLower);
+    const isHistoricalRequest = /show me (?:a |an )?example|give me (?:a |an )?example|real example|famous team|when has this happened|another example|an example of|example of this|example/i.test(qLower);
 
     if (isHistoricalRequest) {
       // 1. Resolve matched concept
@@ -274,6 +288,9 @@ ${explanationText}`;
       });
       contextManager.addTurn(conversationId, question, formattedExplanation);
 
+      // Classify via intent engine to fetch additional matches if appropriate
+      const intentResult = classroomIntentEngine.classifyIntent(question, context);
+
       return {
         success: true,
         is_mocked: this.isMockMode,
@@ -287,7 +304,26 @@ ${explanationText}`;
           user_level: session.user_level,
           animation_module: conceptRegistryObj?.animation_module?.module_id || '',
           explanation: formattedExplanation,
-          follow_up_suggestions: ['Give me another example', 'Explain the defensive response', 'Show me the 3D lesson']
+          follow_up_suggestions: ['Explain the defensive response', 'Show me the 3D lesson', 'Give me another example'],
+          actions: intentResult.actions && intentResult.actions.length > 0 ? intentResult.actions : [
+            {
+              type: 'LAUNCH_HISTORICAL_BREAKDOWN',
+              label: `View Tactical Breakdown: ${example.match_name}`,
+              payload: {
+                concept_id: matchedConcept,
+                example_id: example.example_id,
+                breakdown_id: example.example_id
+              }
+            },
+            {
+              type: 'LAUNCH_MATCH',
+              label: `Open Match Card: ${example.match_name}`,
+              payload: {
+                concept_id: matchedConcept,
+                example_id: example.example_id
+              }
+            }
+          ]
         } as any
       };
     }
@@ -317,6 +353,24 @@ ${explanationText}`;
       };
     }
 
+    // Format the last 5 turns (max 10 messages) of conversation history
+    const historyMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+    if (history && history.length > 0) {
+      historyMessages.push(
+        ...history.slice(-10).map((t) => ({
+          role: t.role,
+          content: t.content,
+        }))
+      );
+    } else {
+      const len = Math.min(session.last_questions.length, session.last_answers.length);
+      const startIdx = Math.max(0, len - 5);
+      for (let i = startIdx; i < len; i++) {
+        historyMessages.push({ role: 'user', content: session.last_questions[i] });
+        historyMessages.push({ role: 'assistant', content: session.last_answers[i] });
+      }
+    }
+
     // Prepare system prompt with injected context variables
     const systemPrompt = this.buildSystemPrompt(context);
 
@@ -329,7 +383,15 @@ ${explanationText}`;
         });
 
         const url = `https://${envConfig.ibmBaseUrl}/models/${envConfig.ibmGraniteModel}`;
-        const promptText = `<|system|>\n${systemPrompt}\n<|user|>\n${question}\n<|assistant|>\n`;
+        let promptText = `<|system|>\n${systemPrompt}\n`;
+        for (const msg of historyMessages) {
+          if (msg.role === 'user') {
+            promptText += `<|user|>\n${msg.content}\n`;
+          } else {
+            promptText += `<|assistant|>\n${msg.content}\n`;
+          }
+        }
+        promptText += `<|user|>\n${question}\n<|assistant|>\n`;
 
         const payload = {
           inputs: promptText,
@@ -373,6 +435,11 @@ ${explanationText}`;
         const parsedData = parseGraniteJson(rawText, traceId);
 
         if (parsedData) {
+          const intentResult = classroomIntentEngine.classifyIntent(question, context);
+          if (!parsedData.actions || parsedData.actions.length === 0) {
+            parsedData.actions = intentResult.actions;
+          }
+          parsedData.actions = this.sanitizeActions(parsedData.actions, parsedData.concept_id || intentResult.matchedConceptId || context.active_concept);
           if (!parsedData.needs_clarification && parsedData.concept_id) {
             contextManager.updateContext(conversationId, {
               active_concept: parsedData.concept_id
@@ -431,6 +498,7 @@ ${explanationText}`;
           model: envConfig.ibmGraniteModel,
           messages: [
             { role: 'system', content: systemPrompt },
+            ...historyMessages,
             { role: 'user', content: question }
           ],
           temperature: 0.1,
@@ -465,6 +533,11 @@ ${explanationText}`;
         const parsedData = parseGraniteJson(rawText, traceId);
 
         if (parsedData) {
+          const intentResult = classroomIntentEngine.classifyIntent(question, context);
+          if (!parsedData.actions || parsedData.actions.length === 0) {
+            parsedData.actions = intentResult.actions;
+          }
+          parsedData.actions = this.sanitizeActions(parsedData.actions, parsedData.concept_id || intentResult.matchedConceptId || context.active_concept);
           if (!parsedData.needs_clarification && parsedData.concept_id) {
             contextManager.updateContext(conversationId, {
               active_concept: parsedData.concept_id
@@ -512,7 +585,15 @@ ${explanationText}`;
       const token = await this.getAccessToken(traceId);
       const url = `https://${envConfig.ibmBaseUrl}/ml/v1/text/generation?version=2023-05-29`;
       
-      const promptText = `<|system|>\n${systemPrompt}\n<|user|>\n${question}\n<|assistant|>\n`;
+      let promptText = `<|system|>\n${systemPrompt}\n`;
+      for (const msg of historyMessages) {
+        if (msg.role === 'user') {
+          promptText += `<|user|>\n${msg.content}\n`;
+        } else {
+          promptText += `<|assistant|>\n${msg.content}\n`;
+        }
+      }
+      promptText += `<|user|>\n${question}\n<|assistant|>\n`;
 
       const payload = {
         model_id: envConfig.ibmGraniteModel,
@@ -559,6 +640,11 @@ ${explanationText}`;
       const parsedData = parseGraniteJson(rawText, traceId);
 
       if (parsedData) {
+        const intentResult = classroomIntentEngine.classifyIntent(question, context);
+        if (!parsedData.actions || parsedData.actions.length === 0) {
+          parsedData.actions = intentResult.actions;
+        }
+        parsedData.actions = this.sanitizeActions(parsedData.actions, parsedData.concept_id || intentResult.matchedConceptId || context.active_concept);
         if (!parsedData.needs_clarification && parsedData.concept_id) {
           contextManager.updateContext(conversationId, {
             active_concept: parsedData.concept_id
@@ -745,9 +831,9 @@ ${explanationText}`;
     const session = contextManager.getOrCreateSessionContext(conversationId);
     const context = session.context;
 
-    // Use ChainEngine to evaluate transition
-    const transitionOutcome = conceptChainEngine.evaluateTransition(question, context);
-    let matchedConcept = transitionOutcome.conceptId;
+    // Use IntentEngine to evaluate intent and routing
+    const intentResult = classroomIntentEngine.classifyIntent(question, context);
+    let matchedConcept = intentResult.matchedConceptId || 'false_9';
 
     // Adapt user level based on keyword signals
     if (q.includes('zone 14') || q.includes('half-space') || q.includes('catenaccio')) {
@@ -764,25 +850,26 @@ ${explanationText}`;
       };
     }
 
-    // Check if the chain engine triggered a clarification or if it's low confidence
-    const isUnrelated = !q.includes('press') && !q.includes('block') && !q.includes('false') && !q.includes('overload') && !q.includes('third') && !q.includes('back') && !q.includes('compact') && !q.includes('trigger') && !context.active_concept;
-    if (isUnrelated) {
+    // Check if the query is unrelated to football/tactics
+    const isUnrelated = !q.includes('press') && !q.includes('block') && !q.includes('false') && !q.includes('overload') && !q.includes('third') && !q.includes('back') && !q.includes('compact') && !q.includes('trigger') && !q.includes('messi') && !q.includes('robben') && !q.includes('salah') && !q.includes('firmino') && !q.includes('fabregas') && !q.includes('totti') && !q.includes('guardiola') && !q.includes('klopp') && !q.includes('simeone') && !q.includes('mourinho') && !context.active_concept;
+    
+    if (intentResult.intent === 'CONCEPT_EXPLANATION' && !intentResult.matchedConceptId && isUnrelated) {
       return {
         needs_clarification: true,
         clarification_question: 'Are you asking about pressing high up the pitch (High Press) or defending deep (Low Block)?',
       };
     }
 
-    // Classify Intent
-    let intent: 'overview' | 'origin' | 'defense' | 'examples' | 'prosCons' = 'overview';
-    if (q.includes('originate') || q.includes('history') || q.includes('invented') || q.includes('where did') || q.includes('who came up') || q.includes('first time') || q.includes('origins') || q.includes('where does') || q.includes('where deos') || q.includes('creator') || q.includes('invent')) {
-      intent = 'origin';
-    } else if (q.includes('defend') || q.includes('stop') || q.includes('counter') || q.includes('prevent') || q.includes('deal with') || q.includes('combat') || q.includes('neutralize') || q.includes('limit') || q.includes('respond')) {
-      intent = 'defense';
-    } else if (q.includes('player') || q.includes('example') || q.includes('who played') || q.includes('messi') || q.includes('totti') || q.includes('cruyff') || q.includes('firmino') || q.includes('guardiola') || q.includes('klopp') || q.includes('famous') || q.includes('team') || q.includes('match') || q.includes('coach')) {
-      intent = 'examples';
-    } else if (q.includes('pro') || q.includes('con') || q.includes('advantage') || q.includes('disadvantage') || q.includes('benefit') || q.includes('strength') || q.includes('weakness') || q.includes('vulnerability') || q.includes('drawback') || q.includes('positive') || q.includes('negative')) {
-      intent = 'prosCons';
+    // Classify Intent for explanation lookup
+    let explanationKey: 'overview' | 'origin' | 'defense' | 'examples' | 'prosCons' = 'overview';
+    if (q.includes('originate') || q.includes('history') || q.includes('invented') || q.includes('where did') || q.includes('who came up') || q.includes('first time') || q.includes('origins') || q.includes('creator') || q.includes('invent')) {
+      explanationKey = 'origin';
+    } else if (q.includes('defend') || q.includes('stop') || q.includes('counter') || q.includes('prevent') || q.includes('deal with') || q.includes('neutralize') || q.includes('limit') || q.includes('respond')) {
+      explanationKey = 'defense';
+    } else if (q.includes('player') || q.includes('example') || q.includes('who played') || q.includes('famous') || q.includes('team') || q.includes('match') || q.includes('coach')) {
+      explanationKey = 'examples';
+    } else if (q.includes('pro') || q.includes('con') || q.includes('advantage') || q.includes('disadvantage') || q.includes('benefit') || q.includes('strength') || q.includes('weakness')) {
+      explanationKey = 'prosCons';
     }
 
     const mockDatabase: Record<string, { name: string; complexity: ComplexityLevel; module: string; overview: string; origin: string; defense: string; examples: string; prosCons: string }> = {
@@ -861,7 +948,7 @@ ${explanationText}`;
         complexity: ComplexityLevel.BEGINNER,
         module: 'invertedWinger',
         overview: 'A wide attacking player positioned on the side opposite their dominant foot, enabling them to cut inside to shoot or pass, rather than cross.',
-        origin: 'Though wide players always cut inside occasionally, the modern tactically permanent inverted winger became standard in the 2000s, popularized by players like Arjen Robben and Franck Ribéry (Robbery) at Bayern Munich.',
+        origin: 'Though wide players always cut inside occasionally, the permanent inverted winger became standard in the 2000s, popularized by players like Arjen Robben and Franck Ribéry (Robbery) at Bayern Munich.',
         defense: 'Defended by using fullbacks with matching dominant feet, double-teaming with a tracking winger/midfielder, or forcing them onto their weaker foot toward the touchline.',
         examples: 'Arjen Robben, Lionel Messi (early years/right wing), Mohamed Salah, Franck Ribéry.',
         prosCons: 'Pros: Goal-scoring threat from wings, opens overlapping lanes for fullbacks, creates central overloads. Cons: Predictable if one-dimensional, leaves the flank open for counter-attacks, reduces traditional cross opportunities.'
@@ -898,18 +985,27 @@ ${explanationText}`;
       }
     };
 
-    const concept = mockDatabase[matchedConcept];
-    let explanation = concept[intent] || concept.overview;
+    const conceptKey = matchedConcept === 'low_block' ? 'defensive_block' : matchedConcept;
+    const concept = mockDatabase[conceptKey] || mockDatabase['false_9'];
+    let explanation = concept[explanationKey] || concept.overview;
+
+    // Custom tactical adjustments for key experiences
+    if (intentResult.intent === 'PLAYER_EXAMPLE' && q.includes('messi')) {
+      explanation = `Pep Guardiola famously deployed Lionel Messi centrally in the 2009 UCL Final (Barcelona vs Manchester United) in the False 9 role. Messi dropped deep into Zone 14 to receive the ball, pulling center-backs out of position and creating spaces for inside runs from Thierry Henry and Samuel Eto'o.`;
+    } else if (intentResult.intent === 'COACH_EXAMPLE' && q.includes('klopp')) {
+      explanation = `Jürgen Klopp utilized Roberto Firmino as a central pressing trigger at Liverpool. Firmino's high-intensity work rate cut off central options to Fernandinho, forcing turnovers inside Manchester City's build-up lines and triggering rapid counter-attacks.`;
+    }
 
     // Special behavior override for Target Experience Chain 1:
     // If we transition to midfield overload or third man run, explain that
+    const transitionOutcome = conceptChainEngine.evaluateTransition(question, context);
     if (transitionOutcome.intent === 'midfield_impact') {
       explanation = `By dropping deep, the False 9 draws the opposing center-back out, creating a midfield overload. This numerical superiority (e.g. 4v3) allows extra passing lanes and lets the team dominate central spaces, causing defensive confusion.`;
     } else if (transitionOutcome.intent === 'attacking_progression') {
       explanation = `The numerical advantage in midfield facilitates Third Man Runs. When Player A passes to Player B (the False 9), the defenders shift focus, allowing Player C to run off-the-ball into the vacated space behind to receive a quick combination pass.`;
     }
 
-    const suggestions = this.getSuggestionsForConcept(matchedConcept, intent);
+    const suggestions = this.getSuggestionsForConcept(matchedConcept, explanationKey);
 
     return {
       needs_clarification: false,
@@ -920,6 +1016,7 @@ ${explanationText}`;
       animation_module: concept.module,
       explanation: explanation,
       follow_up_suggestions: suggestions,
+      actions: this.sanitizeActions(intentResult.actions, matchedConcept)
     };
   }
 
@@ -1014,6 +1111,68 @@ ${explanationText}`;
       .filter(([intent]) => intent !== currentIntent)
       .map(([_, questionText]) => questionText)
       .slice(0, 4); // return up to 4 other questions
+  }
+
+  private sanitizeActions(actions: any[], activeConceptId?: string): any[] {
+    if (!actions || !Array.isArray(actions)) return [];
+
+    const sanitized: any[] = [];
+
+    for (const act of actions) {
+      if (!act || typeof act !== 'object') continue;
+      
+      if (act.type === 'LAUNCH_HISTORICAL_BREAKDOWN' || act.type === 'LAUNCH_MATCH') {
+        const exampleId = act.payload?.example_id || act.payload?.breakdown_id;
+        const conceptId = act.payload?.concept_id || activeConceptId || 'false_9';
+        
+        let validExample = exampleId ? historicalExampleRepository.getById(exampleId) : undefined;
+        
+        if (!validExample) {
+          // Hallucinated or invalid match ID! Let's find a valid seeded example for this concept!
+          const candidates = historicalExampleRepository.getByConcept(conceptId);
+          if (candidates.length > 0) {
+            validExample = candidates[0];
+          } else {
+            const allExamples = historicalExampleRepository.getAll();
+            if (allExamples.length > 0) {
+              validExample = allExamples[0];
+            }
+          }
+        }
+        
+        if (validExample) {
+          sanitized.push({
+            type: act.type,
+            label: act.type === 'LAUNCH_HISTORICAL_BREAKDOWN'
+              ? `View Tactical Breakdown: ${validExample.match_name}`
+              : `Open Match Card: ${validExample.match_name}`,
+            payload: {
+              concept_id: validExample.concept_id,
+              example_id: validExample.example_id,
+              breakdown_id: validExample.example_id
+            }
+          });
+        }
+      } else if (act.type === 'LAUNCH_CONCEPT' || act.type === 'OPEN_RELATED_CONCEPT') {
+        const conceptId = act.payload?.concept_id || activeConceptId || 'false_9';
+        const exists = tacticalRegistry.getConcept(conceptId) !== undefined;
+        if (exists) {
+          sanitized.push({
+            type: act.type,
+            label: act.type === 'LAUNCH_CONCEPT'
+              ? `Launch 3D Concept: ${conceptId.replace(/_/g, ' ')}`
+              : `Explore Related: ${conceptId.replace(/_/g, ' ')}`,
+            payload: {
+              concept_id: conceptId
+            }
+          });
+        }
+      } else {
+        sanitized.push(act);
+      }
+    }
+    
+    return sanitized;
   }
 }
 

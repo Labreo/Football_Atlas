@@ -123,7 +123,14 @@ export type AnalyticsEventType =
   | 'concept_transition'
   | 'context_recovered'
   | 'clarification_requested'
-  | 'conversation_completed';
+  | 'conversation_completed'
+  | 'breakdown_requested'
+  | 'breakdown_launched'
+  | 'historical_example_requested'
+  | 'player_example_requested'
+  | 'coach_example_requested'
+  | 'match_example_requested'
+  | 'concept_chain_triggered';
 
 export interface AnalyticsEvent {
   event: AnalyticsEventType;

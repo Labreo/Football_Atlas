@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { tacticalRegistry, TutorResponse, ComplexityLevel } from '@football-atlas/shared';
+import { tacticalRegistry, TutorResponse, ComplexityLevel, ConversationTurn } from '@football-atlas/shared';
 import { GraniteService } from '../services/granite.service';
 import { historicalExampleService } from '../services/historicalExample.service';
 import { historicalExampleRepository } from '../repositories/historicalExample.repository';
@@ -38,7 +38,7 @@ router.get('/concepts/:id', (req: Request, res: Response) => {
  */
 router.post('/tutor', async (req: Request, res: Response, next: NextFunction) => {
   const traceId = (req as any).traceId || 'unknown-trace';
-  const { prompt } = req.body;
+  const { prompt, history } = req.body;
 
   if (!prompt) {
     return res.status(400).json({
@@ -48,7 +48,7 @@ router.post('/tutor', async (req: Request, res: Response, next: NextFunction) =>
   }
 
   try {
-    const tutorResult = await graniteService.queryTutor(prompt, 'default-session', traceId);
+    const tutorResult = await graniteService.queryTutor(prompt, 'default-session', traceId, history);
     const responseData = tutorResult.data;
     let tutorResponse: TutorResponse;
 
@@ -66,7 +66,8 @@ router.post('/tutor', async (req: Request, res: Response, next: NextFunction) =>
         concept_id: conceptData.concept_id,
         detected_level: conceptData.user_level || ComplexityLevel.BEGINNER,
         follow_up_suggestions: conceptData.follow_up_suggestions || [],
-        confidence_score: conceptData.confidence_score !== undefined ? conceptData.confidence_score : 0.93
+        confidence_score: conceptData.confidence_score !== undefined ? conceptData.confidence_score : 0.93,
+        actions: conceptData.actions || []
       };
     }
 

@@ -20,9 +20,21 @@ export type AnimationModuleReference = z.infer<typeof AnimationModuleReferenceSc
 export type TacticalConcept = z.infer<typeof TacticalConceptSchema>;
 export type GraniteResponse = z.infer<typeof GraniteResponseSchema>;
 
+export interface ClassroomAction {
+  type: 'LAUNCH_CONCEPT' | 'LAUNCH_MATCH' | 'LAUNCH_HISTORICAL_EXAMPLE' | 'LAUNCH_HISTORICAL_BREAKDOWN' | 'OPEN_RELATED_CONCEPT';
+  label: string;
+  payload: {
+    concept_id?: string;
+    match_id?: string;
+    example_id?: string;
+    breakdown_id?: string;
+  };
+}
+
 export interface ConversationTurn {
   role: 'user' | 'assistant';
   content: string;
+  actions?: ClassroomAction[];
 }
 
 export interface TutorResponse {
@@ -31,6 +43,7 @@ export interface TutorResponse {
   detected_level: ComplexityLevel;
   follow_up_suggestions: string[];
   confidence_score?: number;
+  actions?: ClassroomAction[];
 }
 
 export interface ConversationContext {

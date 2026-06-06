@@ -10,7 +10,7 @@ import { useBreakdownStore } from '../../stores/useBreakdownStore';
 
 
 const InteractivePitchPlayer: React.FC = () => {
-  const { playState, playSpeed, overlays, currentConcept } = useTacticalStore();
+  const { playState, playSpeed, overlays, currentConcept, detectedLevel } = useTacticalStore();
   const { currentBreakdown } = useBreakdownStore();
 
   const [moduleInstance, setModuleInstance] = useState<any | null>(null);
@@ -38,6 +38,11 @@ const InteractivePitchPlayer: React.FC = () => {
       const instance = learningOrchestrator.getActiveModule();
       if (!instance) return;
 
+      // Ensure initial level is set immediately upon load
+      if (typeof instance.setComplexityLevel === 'function') {
+        instance.setComplexityLevel(useTacticalStore.getState().detectedLevel);
+      }
+
       setModuleInstance(instance);
     }).catch((err) => {
       console.error('[Pitch3D Orchestration Error] Failed to load animation:', err);
@@ -48,6 +53,14 @@ const InteractivePitchPlayer: React.FC = () => {
       setModuleInstance(null);
     };
   }, [engine, currentConcept]);
+
+  // Synchronize complexity level from Zustand store to our active module instance
+  useEffect(() => {
+    if (!moduleInstance) return;
+    if (typeof moduleInstance.setComplexityLevel === 'function') {
+      moduleInstance.setComplexityLevel(detectedLevel);
+    }
+  }, [detectedLevel, moduleInstance]);
 
   // Synchronize playback timeline controls from Zustand store to our Engine
   useEffect(() => {

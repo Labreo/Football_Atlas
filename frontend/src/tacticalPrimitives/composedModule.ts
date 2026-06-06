@@ -4,6 +4,7 @@ import { TacticalAnimationEngine } from '../tacticalEngine/engine';
 import { PrimitiveCompiler, CompileResult } from './compiler';
 import { TacticalPrimitive } from './types';
 import { transitionManager } from '../tacticalOrchestrator/TransitionManager';
+import { ComplexityLevel } from '@football-atlas/shared';
 
 export interface ComposedModuleOptions {
   id: string;
@@ -28,6 +29,7 @@ export class ComposedTacticalModule implements TacticalModule {
   protected engine: TacticalAnimationEngine | null = null;
   protected activeBranch: 'A' | 'B' = 'A';
   protected compiledData: CompileResult | null = null;
+  protected currentLevel: ComplexityLevel = ComplexityLevel.INTERMEDIATE;
   
   // Track firing status of analytics events
   protected firedAnalyticsEvents = new Set<string>();
@@ -77,10 +79,17 @@ export class ComposedTacticalModule implements TacticalModule {
       );
     }
 
+    const filteredArrows = this.compiledData.arrows.filter(arrow => 
+      this.shouldShowOverlayOrArrowForLevel(arrow.id, this.currentLevel)
+    );
+    const filteredOverlays = this.compiledData.overlays.filter(overlay => 
+      this.shouldShowOverlayOrArrowForLevel(overlay.id, this.currentLevel)
+    );
+
     let conceptData = {
       players: this.compiledData.players,
-      arrows: this.compiledData.arrows,
-      overlays: this.compiledData.overlays,
+      arrows: filteredArrows,
+      overlays: filteredOverlays,
       ball: this.compiledData.ball,
       duration: this.options.durationSeconds
     };
@@ -340,18 +349,20 @@ export class ComposedTacticalModule implements TacticalModule {
     const phase = this.getPhaseInfo(fraction);
     if (phase.index !== this.currentPhaseIndex) {
       this.currentPhaseIndex = phase.index;
+      const adaptedName = this.getAdaptedCommentary(phase.name);
       if (this.onPhaseChange) {
-        this.onPhaseChange(phase.index, phase.name);
+        this.onPhaseChange(phase.index, adaptedName);
       }
       this.triggerAnalytics('step_changed', { phaseIndex: phase.index, phaseName: phase.name });
     }
 
     // 2. Annotations
     const text = this.getTeachingAnnotation(fraction);
-    if (text !== this.currentAnnotationText) {
-      this.currentAnnotationText = text;
+    const adaptedText = this.getAdaptedCommentary(text);
+    if (adaptedText !== this.currentAnnotationText) {
+      this.currentAnnotationText = adaptedText;
       if (this.onAnnotationChange) {
-        this.onAnnotationChange(text);
+        this.onAnnotationChange(adaptedText);
       }
     }
 
@@ -401,5 +412,124 @@ export class ComposedTacticalModule implements TacticalModule {
     const allPrims = [...this.options.primitives, ...branchPrims];
     const report = PrimitiveCompiler.compile(allPrims, this.options.durationSeconds, branch);
     return report.validationReport;
+  }
+
+  public setComplexityLevel(level: ComplexityLevel): void {
+    if (this.currentLevel === level) return;
+    this.currentLevel = level;
+    this.compileAndLoad();
+    this.reset();
+  }
+
+  private shouldShowOverlayOrArrowForLevel(id: string, level: ComplexityLevel): boolean {
+    const cleanId = id.toLowerCase();
+    
+    const isAdvanced = 
+      cleanId.includes('follow') || 
+      cleanId.includes('reaction') || 
+      cleanId.includes('hold') || 
+      cleanId.includes('reference') || 
+      cleanId.includes('overload') || 
+      cleanId.includes('numerical') || 
+      cleanId.includes('advantage') || 
+      cleanId.includes('between_lines') || 
+      cleanId.includes('lines') || 
+      cleanId.includes('occupation') || 
+      cleanId.includes('compactness') || 
+      cleanId.includes('grid') || 
+      cleanId.includes('trap') || 
+      cleanId.includes('trigger') || 
+      cleanId.includes('funnel') || 
+      cleanId.includes('isolation') || 
+      cleanId.includes('shadow') || 
+      cleanId.includes('turnover') ||
+      cleanId.includes('block_structure');
+
+    if (level === ComplexityLevel.BEGINNER) {
+      return !isAdvanced;
+    }
+    
+    if (level === ComplexityLevel.ADVANCED) {
+      return isAdvanced;
+    }
+    
+    return true; // Intermediate shows all
+  }
+
+  private getAdaptedCommentary(text: string): string {
+    if (!text) return '';
+    if (this.currentLevel === ComplexityLevel.BEGINNER) {
+      return this.translateToBeginnerCommentary(text);
+    } else if (this.currentLevel === ComplexityLevel.ADVANCED) {
+      return this.translateToAdvancedCommentary(text);
+    }
+    return text;
+  }
+
+  private translateToBeginnerCommentary(text: string): string {
+    let res = text;
+    const replacements: [RegExp, string][] = [
+      [/\bFalse 9\b/g, 'Withdrawn Striker'],
+      [/\bfalse 9\b/g, 'withdrawn striker'],
+      [/\bFalse9\b/g, 'Withdrawn Striker'],
+      [/\bfalse9\b/g, 'withdrawn striker'],
+      [/\b[Nn]umerical [Oo]verload\b/g, 'extra player advantage'],
+      [/\b[Mm]idfield [Oo]verload\b/g, 'extra midfielder advantage'],
+      [/\b[Oo]verload\b/g, 'extra player numbers'],
+      [/\b[Ii]nverted [Ww]inger\b/g, 'winger cutting inside'],
+      [/\b[Ii]nverted [Ww]ingers\b/g, 'wingers cutting inside'],
+      [/\b[Pp]ressing [Tt]rap\b/g, 'defensive trap'],
+      [/\b[Pp]ressing [Tt]raps\b/g, 'defensive traps'],
+      [/\b[Dd]efensive [Bb]lock\b/g, 'defensive shape'],
+      [/\b[Ll]ow [Bb]lock\b/g, 'deep defense shape'],
+      [/\b[Cc]ompact [Bb]lock\b/g, 'tight defense shape'],
+      [/\b[Cc]ompactness\b/g, 'close teamwork shape'],
+      [/\b[Rr]eference [Pp]oints\b/g, 'defenders marking targets'],
+      [/\b[Rr]eference [Pp]oint\b/g, 'defender marking target'],
+      [/\b[Hh]alf-[Ss]paces\b/g, 'channels between center and side'],
+      [/\b[Hh]alf-[Ss]pace\b/g, 'channel between center and side'],
+      [/\b[Zz]one 14\b/g, 'area in front of the penalty box'],
+      [/\b[Ll]ine [Oo]ccupation\b/g, 'occupying positions'],
+      [/\b[Dd]efensive [Tt]riggers\b/g, 'moments to start defending'],
+      [/\b[Dd]efensive [Tt]rigger\b/g, 'moment to start defending'],
+      [/\b[Gg]egenpressing\b/g, 'winning the ball back immediately'],
+      [/\b[Cc]ounter-[Pp]ressing\b/g, 'winning the ball back immediately'],
+      [/\b[Vv]ertical [Oo]utlets\b/g, 'forward passing routes'],
+      [/\b[Vv]ertical [Oo]utlet\b/g, 'forward passing route'],
+      [/\b[Pp]ositional [Aa]ttacks\b/g, 'structured team attacks'],
+      [/\b[Pp]ositional [Aa]ttack\b/g, 'structured team attack'],
+      [/\b[Cc]entral [Ss]uperiority\b/g, 'extra numbers in the middle'],
+      [/\b[Dd]estabilizes\b/g, 'disrupts'],
+      [/\b[Dd]estabilize\b/g, 'disrupt'],
+      [/\b[Hh]alfspaces\b/g, 'channels between center and side'],
+      [/\b[Hh]alfspace\b/g, 'channel between center and side']
+    ];
+    for (const [regex, replacement] of replacements) {
+      res = res.replace(regex, replacement);
+    }
+    return res;
+  }
+
+  private translateToAdvancedCommentary(text: string): string {
+    let res = text;
+    const replacements: [RegExp, string][] = [
+      [/\bstriker drops deep\b/gi, 'False 9 drops deep to manipulate CB reference coordinates'],
+      [/\bstriker dropping deep\b/gi, 'False 9 withdrawing to destabilize central defensive reference coordinates'],
+      [/\bextra player in midfield\b/gi, 'midfield numerical overload (+1 structural superiority)'],
+      [/\bmidfield numerical superiority\b/gi, 'numerical overload (+1 structural superiority) in the central corridor'],
+      [/\bdefensive trap\b/gi, 'structured pressing trap enforcing a deterministic turnover trigger'],
+      [/\bdefensive traps\b/gi, 'structured pressing traps enforcing deterministic turnover triggers'],
+      [/\bdeep defense\b/gi, 'low defensive block optimizing vertical compactness'],
+      [/\bdefending deep\b/gi, 'low block structure maintaining line compactness'],
+      [/\bdefenders\b/gi, 'defensive reference points'],
+      [/\bpassing lanes\b/gi, 'vertical passing corridors/lanes'],
+      [/\bmarks the player\b/gi, 'establishes defensive marking reference coordinates'],
+      [/\bgap in defense\b/gi, 'exposed defensive line gap due to structural manipulation'],
+      [/\bcenter back follows\b/gi, 'center-back is drawn out, compromising defensive reference points']
+    ];
+    for (const [regex, replacement] of replacements) {
+      res = res.replace(regex, replacement);
+    }
+    return res;
   }
 }

@@ -49,25 +49,35 @@ router.post('/tutor', async (req: Request, res: Response, next: NextFunction) =>
 
   try {
     const tutorResult = await graniteService.queryTutor(prompt, 'default-session', traceId, history);
-    const responseData = tutorResult.data;
+    const rawData: any = tutorResult.data;
     let tutorResponse: TutorResponse;
 
-    if ('needs_clarification' in responseData && responseData.needs_clarification) {
+    if (rawData.needs_clarification) {
       tutorResponse = {
-        explanation: responseData.clarification_question,
+        explanation: rawData.clarification_question || 'Could you clarify what you mean?',
         detected_level: ComplexityLevel.BEGINNER,
         follow_up_suggestions: [],
-        confidence_score: 0.65
+        confidence_score: 0.65,
+        clarification_requested: true,
+        followup_detected: rawData.followup_detected || false,
+        conversation_thread: rawData.conversation_thread || []
       };
     } else {
-      const conceptData = responseData as any;
       tutorResponse = {
-        explanation: conceptData.explanation,
-        concept_id: conceptData.concept_id,
-        detected_level: conceptData.user_level || ComplexityLevel.BEGINNER,
-        follow_up_suggestions: conceptData.follow_up_suggestions || [],
-        confidence_score: conceptData.confidence_score !== undefined ? conceptData.confidence_score : 0.93,
-        actions: conceptData.actions || []
+        explanation: rawData.explanation,
+        concept_id: rawData.concept_id,
+        detected_level: rawData.user_level || ComplexityLevel.BEGINNER,
+        follow_up_suggestions: rawData.follow_up_suggestions || [],
+        confidence_score: rawData.confidence_score !== undefined ? rawData.confidence_score : 0.93,
+        actions: rawData.actions || [],
+        followup_detected: rawData.followup_detected || false,
+        reference_resolved: rawData.reference_resolved || false,
+        clarification_requested: false,
+        context_recovered: rawData.context_recovered || false,
+        concept_transition: rawData.concept_transition || false,
+        breakdown_followup: rawData.breakdown_followup || false,
+        resolved_references: rawData.resolved_references || [],
+        conversation_thread: rawData.conversation_thread || []
       };
     }
 

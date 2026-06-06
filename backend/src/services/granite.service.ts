@@ -11,6 +11,11 @@ import { conversationSummarizer } from './summarizer.service';
 import { conceptVocabularyService } from './vocabulary.service';
 import { classroomIntentEngine } from './classroomIntentEngine.service';
 import { historicalExampleRepository } from '../repositories/historicalExample.repository';
+import { KnowledgeLevelDetector } from './knowledgeLevelDetector.service';
+import { explanationAdaptationLayer } from './explanationAdaptation.service';
+import { ReferenceResolver } from './referenceResolver.service';
+import { FollowUpIntentEngine } from './followUpIntentEngine.service';
+import { ContextRecoveryService } from './contextRecovery.service';
 
 export class GraniteService {
   private static cachedToken: string | null = null;
@@ -34,7 +39,11 @@ export class GraniteService {
   /**
    * Helper that builds the dynamic system prompt containing the session's conversational context.
    */
-  private buildSystemPrompt(context: ConversationContext): string {
+  private buildSystemPrompt(
+    context: ConversationContext,
+    userLevel: ComplexityLevel = ComplexityLevel.INTERMEDIATE,
+    confidenceScore: number = 0.5
+  ): string {
     const conceptIds = conceptVocabularyService.getSupportedConceptIds();
     const conceptListStr = conceptIds.map((id) => `- ${id}`).join('\n');
     const numConcepts = conceptIds.length;
@@ -55,6 +64,25 @@ export class GraniteService {
     if (context.active_breakdown) {
       contextSection += `CURRENT BREAKDOWN VIEW: ${context.active_breakdown}\n`;
     }
+    contextSection += `DETECTED KNOWLEDGE LEVEL: ${userLevel}\n`;
+    contextSection += `LEVEL CONFIDENCE SCORE: ${confidenceScore.toFixed(2)}\n`;
+
+    let levelGuidance = '';
+    if (userLevel === ComplexityLevel.BEGINNER) {
+      levelGuidance = `You must explain the concept in BEGINNER MODE.
+- Prioritize: simple language, visual analogies (e.g. decoy runner, magnets), clear examples, and minimal jargon.
+- Do NOT use advanced terms like "half-spaces", "Zone 14", "reference points", or "compactness".
+- Example of style: "A False 9 is a striker who moves away from the goal to create space."`;
+    } else if (userLevel === ComplexityLevel.ADVANCED) {
+      levelGuidance = `You must explain the concept in ADVANCED MODE.
+- Prioritize: positional play, defensive manipulation, structural effects, and tradeoffs.
+- Use specialized terminology like "half-spaces", "Zone 14", "reference points", "compactness", and "overloads".
+- Example of style: "The False 9 destabilizes defensive reference points and creates central superiority during positional attacks."`;
+    } else {
+      levelGuidance = `You must explain the concept in INTERMEDIATE MODE.
+- Prioritize: tactical reasoning, shape explanations (e.g. 4-3-3, defensive block), role interactions, and overloads.
+- Example of style: "A False 9 pulls defenders out of position and creates midfield overloads."`;
+    }
 
     return `You are the Football Atlas AI Tactical Tutor, an elite football coach (UEFA Pro License analyst level), tactical educator, and visual explainer.
 Your job is to analyze the user's question, detect their level of football knowledge, and map their query to one of our supported tactical concepts.
@@ -68,7 +96,8 @@ ${contextSection ? `CURRENT CONVERSATION CONTEXT:\n${contextSection}\n` : ''}
 
 CRITICAL PERSONAL & EXPLANATION INSTRUCTIONS:
 1. Persona: Speak with professional coaching authority, but remain accessible. Explain in terms of visual spatial movements on a pitch (e.g., "player drops into midfield, drawing the center-back and leaving space behind"). Avoid dry spreadsheets or generic football clichés ("give 110%").
-2. Level Detection: Analyze the user's question. If they use terms like "Zone 14", "half-spaces", "pressing trigger", detect "advanced". If they use standard tactical terms like "defensive block", "overlap", detect "intermediate". If they ask basic terms like "what does a winger do", detect "beginner". Calibrate your explanation complexity to match this level.
+2. Level Calibration Guidance:
+${levelGuidance}
 3. JSON CONTRACT:
 Your output MUST be a valid JSON object. Do not wrap the JSON object in markdown blocks (do NOT output \`\`\`json ... \`\`\`), and do not write any introductory or trailing conversational text. Respond ONLY with the JSON object.
 
@@ -77,8 +106,8 @@ If you have high confidence (>75% probability) that the question is about one of
   "needs_clarification": false,
   "concept_id": "one_of_the_${numConcepts}_ids_above",
   "concept_name": "Readable Name (e.g., 'False 9')",
-  "complexity": "beginner" | "intermediate" | "advanced",
-  "user_level": "detected_user_level_from_question",
+  "complexity": "${userLevel.toLowerCase()}",
+  "user_level": "${userLevel.toLowerCase()}",
   "animation_module": "matching_module_id_e.g._false9_or_highPress",
   "explanation": "Your visual and educational explanation calibrating to the user_level. Detail player runs and spacing.",
   "follow_up_suggestions": [
@@ -158,10 +187,180 @@ If you have low confidence, or the user's query is highly ambiguous, or is compl
     history?: ConversationTurn[]
   ): Promise<GraniteTestResponse> {
     const startTime = Date.now();
+    const session = contextManager.getOrCreateSessionContext(conversationId);
+    const context = session.context;
+
+    // A. Context Recovery
+    const recoveryResult = ContextRecoveryService.evaluate(question, session);
+    let contextRecovered = false;
+    if (recoveryResult.recovered && recoveryResult.recoveredConceptId) {
+      contextManager.updateContext(conversationId, {
+        active_concept: recoveryResult.recoveredConceptId,
+        active_example: recoveryResult.recoveredExampleId
+      });
+      session.last_concept = recoveryResult.recoveredConceptId;
+      session.last_example = recoveryResult.recoveredExampleId;
+      contextRecovered = true;
+    }
+
+    // B. Reference Resolution
+    const refResult = ReferenceResolver.resolve(question, session);
+    if (refResult.resolvedConceptId && refResult.resolvedConceptId !== context.active_concept) {
+      contextManager.updateContext(conversationId, {
+        active_concept: refResult.resolvedConceptId
+      });
+      session.last_concept = refResult.resolvedConceptId;
+    }
+
+    // C. Follow-up Intent Detection
+    const followUpResult = FollowUpIntentEngine.classify(question, session);
+
+    // D. Clarification Routing (Ambiguity Handling)
+    if (followUpResult.requiresClarification) {
+      Logger.info('Clarification requested due to ambiguous follow-up', {
+        question,
+        clarification_question: followUpResult.clarificationQuestion
+      });
+      return {
+        success: true,
+        is_mocked: true,
+        mode: 'mock',
+        latency_ms: Date.now() - startTime,
+        data: {
+          needs_clarification: true,
+          clarification_question: followUpResult.clarificationQuestion,
+          concept_id: session.last_concept || context.active_concept || '',
+          concept_name: (session.last_concept || context.active_concept || '').replace(/_/g, ' '),
+          complexity: session.user_level,
+          user_level: session.user_level,
+          followup_detected: true,
+          clarification_requested: true,
+          resolved_references: [],
+          conversation_thread: session.conversation_thread
+        } as any
+      };
+    }
+
+    // E. Call the internal handler
+    const response = await this.queryTutorInternal(question, conversationId, traceId, history);
+
+    // F. Enrich Output with Metadata & Update Memory
+    if (response && response.data) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parsedData: any = response.data;
+      
+      // Update memory variables
+      const conceptId = parsedData.concept_id || refResult.resolvedConceptId || context.active_concept;
+      if (conceptId) {
+        session.last_concept = conceptId;
+        const regObj = tacticalRegistry.getConcept(conceptId);
+        if (regObj) {
+          session.last_animation = regObj.animation_module?.module_id || null;
+        }
+      }
+
+      const exampleId = parsedData.example_id || parsedData.active_example || refResult.resolvedExampleId;
+      if (exampleId) {
+        session.last_example = exampleId;
+        const example = historicalExampleRepository.getById(exampleId);
+        if (example) {
+          session.last_match = example.example_id;
+          session.last_player = example.players?.[0] || null;
+          session.last_coach = example.coach || null;
+        }
+      }
+
+      if (parsedData.active_breakdown || refResult.resolvedBreakdownId) {
+        session.last_breakdown = parsedData.active_breakdown || refResult.resolvedBreakdownId;
+      }
+
+      // Update the thread sequence
+      const conceptFriendlyNames: Record<string, string> = {
+        false_9: 'False 9',
+        midfield_overload: 'Midfield Overload',
+        third_man_run: 'Third Man Run',
+        high_press: 'High Press',
+        pressing_trap: 'Pressing Trap',
+        compactness_pressing_lines: 'Compactness',
+        defensive_block: 'Defensive Block',
+        counter_attack_trigger: 'Counter Attack Trigger',
+        back_three_wing_back: 'Back Three Recovery',
+        inverted_winger: 'Inverted Winger'
+      };
+
+      const addToThread = (item: string) => {
+        if (session.conversation_thread.length === 0) {
+          session.conversation_thread.push(item);
+        } else {
+          const last = session.conversation_thread[session.conversation_thread.length - 1];
+          if (last !== item && !session.conversation_thread.includes(item)) {
+            session.conversation_thread.push(item);
+          }
+        }
+      };
+
+      if (conceptId && conceptFriendlyNames[conceptId]) {
+        addToThread(conceptFriendlyNames[conceptId]);
+      }
+
+      if (followUpResult.intent === 'CONCEPT_TRANSITION') {
+        if (conceptId === 'false_9' && /defend|defender|stop|react|respond/i.test(question.toLowerCase())) {
+          addToThread('Defensive Response');
+        }
+      }
+
+      const activeEx = session.last_example;
+      if (activeEx && (followUpResult.intent === 'BREAKDOWN_REQUEST' || question.toLowerCase().includes('breakdown') || question.toLowerCase().includes('example'))) {
+        const example = historicalExampleRepository.getById(activeEx);
+        if (example) {
+          addToThread(`${example.match_name.split('vs')[0].trim()} ${example.season} Breakdown`);
+        }
+      }
+
+      // Inject metrics
+      parsedData.followup_detected = followUpResult.intent !== 'DIRECT_FOLLOWUP' || refResult.resolved;
+      parsedData.reference_resolved = refResult.resolved;
+      parsedData.clarification_requested = false;
+      parsedData.context_recovered = contextRecovered;
+      parsedData.concept_transition = followUpResult.intent === 'CONCEPT_TRANSITION';
+      parsedData.breakdown_followup = followUpResult.intent === 'BREAKDOWN_REQUEST';
+      parsedData.resolved_references = refResult.evidence;
+      parsedData.conversation_thread = [...session.conversation_thread];
+    }
+
+    return response;
+  }
+
+  private async queryTutorInternal(
+    question: string,
+    conversationId: string = 'default-session',
+    traceId: string = 'system-request',
+    history?: ConversationTurn[]
+  ): Promise<GraniteTestResponse> {
+    const startTime = Date.now();
     
     // Resolve session context history using the unified Context Manager
     const session = contextManager.getOrCreateSessionContext(conversationId);
     const context = session.context;
+
+    // Run level detection
+    const detection = KnowledgeLevelDetector.detect(question, session.last_questions);
+    
+    // Log detection events for analytics tracking
+    Logger.info('Knowledge Level Detected', {
+      question,
+      detected_level: detection.detected_level,
+      confidence_score: detection.confidence_score,
+      evidence: detection.evidence
+    });
+
+    session.user_level = detection.detected_level;
+    session.knowledge_profile = {
+      detected_level: detection.detected_level,
+      confidence_score: detection.confidence_score,
+      evidence: detection.evidence,
+      conversation_history: [...session.last_questions]
+    };
 
     // Auto-summarize if conversation depth exceeds 5 turns
     if (session.last_questions.length > 5) {
@@ -264,11 +463,12 @@ If you have low confidence, or the user's query is highly ambiguous, or is compl
         example,
         conceptName,
         question,
-        traceId
+        traceId,
+        session.user_level
       );
 
       // Format target experience output exactly as requested
-      const formattedExplanation = `Example:
+      let formattedExplanation = `Example:
 ${example.match_name}
 ${example.season} ${example.competition}
 
@@ -280,6 +480,14 @@ ${example.tactical_summary}
 
 Explanation:
 ${explanationText}`;
+
+      // Adapt historical explanation
+      formattedExplanation = explanationAdaptationLayer.adaptHistoricalExplanation(
+        matchedConcept,
+        session.user_level,
+        example,
+        formattedExplanation
+      );
 
       // Update context state
       contextManager.updateContext(conversationId, {
@@ -372,7 +580,7 @@ ${explanationText}`;
     }
 
     // Prepare system prompt with injected context variables
-    const systemPrompt = this.buildSystemPrompt(context);
+    const systemPrompt = this.buildSystemPrompt(context, session.user_level, detection.confidence_score);
 
     // 2. Trigger Hugging Face API if in Hugging Face mode
     if (this.isHFMode) {
@@ -831,16 +1039,19 @@ ${explanationText}`;
     const session = contextManager.getOrCreateSessionContext(conversationId);
     const context = session.context;
 
+    // Run level detection
+    const detection = KnowledgeLevelDetector.detect(question, session.last_questions);
+    session.user_level = detection.detected_level;
+    session.knowledge_profile = {
+      detected_level: detection.detected_level,
+      confidence_score: detection.confidence_score,
+      evidence: detection.evidence,
+      conversation_history: [...session.last_questions]
+    };
+
     // Use IntentEngine to evaluate intent and routing
     const intentResult = classroomIntentEngine.classifyIntent(question, context);
     let matchedConcept = intentResult.matchedConceptId || 'false_9';
-
-    // Adapt user level based on keyword signals
-    if (q.includes('zone 14') || q.includes('half-space') || q.includes('catenaccio')) {
-      session.user_level = ComplexityLevel.ADVANCED;
-    } else if (q.includes('trigger') || q.includes('structure') || q.includes('tactical')) {
-      session.user_level = ComplexityLevel.INTERMEDIATE;
-    }
 
     // Failsafe: if we couldn't resolve a concept and there's no active concept
     if (!matchedConcept) {
@@ -989,11 +1200,35 @@ ${explanationText}`;
     const concept = mockDatabase[conceptKey] || mockDatabase['false_9'];
     let explanation = concept[explanationKey] || concept.overview;
 
+    // Adapt explanation dynamically
+    explanation = explanationAdaptationLayer.adaptExplanation(matchedConcept, session.user_level, explanation);
+
     // Custom tactical adjustments for key experiences
-    if (intentResult.intent === 'PLAYER_EXAMPLE' && q.includes('messi')) {
-      explanation = `Pep Guardiola famously deployed Lionel Messi centrally in the 2009 UCL Final (Barcelona vs Manchester United) in the False 9 role. Messi dropped deep into Zone 14 to receive the ball, pulling center-backs out of position and creating spaces for inside runs from Thierry Henry and Samuel Eto'o.`;
-    } else if (intentResult.intent === 'COACH_EXAMPLE' && q.includes('klopp')) {
-      explanation = `Jürgen Klopp utilized Roberto Firmino as a central pressing trigger at Liverpool. Firmino's high-intensity work rate cut off central options to Fernandinho, forcing turnovers inside Manchester City's build-up lines and triggering rapid counter-attacks.`;
+    if (intentResult.intent === 'PLAYER_EXAMPLE' || intentResult.intent === 'COACH_EXAMPLE' || q.includes('example')) {
+      explanation = explanationAdaptationLayer.adaptHistoricalExplanation(
+        matchedConcept,
+        session.user_level,
+        {
+          example_id: 'barcelona_2009_f9',
+          concept_id: 'false_9',
+          match_name: 'Barcelona vs Manchester United (2009 UCL Final)',
+          competition: 'UEFA Champions League',
+          season: '2008-09',
+          teams: ['Barcelona', 'Manchester United'],
+          date: '2009-05-27',
+          coach: 'Pep Guardiola',
+          players: ['Lionel Messi', "Samuel Eto'o", 'Thierry Henry'],
+          description: 'Pep Guardiola deployed Messi centrally as a dropping striker to create a 4v3 numerical overload in midfield, pulling United center-backs Ferdinand and Vidic out of position.',
+          tactical_summary: 'Messi dropped deep into Zone 14, attracting the attention of central defenders. This opened vertical channels behind the backline for Samuel Eto\'o and Thierry Henry to exploit.',
+          source_references: [],
+          confidence_score: 98,
+          tags: [],
+          review_status: 'approved',
+          validation_metadata: { difficulty: 'beginner', educational_value: '', suitability_score: 95 },
+          beginner_friendly: true
+        },
+        explanation
+      );
     }
 
     // Special behavior override for Target Experience Chain 1:

@@ -44,6 +44,14 @@ export interface TutorResponse {
   follow_up_suggestions: string[];
   confidence_score?: number;
   actions?: ClassroomAction[];
+  followup_detected?: boolean;
+  reference_resolved?: boolean;
+  clarification_requested?: boolean;
+  context_recovered?: boolean;
+  concept_transition?: boolean;
+  breakdown_followup?: boolean;
+  resolved_references?: string[];
+  conversation_thread?: string[];
 }
 
 export interface ConversationContext {

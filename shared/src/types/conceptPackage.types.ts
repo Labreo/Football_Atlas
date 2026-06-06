@@ -130,7 +130,11 @@ export type AnalyticsEventType =
   | 'player_example_requested'
   | 'coach_example_requested'
   | 'match_example_requested'
-  | 'concept_chain_triggered';
+  | 'concept_chain_triggered'
+  | 'knowledge_level_detected'
+  | 'adaptation_applied'
+  | 'level_changed'
+  | 'confidence_updated';
 
 export interface AnalyticsEvent {
   event: AnalyticsEventType;

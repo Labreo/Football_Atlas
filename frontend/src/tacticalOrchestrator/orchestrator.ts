@@ -127,18 +127,68 @@ export class LearningOrchestrator {
 
       store.setTelemetry({ graniteLatencyMs: latency });
 
-      // 3. Append turn in chat console with actions payload
-      useTacticalStore.setState((state) => ({
-        conversation: [
-          ...state.conversation,
-          { role: 'user', content: question },
-          { role: 'assistant', content: response.explanation, actions: response.actions }
-        ],
-        detectedLevel: response.detected_level,
-        followUpSuggestions: response.follow_up_suggestions && response.follow_up_suggestions.length > 0
-          ? response.follow_up_suggestions
-          : state.followUpSuggestions
-      }));
+      // 3. Append turn in chat console with actions payload and process thread
+      useTacticalStore.setState((state) => {
+        if (state.detectedLevel !== response.detected_level) {
+          analyticsTracker.track('level_changed', { 
+            from_level: state.detectedLevel, 
+            to_level: response.detected_level 
+          });
+        }
+        
+        analyticsTracker.track('knowledge_level_detected', {
+          detected_level: response.detected_level,
+          confidence_score: response.confidence_score,
+          question: question
+        });
+
+        analyticsTracker.track('confidence_updated', {
+          detected_level: response.detected_level,
+          confidence_score: response.confidence_score
+        });
+
+        analyticsTracker.track('adaptation_applied', {
+          level: response.detected_level,
+          concept_id: response.concept_id
+        });
+
+        // Track Follow-Up Intelligence analytics events
+        if (response.followup_detected) {
+          analyticsTracker.track('followup_detected', { question });
+        }
+        if (response.reference_resolved) {
+          analyticsTracker.track('reference_resolved', { question, resolved_references: response.resolved_references });
+        }
+        if (response.clarification_requested) {
+          analyticsTracker.track('clarification_requested', { question });
+        }
+        if (response.context_recovered) {
+          analyticsTracker.track('context_recovered', { question });
+        }
+        if (response.concept_transition) {
+          analyticsTracker.track('concept_transition', { question });
+        }
+        if (response.breakdown_followup) {
+          analyticsTracker.track('breakdown_followup', { question });
+        }
+
+        const newThread = response.conversation_thread && response.conversation_thread.length > 0
+          ? response.conversation_thread
+          : state.tacticalThread;
+
+        return {
+          conversation: [
+            ...state.conversation,
+            { role: 'user', content: question },
+            { role: 'assistant', content: response.explanation, actions: response.actions }
+          ],
+          detectedLevel: response.detected_level,
+          tacticalThread: newThread,
+          followUpSuggestions: response.follow_up_suggestions && response.follow_up_suggestions.length > 0
+            ? response.follow_up_suggestions
+            : state.followUpSuggestions
+        };
+      });
 
       // 4. Evaluate Confidence and Concept Routing
       const confidence = response.confidence_score || 0.90;

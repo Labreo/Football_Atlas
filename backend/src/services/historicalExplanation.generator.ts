@@ -32,7 +32,8 @@ export class HistoricalExplanationGenerator {
     example: HistoricalExample,
     conceptName: string,
     userQuestion: string,
-    traceId: string = 'historical-request'
+    traceId: string = 'historical-request',
+    userLevel?: string
   ): Promise<string> {
     const promptText = `You are a world-class Tactical Analyst for Football Atlas.
 Explain the following historical match example in relation to the tactical concept:

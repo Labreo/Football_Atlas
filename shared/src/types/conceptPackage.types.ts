@@ -134,7 +134,12 @@ export type AnalyticsEventType =
   | 'knowledge_level_detected'
   | 'adaptation_applied'
   | 'level_changed'
-  | 'confidence_updated';
+  | 'confidence_updated'
+  | 'evidence_opened'
+  | 'source_viewed'
+  | 'grounded_example_used'
+  | 'historical_mode_entered'
+  | 'source_followup_asked';
 
 export interface AnalyticsEvent {
   event: AnalyticsEventType;

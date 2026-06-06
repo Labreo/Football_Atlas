@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { TacticalConcept, ConversationTurn, ComplexityLevel } from '@football-atlas/shared';
+import { TacticalConcept, ConversationTurn, ComplexityLevel, HistoricalEvidence } from '@football-atlas/shared';
 import { tacticalApi } from '../apiClients/tacticalApi';
 import { learningOrchestrator } from '../tacticalOrchestrator/orchestrator';
 import { VisualMode } from '../visualLanguage/types';
+import { analyticsTracker } from '../tacticalOrchestrator/analytics';
 
 interface TacticalState {
   concepts: TacticalConcept[];
@@ -51,6 +52,14 @@ interface TacticalState {
   // TVLS: Visual Mode state & action
   visualMode: VisualMode;
   setVisualMode: (mode: VisualMode) => void;
+
+  // Grounded Historical Intelligence Layer
+  activeEvidence: HistoricalEvidence[];
+  selectedEvidenceItem: HistoricalEvidence | null;
+  isEvidencePanelOpen: boolean;
+  fetchEvidenceForExample: (exampleId: string) => Promise<void>;
+  setSelectedEvidenceItem: (item: HistoricalEvidence | null) => void;
+  setEvidencePanelOpen: (isOpen: boolean) => void;
 }
 
 export const useTacticalStore = create<TacticalState>((set) => ({
@@ -132,13 +141,38 @@ export const useTacticalStore = create<TacticalState>((set) => ({
   setTacticalThread: (tacticalThread) => set({ tacticalThread }),
 
   setVisualMode: (visualMode) => {
+    const prevMode = useTacticalStore.getState().visualMode;
     set({ visualMode });
     const activeModule = learningOrchestrator.getActiveModule();
     if (activeModule && activeModule.setVisualMode) {
       activeModule.setVisualMode(visualMode);
     }
+    if (visualMode === 'historical' && prevMode !== 'historical') {
+      analyticsTracker.trackHistoricalModeEntered(
+        useTacticalStore.getState().currentConcept?.concept_id || 'none'
+      );
+    }
   },
 
+
+  // Grounded Historical Intelligence Layer initial state
+  activeEvidence: [],
+  selectedEvidenceItem: null,
+  isEvidencePanelOpen: false,
+
+  fetchEvidenceForExample: async (exampleId: string) => {
+    try {
+      const response = await fetch(`/api/tactical/historical/evidence/${exampleId}`);
+      if (response.ok) {
+        const activeEvidence = await response.json();
+        set({ activeEvidence });
+      }
+    } catch (err) {
+      console.error('Failed to fetch evidence for example:', err);
+    }
+  },
+  setSelectedEvidenceItem: (selectedEvidenceItem) => set({ selectedEvidenceItem }),
+  setEvidencePanelOpen: (isEvidencePanelOpen) => set({ isEvidencePanelOpen }),
 
   askQuestion: async (prompt: string) => {
     // Delegate fully to the orchestrator layer to handle the end-to-end loop

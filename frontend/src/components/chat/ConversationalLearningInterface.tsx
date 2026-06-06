@@ -10,6 +10,7 @@ import { ClassroomAction } from '@football-atlas/shared';
 import { HistoricalBreakdownMode } from '../playbook/HistoricalBreakdownMode';
 import Pitch3D from '../pitch/Pitch3D';
 import PitchControls from '../pitch/PitchControls';
+import { EvidencePanel } from '../common/EvidencePanel';
 
 const ConversationalLearningInterface: React.FC = () => {
   const {
@@ -26,6 +27,7 @@ const ConversationalLearningInterface: React.FC = () => {
     followUpSuggestions,
     triggerCameraReset,
     tacticalThread,
+    visualMode,
   } = useTacticalStore();
 
   const orchestratorStore = learningStateStore((state) => state.telemetry);
@@ -80,6 +82,7 @@ const ConversationalLearningInterface: React.FC = () => {
         example = allEx.find(e => e.example_id === exampleId);
       }
       if (example) {
+        analyticsTracker.trackGroundedExampleUsed(exampleId);
         await useBreakdownStore.getState().startBreakdown(example);
       } else {
         console.error('Historical example not found:', exampleId);
@@ -98,6 +101,7 @@ const ConversationalLearningInterface: React.FC = () => {
         }
         break;
       case 'LAUNCH_HISTORICAL_BREAKDOWN':
+      case 'LAUNCH_BREAKDOWN':
         if (action.payload.example_id) {
           await handleLaunchHistoricalBreakdown(action.payload.example_id, action.payload.concept_id);
         }
@@ -116,13 +120,36 @@ const ConversationalLearningInterface: React.FC = () => {
         useBreakdownStore.getState().stopBreakdown();
         triggerCameraReset();
         break;
+      case 'VIEW_SOURCE':
+      case 'OPEN_EVIDENCE':
+      case 'RELATED_DOCUMENT':
+        if (action.payload.example_id) {
+          const { fetchEvidenceForExample, setEvidencePanelOpen } = useTacticalStore.getState();
+          await fetchEvidenceForExample(action.payload.example_id);
+          setEvidencePanelOpen(true);
+           analyticsTracker.trackEvidenceOpened(action.payload.example_id, {
+            action_type: action.type
+          });
+        }
+        break;
+      case 'OPEN_MATCH':
+        if (action.payload.example_id) {
+          analyticsTracker.track('match_opened', { example_id: action.payload.example_id });
+          await handleLaunchHistoricalBreakdown(action.payload.example_id, action.payload.concept_id);
+        }
+        break;
       default:
         console.warn('Unhandled action type:', action.type);
     }
   };
 
   return (
-    <div className="h-full w-full flex bg-[#0A0D14] text-slate-100 overflow-hidden font-sans relative">
+    <div className={`h-full w-full flex bg-[#0A0D14] text-slate-100 overflow-hidden font-sans relative ${visualMode === 'historical' ? 'historical-mode' : ''}`}>
+      {visualMode === 'historical' && (
+        <div className="historical-mode-watermark select-none pointer-events-none">
+          🏛️ Grounded Historical Intel
+        </div>
+      )}
       
       {/* ──────────────────────────────────────────────────────────── */}
       {/* LEFT / CENTER CORE (70-80% viewport): The Hero Pitch         */}
@@ -427,7 +454,7 @@ const ConversationalLearningInterface: React.FC = () => {
           </>
         )}
       </div>
-
+      <EvidencePanel />
     </div>
   );
 };

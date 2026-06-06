@@ -21,13 +21,26 @@ export type TacticalConcept = z.infer<typeof TacticalConceptSchema>;
 export type GraniteResponse = z.infer<typeof GraniteResponseSchema>;
 
 export interface ClassroomAction {
-  type: 'LAUNCH_CONCEPT' | 'LAUNCH_MATCH' | 'LAUNCH_HISTORICAL_EXAMPLE' | 'LAUNCH_HISTORICAL_BREAKDOWN' | 'OPEN_RELATED_CONCEPT';
+  type:
+    | 'LAUNCH_CONCEPT'
+    | 'LAUNCH_MATCH'
+    | 'LAUNCH_HISTORICAL_EXAMPLE'
+    | 'LAUNCH_HISTORICAL_BREAKDOWN'
+    | 'OPEN_RELATED_CONCEPT'
+    | 'VIEW_SOURCE'
+    | 'OPEN_EVIDENCE'
+    | 'OPEN_MATCH'
+    | 'LAUNCH_BREAKDOWN'
+    | 'RELATED_DOCUMENT';
   label: string;
   payload: {
     concept_id?: string;
     match_id?: string;
     example_id?: string;
     breakdown_id?: string;
+    document_id?: string;
+    chunk_id?: string;
+    evidence_id?: string;
   };
 }
 

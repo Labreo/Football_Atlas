@@ -124,6 +124,19 @@ export class LearningOrchestrator {
       if (qLower.includes('next') || qLower.includes('chain') || qLower.includes('then what')) {
         analyticsTracker.track('concept_chain_triggered', { question });
       }
+      if (
+        qLower.includes('where did') ||
+        qLower.includes('what source') ||
+        qLower.includes('supporting evidence') ||
+        qLower.includes('what document') ||
+        qLower.includes('source of this') ||
+        qLower.includes('why do you say') ||
+        qLower.includes('based on what') ||
+        qLower.includes('where does this analysis come from') ||
+        qLower.includes('what says')
+      ) {
+        analyticsTracker.trackSourceFollowupAsked(question);
+      }
 
       // 2. Call Granite AI Tutoring API
       const response = await tacticalApi.askTutor(question, globalStore.conversation);

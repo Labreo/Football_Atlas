@@ -68,3 +68,16 @@ export const HistoricalBreakdownSchema = z.object({
   commentary: z.array(z.string()),
   learning_goals: z.array(z.string())
 });
+
+export const HistoricalEvidenceSchema = z.object({
+  evidence_id: z.string().min(3),
+  example_id: z.string().min(3),
+  document_id: z.string().min(3),
+  chunk_id: z.string().min(3),
+  source_title: z.string().min(3),
+  source_type: z.string().min(3),
+  coach: z.string().min(2),
+  season: z.string().min(4),
+  excerpt: z.string().min(10),
+  confidence: z.number().min(0).max(1)
+});

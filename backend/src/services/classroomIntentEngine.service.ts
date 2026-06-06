@@ -17,13 +17,26 @@ export type ClassroomIntent =
   | 'CONCEPT_CHAIN';
 
 export interface ClassroomAction {
-  type: 'LAUNCH_CONCEPT' | 'LAUNCH_MATCH' | 'LAUNCH_HISTORICAL_EXAMPLE' | 'LAUNCH_HISTORICAL_BREAKDOWN' | 'OPEN_RELATED_CONCEPT';
+  type:
+    | 'LAUNCH_CONCEPT'
+    | 'LAUNCH_MATCH'
+    | 'LAUNCH_HISTORICAL_EXAMPLE'
+    | 'LAUNCH_HISTORICAL_BREAKDOWN'
+    | 'OPEN_RELATED_CONCEPT'
+    | 'VIEW_SOURCE'
+    | 'OPEN_EVIDENCE'
+    | 'OPEN_MATCH'
+    | 'LAUNCH_BREAKDOWN'
+    | 'RELATED_DOCUMENT';
   label: string;
   payload: {
     concept_id?: string;
     match_id?: string;
     example_id?: string;
     breakdown_id?: string;
+    document_id?: string;
+    chunk_id?: string;
+    evidence_id?: string;
   };
 }
 
@@ -320,6 +333,22 @@ export class ClassroomIntentEngine {
         actions.push({
           type: 'LAUNCH_MATCH',
           label: `Open Match Card: ${bestExample.match_name}`,
+          payload: {
+            concept_id: conceptId,
+            example_id: bestExample.example_id
+          }
+        });
+        actions.push({
+          type: 'VIEW_SOURCE',
+          label: `View Sources: ${bestExample.match_name}`,
+          payload: {
+            concept_id: conceptId,
+            example_id: bestExample.example_id
+          }
+        });
+        actions.push({
+          type: 'OPEN_EVIDENCE',
+          label: `Open Grounding Evidence`,
           payload: {
             concept_id: conceptId,
             example_id: bestExample.example_id

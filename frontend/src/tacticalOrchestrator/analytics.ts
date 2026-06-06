@@ -146,6 +146,26 @@ export class AnalyticsTracker {
     this.track('conversation_completed', data);
   }
 
+  public trackEvidenceOpened(exampleId: string, data: any = {}): void {
+    this.track('evidence_opened', { example_id: exampleId, ...data });
+  }
+
+  public trackSourceViewed(evidenceId: string, sourceTitle: string, data: any = {}): void {
+    this.track('source_viewed', { evidence_id: evidenceId, source_title: sourceTitle, ...data });
+  }
+
+  public trackGroundedExampleUsed(exampleId: string, data: any = {}): void {
+    this.track('grounded_example_used', { example_id: exampleId, ...data });
+  }
+
+  public trackHistoricalModeEntered(conceptId: string, data: any = {}): void {
+    this.track('historical_mode_entered', { concept_id: conceptId, ...data });
+  }
+
+  public trackSourceFollowupAsked(question: string, data: any = {}): void {
+    this.track('source_followup_asked', { question, ...data });
+  }
+
   // ──────────────── Session Buffer ────────────────
 
   /**

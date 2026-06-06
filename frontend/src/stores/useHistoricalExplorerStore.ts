@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { HistoricalExample } from '@football-atlas/shared';
 import { analyticsTracker } from '../tacticalOrchestrator/analytics';
+import { useTacticalStore } from './useTacticalStore';
 
 interface HistoricalExplorerState {
   selectedExample: HistoricalExample | null;
@@ -43,6 +44,7 @@ export const useHistoricalExplorerStore = create<HistoricalExplorerState>((set) 
   setSelectedExample: (example) => {
     set({ selectedExample: example });
     if (example) {
+      useTacticalStore.getState().setVisualMode('historical');
       analyticsTracker.trackHistoricalExampleViewed(example.example_id, {
         concept_id: example.concept_id,
         match_name: example.match_name,
@@ -51,6 +53,13 @@ export const useHistoricalExplorerStore = create<HistoricalExplorerState>((set) 
         concept_id: example.concept_id,
         match_name: example.match_name,
       });
+      analyticsTracker.trackGroundedExampleUsed(example.example_id);
+    } else {
+      // Revert if no active breakdown is playing
+      const { useBreakdownStore } = require('./useBreakdownStore');
+      if (!useBreakdownStore.getState().currentBreakdown) {
+        useTacticalStore.getState().setVisualMode('concept');
+      }
     }
   },
 

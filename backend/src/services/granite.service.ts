@@ -67,6 +67,27 @@ export class GraniteService {
     contextSection += `DETECTED KNOWLEDGE LEVEL: ${userLevel}\n`;
     contextSection += `LEVEL CONFIDENCE SCORE: ${confidenceScore.toFixed(2)}\n`;
 
+    let evidenceSection = '';
+    const activeExampleId = context.active_example || (context.active_concept ? require('./historicalExample.service').historicalExampleService.getBestExample(context.active_concept, userLevel)?.example_id : null);
+    if (activeExampleId) {
+      try {
+        const evidenceList = require('./groundedExample.service').groundedExampleService.getEvidenceForExample(activeExampleId);
+        if (evidenceList.length > 0) {
+          evidenceSection = `\nSUPPORTING EVIDENCE FOR GROUNDING:\n` + evidenceList.map((ev: any, idx: number) => {
+            return `[Source #${idx + 1}]
+Title: ${ev.source_title}
+Type: ${ev.source_type}
+Excerpt: "${ev.excerpt}"`;
+          }).join('\n\n') + `\n\nINSTRUCTION: When the CURRENT CONVERSATION CONTEXT contains SUPPORTING EVIDENCE, you MUST base your explanation on these sources. Prefer grounded claims referencing specific matches, coaches, players, and excerpts from the sources (e.g. "In Barcelona's 2009 Champions League Final performance...") rather than generic statements. Cite your sources inline, e.g. [Source Title].\n`;
+        }
+      } catch (err) {
+        // Safe catch for potential init/circular dependencies
+      }
+    }
+    if (evidenceSection) {
+      contextSection += evidenceSection;
+    }
+
     let levelGuidance = '';
     if (userLevel === ComplexityLevel.BEGINNER) {
       levelGuidance = `You must explain the concept in BEGINNER MODE.
@@ -324,7 +345,24 @@ If you have low confidence, or the user's query is highly ambiguous, or is compl
       parsedData.context_recovered = contextRecovered;
       parsedData.concept_transition = followUpResult.intent === 'CONCEPT_TRANSITION';
       parsedData.breakdown_followup = followUpResult.intent === 'BREAKDOWN_REQUEST';
-      parsedData.resolved_references = refResult.evidence;
+      
+      let sourceRefs = [...refResult.evidence];
+      const activeExId = session.last_example || parsedData.example_id || parsedData.active_example;
+      if (activeExId) {
+        try {
+          const evidenceList = require('./groundedExample.service').groundedExampleService.getEvidenceForExample(activeExId);
+          sourceRefs.push(...evidenceList.map((e: any) => e.source_title));
+        } catch (_) {}
+      } else if (conceptId) {
+        try {
+          const bestEx = require('./historicalExample.service').historicalExampleService.getBestExample(conceptId, session.user_level);
+          if (bestEx) {
+            const evidenceList = require('./groundedExample.service').groundedExampleService.getEvidenceForExample(bestEx.example_id);
+            sourceRefs.push(...evidenceList.map((e: any) => e.source_title));
+          }
+        } catch (_) {}
+      }
+      parsedData.resolved_references = Array.from(new Set(sourceRefs));
       parsedData.conversation_thread = [...session.conversation_thread];
     }
 
@@ -378,6 +416,63 @@ If you have low confidence, or the user's query is highly ambiguous, or is compl
     }
 
     const qLower = question.toLowerCase();
+    const isSourceFollowUp = /where did (you|that) (get|come from)|what source|show supporting evidence|what document discusses|prove it|evidence for this|source reference|where does this analysis come from/i.test(qLower);
+
+    if (isSourceFollowUp) {
+      const activeExampleId = session.last_example || session.context.active_example || 'barcelona_2009_f9';
+      const evidenceList = require('./groundedExample.service').groundedExampleService.getEvidenceForExample(activeExampleId);
+      
+      const sourceListStr = evidenceList.map((ev: any, idx: number) => {
+        return `Source #${idx + 1}: **${ev.source_title}** (${ev.source_type})
+Excerpt: "${ev.excerpt}" (Confidence: ${Math.round(ev.confidence * 100)}%)`;
+      }).join('\n\n');
+
+      const explanationText = `This tactical analysis is backed by the following documented sources in Football Atlas:
+
+${sourceListStr}
+
+These documents discuss positional structures, spaces, and tactical roles like the False 9 dropping centrally to create midfield overloads.`;
+
+      // Update session metrics
+      session.last_questions.push(question);
+      session.last_answers.push(explanationText);
+
+      return {
+        success: true,
+        is_mocked: true,
+        mode: 'mock',
+        latency_ms: Date.now() - startTime,
+        data: {
+          needs_clarification: false,
+          concept_id: session.last_concept || session.context.active_concept || 'false_9',
+          concept_name: (session.last_concept || session.context.active_concept || 'false_9').replace(/_/g, ' '),
+          complexity: session.user_level,
+          user_level: session.user_level,
+          explanation: explanationText,
+          follow_up_suggestions: ['Show supporting evidence', 'Launch breakdown', 'View core lesson'],
+          actions: [
+            {
+              type: 'VIEW_SOURCE',
+              label: 'View Ingested Source Document',
+              payload: {
+                example_id: activeExampleId,
+                document_id: evidenceList[0]?.document_id || 'tactical_analysis_guardiola',
+                chunk_id: evidenceList[0]?.chunk_id || 'chunk_1'
+              }
+            },
+            {
+              type: 'OPEN_EVIDENCE',
+              label: 'Open Evidence Card',
+              payload: {
+                example_id: activeExampleId,
+                evidence_id: evidenceList[0]?.evidence_id || 'ev_barcelona_2009_f9_chunk_1'
+              }
+            }
+          ]
+        } as any
+      };
+    }
+
     const isHistoricalRequest = /show me (?:a |an )?example|give me (?:a |an )?example|real example|famous team|when has this happened|another example|an example of|example of this|example/i.test(qLower);
 
     if (isHistoricalRequest) {

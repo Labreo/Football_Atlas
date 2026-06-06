@@ -84,6 +84,9 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
           isLoading: false,
         });
 
+        // Set visual mode to historical
+        useTacticalStore.getState().setVisualMode('historical');
+
         // Track analytics
         analyticsTracker.trackBreakdownStarted(breakdown.breakdown_id, {
           example_id: example.example_id,
@@ -227,6 +230,7 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
         timelineProgress: 0.0,
       });
       // Restore standard concept settings
+      useTacticalStore.getState().setVisualMode('concept');
       const currentConcept = useTacticalStore.getState().currentConcept;
       if (currentConcept) {
         learningOrchestrator.loadConceptAnimation(currentConcept.concept_id);

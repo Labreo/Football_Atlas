@@ -29,7 +29,8 @@ const PlaybookInterface: React.FC = () => {
     concepts, 
     isLoading, 
     fetchConcepts, 
-    triggerCameraReset 
+    triggerCameraReset,
+    visualMode
   } = useTacticalStore();
 
   const { currentBreakdown } = useBreakdownStore();
@@ -105,7 +106,12 @@ const PlaybookInterface: React.FC = () => {
   }, [current_concept?.concept_id]);
 
   return (
-    <div className="w-full p-4 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-4 h-full bg-[#0A0D14] select-none">
+    <div className={`w-full p-4 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-4 h-full bg-[#0A0D14] select-none relative ${visualMode === 'historical' ? 'historical-mode' : ''}`}>
+      {visualMode === 'historical' && (
+        <div className="historical-mode-watermark select-none pointer-events-none">
+          🏛️ Grounded Historical Intel
+        </div>
+      )}
       
       {/* ──────────────────────────────────────────────────────────── */}
       {/* LEFT COLUMN (lg:col-span-3): Concept Library / Navigator     */}

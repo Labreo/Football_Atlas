@@ -4,6 +4,7 @@ import { GraniteService } from '../services/granite.service';
 import { historicalExampleService } from '../services/historicalExample.service';
 import { historicalExampleRepository } from '../repositories/historicalExample.repository';
 import { historicalBreakdownService } from '../services/historicalBreakdown.service';
+import { groundedExampleService } from '../services/groundedExample.service';
 
 const router = Router();
 const graniteService = new GraniteService();
@@ -142,6 +143,26 @@ router.get('/historical/breakdowns/:exampleId', (req: Request, res: Response) =>
     return res.status(404).json({ error: 'Not Found', message: 'No tactical breakdown found for this historical example.' });
   }
   return res.json(breakdown);
+});
+
+/**
+ * GET /api/tactical/historical/evidence/:exampleId
+ * Returns the supporting evidence chunks for a specific historical match.
+ */
+router.get('/historical/evidence/:exampleId', (req: Request, res: Response) => {
+  const exampleId = req.params.exampleId;
+  const evidence = groundedExampleService.getEvidenceForExample(exampleId);
+  return res.json(evidence);
+});
+
+/**
+ * GET /api/tactical/historical/examples/:exampleId/evidence
+ * Alternative path to retrieve supporting evidence.
+ */
+router.get('/historical/examples/:exampleId/evidence', (req: Request, res: Response) => {
+  const exampleId = req.params.exampleId;
+  const evidence = groundedExampleService.getEvidenceForExample(exampleId);
+  return res.json(evidence);
 });
 
 export default router;

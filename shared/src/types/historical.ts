@@ -60,3 +60,54 @@ export interface HistoricalBreakdown {
   commentary: string[];
   learning_goals: string[];
 }
+
+export interface HistoricalEvidence {
+  evidence_id: string;
+  example_id: string;
+  document_id: string;
+  chunk_id: string;
+  source_title: string;
+  source_type: string;
+  coach: string;
+  season: string;
+  excerpt: string;
+  confidence: number;
+}
+
+export interface DoclingChunk {
+  chunk_id: string;
+  document_id: string;
+  content: string;
+  section_title: string;
+  page_number: number;
+  word_count: number;
+  concept_tags: string[];
+  language?: string;
+  original_language?: string;
+  historical_tags?: string[];
+  match_tags?: string[];
+  coach_tags?: string[];
+  player_tags?: string[];
+}
+
+export interface DoclingDocument {
+  document_id: string;
+  metadata: {
+    title: string;
+    source: string;
+    author: string;
+    publication_year: number;
+    document_type: string;
+    upload_timestamp: string;
+    processing_status: string;
+    language?: string;
+    original_language?: string;
+  };
+  chunk_ids: string[];
+}
+
+export type ConceptTags = string[];
+export type HistoricalTags = string[];
+export type MatchTags = string[];
+export type CoachTags = string[];
+export type PlayerTags = string[];

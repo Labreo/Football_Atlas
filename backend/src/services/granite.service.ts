@@ -416,7 +416,7 @@ If you have low confidence, or the user's query is highly ambiguous, or is compl
     }
 
     const qLower = question.toLowerCase();
-    const isSourceFollowUp = /where did (you|that) (get|come from)|what source|show supporting evidence|what document discusses|prove it|evidence for this|source reference|where does this analysis come from/i.test(qLower);
+    const isSourceFollowUp = /where did (you|that) (get|come from)|what source|show supporting evidence|what document discusses|prove it|evidence for this|source reference|where does this analysis come from|show (me )?(a )?source|show source/i.test(qLower);
 
     if (isSourceFollowUp) {
       const activeExampleId = session.last_example || session.context.active_example || 'barcelona_2009_f9';

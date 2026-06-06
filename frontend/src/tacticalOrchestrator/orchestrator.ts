@@ -133,7 +133,10 @@ export class LearningOrchestrator {
         qLower.includes('why do you say') ||
         qLower.includes('based on what') ||
         qLower.includes('where does this analysis come from') ||
-        qLower.includes('what says')
+        qLower.includes('what says') ||
+        qLower.includes('show source') ||
+        qLower.includes('show me a source') ||
+        qLower.includes('show a source')
       ) {
         analyticsTracker.trackSourceFollowupAsked(question);
       }

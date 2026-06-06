@@ -6,6 +6,8 @@ import {
   AnimationFrame 
 } from '../tacticalEngine/types';
 
+import { VisualMode } from '../visualLanguage/types';
+
 export type TeamType = 'attack' | 'defense' | 'defend';
 
 export interface PhaseInfo {
@@ -46,6 +48,7 @@ export interface PrimitiveCompileContext {
   cameraPresets: CameraPresetInfo[];
   activeBranch: 'A' | 'B';
   durationSeconds: number;
+  visualMode?: VisualMode;
   
   // Helpers
   getPlayerPosition(playerId: string, time: number): TacticalPosition;

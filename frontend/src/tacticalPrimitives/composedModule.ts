@@ -5,6 +5,10 @@ import { PrimitiveCompiler, CompileResult } from './compiler';
 import { TacticalPrimitive } from './types';
 import { transitionManager } from '../tacticalOrchestrator/TransitionManager';
 import { ComplexityLevel } from '@football-atlas/shared';
+import { VisualMode, TacticalEventType } from '../visualLanguage/types';
+import { VisualLanguageRegistry } from '../visualLanguage/VisualLanguageRegistry';
+
+
 
 export interface ComposedModuleOptions {
   id: string;
@@ -23,6 +27,7 @@ export interface ComposedModuleOptions {
   cameraPresets?: Array<{ start: number; end: number; preset: string }>;
   // Dynamic debug telemetry custom metrics builder
   debugMetricsBuilder?: (fraction: number, activeBranch: 'A' | 'B') => Record<string, any>;
+  visualMode?: VisualMode;
 }
 
 export class ComposedTacticalModule implements TacticalModule {
@@ -30,6 +35,7 @@ export class ComposedTacticalModule implements TacticalModule {
   protected activeBranch: 'A' | 'B' = 'A';
   protected compiledData: CompileResult | null = null;
   protected currentLevel: ComplexityLevel = ComplexityLevel.INTERMEDIATE;
+  protected visualMode: VisualMode = 'concept';
   
   // Track firing status of analytics events
   protected firedAnalyticsEvents = new Set<string>();
@@ -48,15 +54,36 @@ export class ComposedTacticalModule implements TacticalModule {
   public onAnalyticsEvent: ((eventName: string, data: any) => void) | null = null;
   public onCameraPresetChange: ((presetName: string) => void) | null = null;
 
-  constructor(protected options: ComposedModuleOptions) {}
+  constructor(protected options: ComposedModuleOptions) {
+    if (options.visualMode) {
+      this.visualMode = options.visualMode;
+    }
+  }
 
   public init(engine: TacticalAnimationEngine): void {
     this.engine = engine;
     this.engine.getTimeline().setDuration(this.options.durationSeconds);
+    if ((this.engine as any).setVisualMode) {
+      (this.engine as any).setVisualMode(this.visualMode);
+    }
     
     this.compileAndLoad();
     this.subscribeToTimelineEvents();
     this.reset();
+  }
+
+  public setVisualMode(mode: VisualMode): void {
+    if (this.visualMode === mode) return;
+    this.visualMode = mode;
+    if (this.engine && (this.engine as any).setVisualMode) {
+      (this.engine as any).setVisualMode(mode);
+    }
+    this.compileAndLoad();
+    this.reset();
+  }
+
+  public getVisualMode(): VisualMode {
+    return this.visualMode;
   }
 
   protected compileAndLoad(): void {
@@ -69,8 +96,10 @@ export class ComposedTacticalModule implements TacticalModule {
     this.compiledData = PrimitiveCompiler.compile(
       allPrims,
       this.options.durationSeconds,
-      this.activeBranch
+      this.activeBranch,
+      this.visualMode
     );
+
 
     // If compiler failed validation, log it to help developers debug
     if (!this.compiledData.validationReport.valid) {
@@ -86,10 +115,22 @@ export class ComposedTacticalModule implements TacticalModule {
       this.shouldShowOverlayOrArrowForLevel(overlay.id, this.currentLevel)
     );
 
+    let finalArrows = filteredArrows;
+    let finalOverlays = filteredOverlays;
+
+    if (this.visualMode === 'historical') {
+      finalArrows = filteredArrows.map(arrow => 
+        VisualLanguageRegistry.applyHistoricalToArrow(arrow)
+      );
+      finalOverlays = filteredOverlays.map(overlay => 
+        VisualLanguageRegistry.applyHistoricalToOverlay(overlay)
+      );
+    }
+
     let conceptData = {
       players: this.compiledData.players,
-      arrows: filteredArrows,
-      overlays: filteredOverlays,
+      arrows: finalArrows,
+      overlays: finalOverlays,
       ball: this.compiledData.ball,
       duration: this.options.durationSeconds
     };
@@ -532,4 +573,26 @@ export class ComposedTacticalModule implements TacticalModule {
     }
     return res;
   }
+
+  public getActiveEventTypes(fraction: number): TacticalEventType[] {
+    if (!this.compiledData) return [];
+    const active: Set<TacticalEventType> = new Set();
+    
+    // Check arrows
+    this.compiledData.arrows.forEach(a => {
+      if (fraction >= a.startFrame && fraction <= a.endFrame && a.eventType) {
+        active.add(a.eventType as TacticalEventType);
+      }
+    });
+
+    // Check overlays
+    this.compiledData.overlays.forEach(o => {
+      if (fraction >= o.startFrame && fraction <= o.endFrame && o.eventType) {
+        active.add(o.eventType as TacticalEventType);
+      }
+    });
+
+    return Array.from(active);
+  }
 }
+

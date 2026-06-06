@@ -137,7 +137,7 @@ export class ArrowManager {
           dashSize: { value: dashSize },
           gapSize: { value: gapSize },
           dashOffset: { value: this.dashOffset * speed },
-          opacity: { value: 0.95 }
+          opacity: { value: arrow.style.opacity !== undefined ? arrow.style.opacity : 0.95 }
         },
         vertexShader: `
           attribute float lineDistance;
@@ -171,7 +171,7 @@ export class ArrowManager {
         color: arrow.style.color,
         linewidth: arrow.style.width || 3,
         transparent: true,
-        opacity: 0.85,
+        opacity: arrow.style.opacity !== undefined ? arrow.style.opacity : 0.85,
         depthWrite: false
       });
     }
@@ -197,7 +197,7 @@ export class ArrowManager {
     const arrowHeadMat = new THREE.MeshBasicMaterial({
       color: arrow.style.color,
       transparent: true,
-      opacity: 0.9,
+      opacity: arrow.style.opacity !== undefined ? arrow.style.opacity : 0.9,
       depthWrite: false
     });
 

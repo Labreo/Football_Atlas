@@ -7,6 +7,9 @@ import {
 } from './types';
 import { PRIMITIVE_STYLE_CONFIG } from './config';
 import { TacticalPosition, OverlayType } from '../tacticalEngine/types';
+import { TacticalEventType } from '../visualLanguage/types';
+import { VisualLanguageRegistry } from '../visualLanguage/VisualLanguageRegistry';
+
 
 // ────────────────────────────────────────────────────────────
 // FORMATION COORDINATE PRESETS
@@ -880,40 +883,125 @@ export class DefenderHolds implements TacticalPrimitive {
 
 export class PressTriggered implements TacticalPrimitive {
   type = 'PressTriggered';
-  constructor(public time: number, public data: any = {}) {}
+  constructor(
+    public time: number,
+    public data: any = {},
+    public eventType: TacticalEventType = TacticalEventType.PRESS_TRIGGER
+  ) {}
 
   compile(context: PrimitiveCompileContext): void {
     context.analyticsEvents.push({
       timeFraction: this.time,
       eventName: 'trigger_detected',
-      data: { trigger_type: 'press_triggered', ...this.data }
+      data: { trigger_type: 'press_triggered', eventType: this.eventType, ...this.data }
     });
+
+    const center = this.data.center || this.data.player_id || this.data.playerId;
+    if (center) {
+      const mode = (context as any).visualMode || 'concept';
+      const sig = VisualLanguageRegistry.getSignature(this.eventType, mode);
+      const resolvedCenter = typeof center === 'string'
+        ? context.getPlayerPosition(center, this.time)
+        : center;
+
+      if (resolvedCenter && sig.overlay) {
+        context.overlays.push({
+          id: `press_trigger_overlay_${this.time}`,
+          type: sig.overlay.mode as any,
+          center: resolvedCenter,
+          radius: this.data.radius ?? 5.0,
+          startFrame: this.time,
+          endFrame: Math.min(1.0, this.time + (sig.motion.durationMs / 1000) / context.durationSeconds),
+          color: sig.overlay.color,
+          opacity: sig.overlay.opacity,
+          eventType: this.eventType,
+          pulseCount: sig.overlay.pulseCount,
+          pulsePeriodMs: sig.overlay.pulsePeriodMs,
+        });
+      }
+    }
   }
 }
 
 export class TrapActivated implements TacticalPrimitive {
   type = 'TrapActivated';
-  constructor(public time: number, public data: any = {}) {}
+  constructor(
+    public time: number,
+    public data: any = {},
+    public eventType: TacticalEventType = TacticalEventType.PRESSING_TRAP
+  ) {}
 
   compile(context: PrimitiveCompileContext): void {
     context.analyticsEvents.push({
       timeFraction: this.time,
       eventName: 'trap_activated',
-      data: { trap_zone: 'sideline', ...this.data }
+      data: { trap_zone: 'sideline', eventType: this.eventType, ...this.data }
     });
+
+    const center = this.data.center;
+    if (center) {
+      const mode = (context as any).visualMode || 'concept';
+      const sig = VisualLanguageRegistry.getSignature(this.eventType, mode);
+      const resolvedCenter = typeof center === 'string'
+        ? context.getPlayerPosition(center, this.time)
+        : center;
+
+      if (resolvedCenter && sig.overlay) {
+        context.overlays.push({
+          id: `trap_activated_overlay_${this.time}`,
+          type: sig.overlay.mode as any,
+          center: resolvedCenter,
+          radius: this.data.radius ?? 6.0,
+          startFrame: this.time,
+          endFrame: Math.min(1.0, this.time + (sig.motion.durationMs / 1000) / context.durationSeconds),
+          color: sig.overlay.color,
+          opacity: sig.overlay.opacity,
+          eventType: this.eventType,
+        });
+      }
+    }
   }
 }
 
 export class CounterAttackTriggered implements TacticalPrimitive {
   type = 'CounterAttackTriggered';
-  constructor(public time: number, public data: any = {}) {}
+  constructor(
+    public time: number,
+    public data: any = {},
+    public eventType: TacticalEventType = TacticalEventType.COUNTER_ATTACK_TRIGGER
+  ) {}
 
   compile(context: PrimitiveCompileContext): void {
     context.analyticsEvents.push({
       timeFraction: this.time,
       eventName: 'replay_triggered',
-      data: { reason: 'counter_attack_started', ...this.data }
+      data: { reason: 'counter_attack_started', eventType: this.eventType, ...this.data }
     });
+
+    const center = this.data.center;
+    if (center) {
+      const mode = (context as any).visualMode || 'concept';
+      const sig = VisualLanguageRegistry.getSignature(this.eventType, mode);
+      const resolvedCenter = typeof center === 'string'
+        ? context.getPlayerPosition(center, this.time)
+        : center;
+
+      if (resolvedCenter && sig.overlay) {
+        context.overlays.push({
+          id: `counter_attack_overlay_${this.time}`,
+          type: sig.overlay.mode as any,
+          center: resolvedCenter,
+          radius: this.data.radius ?? 8.0,
+          startFrame: this.time,
+          endFrame: Math.min(1.0, this.time + (sig.motion.durationMs / 1000) / context.durationSeconds),
+          color: sig.overlay.color,
+          colorSecondary: sig.overlay.colorSecondary,
+          opacity: sig.overlay.opacity,
+          eventType: this.eventType,
+          flashDurationMs: sig.overlay.flashDurationMs,
+        });
+      }
+    }
   }
 }
 
@@ -957,7 +1045,8 @@ abstract class BaseArrowPrimitive implements TacticalPrimitive {
     public endTime: number,
     public defaultStyle: any,
     public customStyle?: any,
-    public curved: boolean = false
+    public curved: boolean = false,
+    public eventType?: TacticalEventType
   ) {}
 
   compile(context: PrimitiveCompileContext): void {
@@ -969,7 +1058,7 @@ abstract class BaseArrowPrimitive implements TacticalPrimitive {
     if (this.curved) {
       const dx = toPos.x - fromPos.x;
       const dz = toPos.z - fromPos.z;
-      const dist = Math.sqrt(dx * dx + dz * dz);
+      const dist = Math.sqrt(dx * dx + dz * dz) || 1;
       const perpX = -dz / dist * (dist * 0.15); // Offset curve control point
       const perpZ = dx / dist * (dist * 0.15);
       
@@ -980,10 +1069,16 @@ abstract class BaseArrowPrimitive implements TacticalPrimitive {
       ];
     }
 
+    const mode = (context as any).visualMode || 'concept';
+    let resolvedStyle = this.defaultStyle;
+    if (this.eventType) {
+      resolvedStyle = VisualLanguageRegistry.getArrowStyle(this.eventType, mode);
+    }
+
     const mergedStyle = {
-      ...this.defaultStyle,
+      ...resolvedStyle,
       ...this.customStyle,
-      curved: this.curved || this.defaultStyle.curved
+      curved: this.curved || resolvedStyle.curved
     };
 
     context.arrows.push({
@@ -994,7 +1089,8 @@ abstract class BaseArrowPrimitive implements TacticalPrimitive {
       style: mergedStyle,
       startFrame: this.startTime,
       endFrame: this.endTime,
-      currentProgress: 0.0
+      currentProgress: 0.0,
+      eventType: this.eventType
     });
   }
 }
@@ -1008,9 +1104,10 @@ export class MovementArrow extends BaseArrowPrimitive {
     startTime: number,
     endTime: number,
     customStyle?: any,
-    curved: boolean = false
+    curved: boolean = false,
+    eventType: TacticalEventType = TacticalEventType.MOVEMENT_RUN
   ) {
-    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.movement, customStyle, curved);
+    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.movement, customStyle, curved, eventType);
   }
 }
 
@@ -1023,9 +1120,10 @@ export class PassingArrow extends BaseArrowPrimitive {
     startTime: number,
     endTime: number,
     customStyle?: any,
-    curved: boolean = false
+    curved: boolean = false,
+    eventType: TacticalEventType = TacticalEventType.PASSING_LANE
   ) {
-    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.passing, customStyle, curved);
+    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.passing, customStyle, curved, eventType);
   }
 }
 
@@ -1038,9 +1136,10 @@ export class PressingArrow extends BaseArrowPrimitive {
     startTime: number,
     endTime: number,
     customStyle?: any,
-    curved: boolean = false
+    curved: boolean = false,
+    eventType: TacticalEventType = TacticalEventType.PRESSING_TRAP
   ) {
-    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.pressing, customStyle, curved);
+    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.pressing, customStyle, curved, eventType);
   }
 }
 
@@ -1053,9 +1152,10 @@ export class RotationArrow extends BaseArrowPrimitive {
     startTime: number,
     endTime: number,
     customStyle?: any,
-    curved: boolean = true
+    curved: boolean = true,
+    eventType?: TacticalEventType
   ) {
-    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.rotation, customStyle, curved);
+    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.rotation, customStyle, curved, eventType);
   }
 }
 
@@ -1068,9 +1168,10 @@ export class SupportArrow extends BaseArrowPrimitive {
     startTime: number,
     endTime: number,
     customStyle?: any,
-    curved: boolean = false
+    curved: boolean = false,
+    eventType: TacticalEventType = TacticalEventType.SPACE_EXPLOITATION
   ) {
-    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.support, customStyle, curved);
+    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.support, customStyle, curved, eventType);
   }
 }
 
@@ -1083,9 +1184,10 @@ export class CounterArrow extends BaseArrowPrimitive {
     startTime: number,
     endTime: number,
     customStyle?: any,
-    curved: boolean = false
+    curved: boolean = false,
+    eventType: TacticalEventType = TacticalEventType.COUNTER_ATTACK_TRIGGER
   ) {
-    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.counter, customStyle, curved);
+    super(id, from, to, startTime, endTime, PRIMITIVE_STYLE_CONFIG.arrows.counter, customStyle, curved, eventType);
   }
 }
 

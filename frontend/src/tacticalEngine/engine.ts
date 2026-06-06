@@ -11,6 +11,8 @@ import {
   AnimationFrame, 
   EngineTelemetry 
 } from './types';
+import { VisualMode } from '../visualLanguage/types';
+
 
 export class TacticalAnimationEngine {
   private scene: THREE.Scene;
@@ -31,6 +33,7 @@ export class TacticalAnimationEngine {
   // Configuration
   private teamAVisible: boolean = true;
   private teamBVisible: boolean = true;
+  private visualMode: VisualMode = 'concept';
 
   // Performance Telemetry tracking
   private lastFrameTime: number = 0;
@@ -175,6 +178,16 @@ export class TacticalAnimationEngine {
       this.timeline.play();
     }
   }
+
+  public setVisualMode(mode: VisualMode): void {
+    this.visualMode = mode;
+  }
+
+  public getVisualMode(): VisualMode {
+    return this.visualMode;
+  }
+
+
 
   /**
    * Main ticking driver. Call this inside your requestAnimationFrame loop.

@@ -3,3 +3,5 @@ export * from './types';
 export * from './library';
 export * from './compiler';
 export * from './composedModule';
+export * from './VisualEventPrimitive';
+

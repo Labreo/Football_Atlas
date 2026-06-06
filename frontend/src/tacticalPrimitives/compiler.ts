@@ -13,6 +13,7 @@ import {
   AnalyticsEventInfo, 
   CameraPresetInfo 
 } from './types';
+import { VisualMode } from '../visualLanguage/types';
 
 // Helper to ease timings
 function ease(t: number, type?: string): number {
@@ -97,7 +98,8 @@ export class PrimitiveCompiler {
   public static compile(
     rootPrimitives: TacticalPrimitive[],
     durationSeconds: number,
-    activeBranch: 'A' | 'B' = 'A'
+    activeBranch: 'A' | 'B' = 'A',
+    visualMode: VisualMode = 'concept'
   ): CompileResult {
     const playersMap = new Map<string, PlayerState>();
     const arrows: ArrowState[] = [];
@@ -116,6 +118,8 @@ export class PrimitiveCompiler {
       cameraPresets: [],
       activeBranch,
       durationSeconds,
+      visualMode,
+
       
       getPlayerPosition(playerId: string, time: number): TacticalPosition {
         const p = playersMap.get(playerId);

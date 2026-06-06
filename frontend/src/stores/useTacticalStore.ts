@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { TacticalConcept, ConversationTurn, ComplexityLevel } from '@football-atlas/shared';
 import { tacticalApi } from '../apiClients/tacticalApi';
 import { learningOrchestrator } from '../tacticalOrchestrator/orchestrator';
-
+import { VisualMode } from '../visualLanguage/types';
 
 interface TacticalState {
   concepts: TacticalConcept[];
@@ -47,6 +47,10 @@ interface TacticalState {
   // Concept Chaining visual thread
   tacticalThread: string[];
   setTacticalThread: (thread: string[]) => void;
+
+  // TVLS: Visual Mode state & action
+  visualMode: VisualMode;
+  setVisualMode: (mode: VisualMode) => void;
 }
 
 export const useTacticalStore = create<TacticalState>((set) => ({
@@ -83,6 +87,8 @@ export const useTacticalStore = create<TacticalState>((set) => ({
   cameraPanDirection: { dir: null, count: 0 },
   cameraZoom: 1.0,
   tacticalThread: [],
+  visualMode: 'concept',
+
 
   fetchConcepts: async () => {
     set({ isLoading: true, error: null });
@@ -124,6 +130,15 @@ export const useTacticalStore = create<TacticalState>((set) => ({
   setCameraZoom: (cameraZoom) => set({ cameraZoom }),
 
   setTacticalThread: (tacticalThread) => set({ tacticalThread }),
+
+  setVisualMode: (visualMode) => {
+    set({ visualMode });
+    const activeModule = learningOrchestrator.getActiveModule();
+    if (activeModule && activeModule.setVisualMode) {
+      activeModule.setVisualMode(visualMode);
+    }
+  },
+
 
   askQuestion: async (prompt: string) => {
     // Delegate fully to the orchestrator layer to handle the end-to-end loop

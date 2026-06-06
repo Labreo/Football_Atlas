@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:visual-language": "npx tsx src/visualLanguage/VisualLanguageTestSuite.ts"
   },
   "dependencies": {
     "@football-atlas/shared": "*",

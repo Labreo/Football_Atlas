@@ -76,6 +76,14 @@ export class LearningOrchestrator {
   }
 
   /**
+   * Returns the tactical animation engine.
+   */
+  public getEngine(): TacticalAnimationEngine | null {
+    return this.engine;
+  }
+
+
+  /**
    * Processes a user question through the end-to-end learning loop.
    */
   public async askQuestion(question: string): Promise<void> {

@@ -28,6 +28,7 @@ export interface ArrowStyle {
   dashSize?: number;
   gapSize?: number;
   curved?: boolean;
+  opacity?: number;
 }
 
 export interface ArrowState {
@@ -39,13 +40,23 @@ export interface ArrowState {
   startFrame: number; // time fraction (0.0 to 1.0)
   endFrame: number;
   currentProgress: number; // current animated extension (0.0 to 1.0)
+  /** TVLS: tactical event type tag for analytics binding */
+  eventType?: string;
 }
 
 export enum OverlayType {
+  // Standard types
   POLYGON = 'POLYGON',
   RECTANGLE = 'RECTANGLE',
   CIRCLE = 'CIRCLE',
-  HEAT_AREA = 'HEAT_AREA'
+  HEAT_AREA = 'HEAT_AREA',
+  // Tactical Visual Language System types
+  PULSE_RING = 'PULSE_RING',           // Expanding animated rings (PRESS_TRIGGER)
+  VACATED_GLOW = 'VACATED_GLOW',       // Shimmer in vacated space (SPACE_CREATION)
+  COMPRESSION_BAND = 'COMPRESSION_BAND', // Narrowing band (DEFENSIVE_COMPACTNESS)
+  CONVERGING_ZONE = 'CONVERGING_ZONE', // Inward converging (PRESSING_TRAP)
+  FLASH_BURST = 'FLASH_BURST',         // Instant radial flash (COUNTER_ATTACK_TRIGGER)
+  SPLIT_FIELD = 'SPLIT_FIELD',         // Half-field color flip (TRANSITION_MOMENT)
 }
 
 export interface OverlayState {
@@ -58,7 +69,18 @@ export interface OverlayState {
   startFrame: number; // time fraction (0.0 to 1.0)
   endFrame: number;
   color: string; // e.g. '#39FF14' (neon green), '#00F3FF' (cyan)
+  colorSecondary?: string; // Secondary color for gradient/transition effects
   opacity?: number;
+  /** TVLS: tactical event type tag for analytics binding */
+  eventType?: string;
+  /** TVLS: pulse ring count (PULSE_RING type) */
+  pulseCount?: number;
+  /** TVLS: pulse period in ms (PULSE_RING, VACATED_GLOW) */
+  pulsePeriodMs?: number;
+  /** TVLS: squeeze axis (COMPRESSION_BAND type) */
+  squeezeAxis?: 'x' | 'z';
+  /** TVLS: flash duration in ms (FLASH_BURST, SPLIT_FIELD) */
+  flashDurationMs?: number;
 }
 
 export interface EngineTelemetry {

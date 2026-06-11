@@ -82,6 +82,42 @@ Football Atlas is structured as a TypeScript monorepo using standard package wor
 
 ---
 
+## 🛠️ MCP Agent Platform Architecture
+
+Football Atlas uses the Model Context Protocol (MCP) to isolate the IBM Granite LLM from direct database access. Instead, Granite queries application services by executing typed MCP tools through the Context Forge gateway.
+
+```mermaid
+graph TD
+    User([User Question]) -->|1. Prompt| Gateway[Context Forge MCP Gateway]
+    Gateway -->|2. Get Tool Recommendations| Granite[IBM Granite LLM]
+    Granite -->|3. Output JSON Tool Chain| Gateway
+    Gateway -->|4. Execute Tool Calls| Server[FootballAtlasMCPServer]
+    
+    subgraph Football Atlas Services
+        Server -->|get_concept_explanation| Registry[Tactical Concept Registry]
+        Server -->|fetch_historical_example| ExService[Historical Match Service]
+        Server -->|launch_breakdown| BrkService[Timeline Breakdown Service]
+        Server -->|assess_knowledge_level| LevelService[Knowledge Level Detector]
+    end
+
+    Registry -->|Return Data| Server
+    ExService -->|Return Examples| Server
+    BrkService -->|Return Timeline| Server
+    LevelService -->|Return Level| Server
+
+    Server -->|5. Aggregate Results| Gateway
+    Gateway -->|6. Synthesize Final Explanation| Granite
+    Granite -->|7. Formatted Response| Gateway
+    Gateway -->|8. TutorResponse + Observability Trace| UI[React Frontend Chat UI]
+```
+
+### Observability & Debug HUD
+The platform tracks tool executions (latencies, inputs, status) in real time. These metrics are exposed:
+- **In Classroom Chat**: Glowing execution tree traces printed under the assistant bubbles.
+- **In HUD Debug Panel**: Dedicated **MCP Tools** tab listing active tool definitions and the runtime execution timeline.
+
+---
+
 ## 🚀 Quick Start & Developer Instructions
 
 ### Prerequisites

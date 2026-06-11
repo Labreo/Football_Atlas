@@ -5,6 +5,8 @@ import { historicalExampleService } from '../services/historicalExample.service'
 import { historicalExampleRepository } from '../repositories/historicalExample.repository';
 import { historicalBreakdownService } from '../services/historicalBreakdown.service';
 import { groundedExampleService } from '../services/groundedExample.service';
+import { contextForgeGateway } from '../services/contextForge.service';
+import { footballAtlasMCPServer } from '../services/mcpServer.service';
 
 const router = Router();
 const graniteService = new GraniteService();
@@ -35,7 +37,7 @@ router.get('/concepts/:id', (req: Request, res: Response) => {
 
 /**
  * POST /api/tactical/tutor
- * Interacts with the IBM Granite Tutor service and returns mapped tutoring responses.
+ * Interacts with the Context Forge MCP Gateway to orchestrate tool selection and synthesis.
  */
 router.post('/tutor', async (req: Request, res: Response, next: NextFunction) => {
   const traceId = (req as any).traceId || 'unknown-trace';
@@ -49,39 +51,7 @@ router.post('/tutor', async (req: Request, res: Response, next: NextFunction) =>
   }
 
   try {
-    const tutorResult = await graniteService.queryTutor(prompt, 'default-session', traceId, history);
-    const rawData: any = tutorResult.data;
-    let tutorResponse: TutorResponse;
-
-    if (rawData.needs_clarification) {
-      tutorResponse = {
-        explanation: rawData.clarification_question || 'Could you clarify what you mean?',
-        detected_level: ComplexityLevel.BEGINNER,
-        follow_up_suggestions: [],
-        confidence_score: 0.65,
-        clarification_requested: true,
-        followup_detected: rawData.followup_detected || false,
-        conversation_thread: rawData.conversation_thread || []
-      };
-    } else {
-      tutorResponse = {
-        explanation: rawData.explanation,
-        concept_id: rawData.concept_id,
-        detected_level: rawData.user_level || ComplexityLevel.BEGINNER,
-        follow_up_suggestions: rawData.follow_up_suggestions || [],
-        confidence_score: rawData.confidence_score !== undefined ? rawData.confidence_score : 0.93,
-        actions: rawData.actions || [],
-        followup_detected: rawData.followup_detected || false,
-        reference_resolved: rawData.reference_resolved || false,
-        clarification_requested: false,
-        context_recovered: rawData.context_recovered || false,
-        concept_transition: rawData.concept_transition || false,
-        breakdown_followup: rawData.breakdown_followup || false,
-        resolved_references: rawData.resolved_references || [],
-        conversation_thread: rawData.conversation_thread || []
-      };
-    }
-
+    const tutorResponse = await contextForgeGateway.queryTutor(prompt, 'default-session', traceId, history);
     res.json(tutorResponse);
   } catch (error) {
     next(error);
@@ -163,6 +133,15 @@ router.get('/historical/examples/:exampleId/evidence', (req: Request, res: Respo
   const exampleId = req.params.exampleId;
   const evidence = groundedExampleService.getEvidenceForExample(exampleId);
   return res.json(evidence);
+});
+
+/**
+ * GET /api/tactical/mcp/tools
+ * Returns the list of registered tools and schemas on FootballAtlasMCPServer.
+ */
+router.get('/mcp/tools', (req: Request, res: Response) => {
+  const toolsList = footballAtlasMCPServer.listTools();
+  res.json(toolsList);
 });
 
 export default router;

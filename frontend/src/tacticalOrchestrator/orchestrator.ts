@@ -153,6 +153,7 @@ export class LearningOrchestrator {
       useLearningUIStore.getState().setCurrentExplanation(response.explanation);
 
       store.setTelemetry({ graniteLatencyMs: latency });
+      store.setMcpToolChain(response.mcp_tool_chain || []);
 
       // 3. Append turn in chat console with actions payload and process thread
       useTacticalStore.setState((state) => {
@@ -207,7 +208,7 @@ export class LearningOrchestrator {
           conversation: [
             ...state.conversation,
             { role: 'user', content: question },
-            { role: 'assistant', content: response.explanation, actions: response.actions }
+            { role: 'assistant', content: response.explanation, actions: response.actions, mcp_tool_chain: response.mcp_tool_chain }
           ],
           detectedLevel: response.detected_level,
           tacticalThread: newThread,
@@ -314,18 +315,10 @@ export class LearningOrchestrator {
             store.setAnimationStatus(resolvedModule ? 'playing' : 'stopped');
           }
         } else if (confidence >= store.config.clarificationThreshold) {
-          // Ask for clarification
+          // Silently load the concept — no clarification popup needed
           analyticsTracker.trackClarificationRequested(question);
-          store.setTelemetry({ sessionState: 'awaiting_clarification' });
-          useTacticalStore.setState((state) => ({
-            conversation: [
-              ...state.conversation,
-              { 
-                role: 'assistant', 
-                content: `I identified that you might be asking about "${conceptId.replace(/_/g, ' ')}" (Confidence: ${Math.round(confidence * 100)}%). Would you like me to load the tactical 3D lesson for this?` 
-              }
-            ]
-          }));
+          store.setTelemetry({ sessionState: 'active' });
+          await this.loadConceptAnimation(conceptId);
         } else {
           // Fallback state below 0.50
           analyticsTracker.trackClarificationRequested(question);
@@ -372,6 +365,12 @@ export class LearningOrchestrator {
     const store = learningStateStore.getState();
     if (!this.engine) {
       throw new Error('[Orchestrator Error] Animation engine has not been initialized.');
+    }
+
+    // Bypass loading if the requested concept is already active and loaded on this engine.
+    // This avoids redundant network requests and duplicate lifecycle hooks.
+    if (this.activeModuleInstance && store.currentConcept?.concept_id === conceptId) {
+      return;
     }
 
     const loadStart = performance.now();

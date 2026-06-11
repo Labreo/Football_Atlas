@@ -23,7 +23,17 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
   
   // Re-sync states for controls
   const [speed, setSpeed] = useState(1.0);
-  const [selectedTab, setSelectedTab] = useState<'telemetry' | 'players' | 'entities' | 'orchestrator'>('telemetry');
+  const [selectedTab, setSelectedTab] = useState<'telemetry' | 'players' | 'entities' | 'orchestrator' | 'mcp'>('telemetry');
+  const [mcpTools, setMcpTools] = useState<Array<{ name: string; description: string; inputSchema: any }>>([]);
+
+  const mcpToolChain = useOrchestratorStore((state) => state.mcpToolChain);
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/tactical/mcp/tools')
+      .then(res => res.json())
+      .then(data => setMcpTools(data))
+      .catch(err => console.error('Failed to fetch MCP tools:', err));
+  }, []);
 
   const orchTelemetry = useOrchestratorStore((state) => state.telemetry);
   const conversationHistory = useTacticalStore((state) => state.conversation);
@@ -154,7 +164,7 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
 
           {/* Navigation Tabs */}
           <div className="flex border-b border-slate-900 bg-slate-900/50 text-[9px] text-center">
-            {(['telemetry', 'players', 'entities', 'orchestrator'] as const).map((tab) => (
+            {(['telemetry', 'players', 'entities', 'orchestrator', 'mcp'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setSelectedTab(tab)}
@@ -315,6 +325,75 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
                     {conversationHistory.length === 0 && (
                       <div className="text-slate-600 text-center py-2">No conversation history</div>
                     )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Tab: MCP Tools */}
+            {selectedTab === 'mcp' && (
+              <div className="space-y-3 text-[10px]">
+                {/* Server Status */}
+                <div className="p-2 rounded bg-slate-900 border border-slate-800 text-[10px] space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">MCP Gateway:</span>
+                    <span className="text-[#10B981] font-bold">Context Forge</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">MCP Server:</span>
+                    <span className="text-sky-400 font-bold font-mono">FootballAtlasMCPServer</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Status:</span>
+                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      CONNECTED
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tool Invocations Timeline */}
+                <div>
+                  <h4 className="text-[9px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Tool Invocations</h4>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    {mcpToolChain?.map((inv, idx) => (
+                      <div key={idx} className="p-1.5 rounded bg-slate-900 border border-slate-800 space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sky-300 font-bold font-mono">{inv.tool_name}</span>
+                          <span className={`px-1 rounded text-[8px] font-bold font-mono ${
+                            inv.status === 'success' ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30' :
+                            inv.status === 'failure' ? 'bg-red-950 text-red-400 border border-red-500/30' :
+                            'bg-blue-950 text-blue-400 border border-blue-500/30 animate-pulse'
+                          }`}>
+                            {inv.status.toUpperCase()} ({inv.latency_ms}ms)
+                          </span>
+                        </div>
+                        <div className="text-[8.5px] text-slate-500 font-mono">
+                          Args: {JSON.stringify(inv.arguments)}
+                        </div>
+                        {inv.error_message && (
+                          <div className="text-[8.5px] text-red-400 font-mono bg-red-950/20 p-1 rounded border border-red-900/30">
+                            Error: {inv.error_message}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {(!mcpToolChain || mcpToolChain.length === 0) && (
+                      <div className="text-slate-600 text-center py-3">No tools invoked yet in this session.</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Registered Tools */}
+                <div>
+                  <h4 className="text-[9px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Registered Tools ({mcpTools.length})</h4>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    {mcpTools.map((t) => (
+                      <div key={t.name} className="p-1.5 rounded bg-slate-900/50 border border-slate-800/80 space-y-1">
+                        <div className="font-bold text-slate-200 font-mono">{t.name}</div>
+                        <div className="text-slate-400 text-[9px] font-sans leading-relaxed">{t.description}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

@@ -12,6 +12,104 @@ import Pitch3D from '../pitch/Pitch3D';
 import PitchControls from '../pitch/PitchControls';
 import { EvidencePanel } from '../common/EvidencePanel';
 
+// Comprehensive markdown → HTML parser processed line-by-line
+function parseMarkdown(text: string): string {
+  const lines = text.split('\n');
+  const out: string[] = [];
+  let tableBuffer: string[] = [];
+  let inTable = false;
+
+  const flushTable = () => {
+    if (tableBuffer.length === 0) return;
+    const rows = tableBuffer.map(r =>
+      r.split('|').map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
+    );
+    // Separator row (all dashes) — determines header split
+    const sepIdx = rows.findIndex(r => r.every(c => /^-+$/.test(c)));
+    let html = '<div style="overflow-x:auto;margin:8px 0"><table style="width:100%;border-collapse:collapse;font-size:0.78em;">';
+    rows.forEach((cols, ri) => {
+      if (ri === sepIdx) return; // skip separator row
+      const isHeader = sepIdx !== -1 && ri < sepIdx;
+      const tag = isHeader ? 'th' : 'td';
+      const rowStyle = ri % 2 === 0 ? 'background:rgba(255,255,255,0.03)' : '';
+      html += `<tr style="${rowStyle}">`;
+      cols.forEach(c => {
+        html += `<${tag} style="padding:4px 8px;border:1px solid rgba(99,118,150,0.2);text-align:left;${isHeader ? 'color:#94a3b8;font-weight:600;background:rgba(15,23,42,0.6)' : ''}">${inlineMarkdown(c)}</${tag}>`;
+      });
+      html += '</tr>';
+    });
+    html += '</table></div>';
+    out.push(html);
+    tableBuffer = [];
+    inTable = false;
+  };
+
+  const inlineMarkdown = (s: string) =>
+    s
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.+?)__/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+?)\*/g, '<em>$1</em>')
+      .replace(/_([^_]+?)_/g, '<em>$1</em>')
+      .replace(/`([^`]+?)`/g, '<code style="background:rgba(99,102,241,0.12);padding:1px 4px;border-radius:3px;font-size:0.85em;">$1</code>');
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Table row
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      inTable = true;
+      tableBuffer.push(trimmed);
+      continue;
+    }
+
+    // Flush table if we hit a non-table line
+    if (inTable) flushTable();
+
+    // Horizontal rule: --- or *** or ___
+    if (/^[-*_]{3,}$/.test(trimmed)) {
+      out.push('<hr style="border:none;border-top:1px solid rgba(99,118,150,0.25);margin:10px 0"/>');
+      continue;
+    }
+
+    // Headings ### / ## / #
+    const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const sizes = ['1.1em', '1em', '0.95em', '0.9em'];
+      out.push(`<div style="font-size:${sizes[level-1]};font-weight:700;color:#e2e8f0;margin:10px 0 4px">${inlineMarkdown(headingMatch[2])}</div>`);
+      continue;
+    }
+
+    // Numbered list: 1. text
+    const numMatch = trimmed.match(/^(\d+)\.\s+(.+)$/);
+    if (numMatch) {
+      out.push(`<div style="margin:6px 0 2px;padding-left:4px"><strong style="color:#94a3b8;margin-right:4px">${numMatch[1]}.</strong>${inlineMarkdown(numMatch[2])}</div>`);
+      continue;
+    }
+
+    // Bullet list: - text or * text
+    const bulletMatch = trimmed.match(/^[-*]\s+(.+)$/);
+    if (bulletMatch) {
+      out.push(`<div style="margin:3px 0;padding-left:12px">• ${inlineMarkdown(bulletMatch[1])}</div>`);
+      continue;
+    }
+
+    // Empty line → spacer
+    if (trimmed === '') {
+      out.push('<div style="height:4px"></div>');
+      continue;
+    }
+
+    // Plain paragraph
+    out.push(`<div>${inlineMarkdown(trimmed)}</div>`);
+  }
+
+  if (inTable) flushTable();
+
+  return out.join('');
+}
+
+
 const ConversationalLearningInterface: React.FC = () => {
   const {
     current_concept,
@@ -384,7 +482,36 @@ const ConversationalLearningInterface: React.FC = () => {
                           : 'bg-[#0E1624] border border-[#23324C]/50 text-slate-300 rounded-tl-none shadow-md'
                       }`}
                     >
-                      {turn.content}
+                      <span
+                        className="leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: parseMarkdown(turn.content) }}
+                      />
+
+                      {/* MCP Tool Execution Trace Timeline */}
+                      {!isUser && turn.mcp_tool_chain && turn.mcp_tool_chain.length > 0 && (
+                        <div className="mt-3 pt-2.5 border-t border-[#23324C]/40 space-y-1.5 font-mono text-[9px] select-text">
+                          <div className="flex justify-between items-center text-slate-500 uppercase tracking-widest text-[8px] font-bold">
+                            <span>🛠️ MCP Gateway: Context Forge</span>
+                            <span className="text-emerald-500 text-[7px] bg-emerald-950/40 px-1 border border-emerald-500/20 rounded">agent-mode</span>
+                          </div>
+                          <div className="space-y-1 pl-1 border-l border-slate-800">
+                            {turn.mcp_tool_chain.map((tool, idx) => (
+                              <div key={idx} className="flex flex-wrap items-center gap-1 leading-relaxed">
+                                <span className="text-slate-600">├─</span>
+                                <span className="text-sky-400 font-bold">{tool.tool_name}</span>
+                                <span className="text-slate-500 truncate max-w-[140px]" title={JSON.stringify(tool.arguments)}>args: {JSON.stringify(tool.arguments)}</span>
+                                <span className={`px-1 text-[7px] font-bold rounded ${
+                                  tool.status === 'success' ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/20' :
+                                  tool.status === 'failure' ? 'bg-red-950 text-red-400 border border-red-500/20' :
+                                  'bg-blue-950 text-blue-400 border border-blue-500/20 animate-pulse'
+                                }`}>
+                                  {tool.status.toUpperCase()} ({tool.latency_ms}ms)
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Contextual Action Cards */}
                       {!isUser && turn.actions && turn.actions.length > 0 && (

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { TacticalConcept } from '@football-atlas/shared';
+import { TacticalConcept, ToolInvocation } from '@football-atlas/shared';
 import { OrchestratorTelemetry, OrchestratorConfig } from './types';
 
 interface LearningState {
@@ -12,6 +12,7 @@ interface LearningState {
   followUpAvailable: boolean;
   telemetry: OrchestratorTelemetry;
   config: OrchestratorConfig;
+  mcpToolChain: ToolInvocation[];
 
   setCurrentQuestion: (q: string) => void;
   setCurrentConcept: (concept: TacticalConcept | null) => void;
@@ -22,6 +23,7 @@ interface LearningState {
   setFollowUpAvailable: (available: boolean) => void;
   setTelemetry: (tel: Partial<OrchestratorTelemetry>) => void;
   setConfig: (config: Partial<OrchestratorConfig>) => void;
+  setMcpToolChain: (chain: ToolInvocation[]) => void;
   reset: () => void;
 }
 
@@ -33,6 +35,7 @@ export const useOrchestratorStore = create<LearningState>((set) => ({
   isLoading: false,
   error: null,
   followUpAvailable: false,
+  mcpToolChain: [],
   telemetry: {
     graniteLatencyMs: 0,
     animationLatencyMs: 0,
@@ -55,6 +58,7 @@ export const useOrchestratorStore = create<LearningState>((set) => ({
   setFollowUpAvailable: (followUpAvailable) => set({ followUpAvailable }),
   setTelemetry: (tel) => set((state) => ({ telemetry: { ...state.telemetry, ...tel } })),
   setConfig: (cfg) => set((state) => ({ config: { ...state.config, ...cfg } })),
+  setMcpToolChain: (mcpToolChain) => set({ mcpToolChain }),
   reset: () => set({
     currentQuestion: '',
     currentConcept: null,
@@ -63,6 +67,7 @@ export const useOrchestratorStore = create<LearningState>((set) => ({
     isLoading: false,
     error: null,
     followUpAvailable: false,
+    mcpToolChain: [],
     telemetry: {
       graniteLatencyMs: 0,
       animationLatencyMs: 0,

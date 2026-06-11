@@ -1,4 +1,4 @@
-import { TacticalConcept, ConversationTurn, ComplexityLevel } from '@football-atlas/shared';
+import { TacticalConcept, ConversationTurn, ComplexityLevel, ToolInvocation } from '@football-atlas/shared';
 
 export interface LearningSession {
   sessionId: string;
@@ -18,6 +18,7 @@ export interface OrchestratorTelemetry {
   activeConceptId: string;
   loadedModuleId: string;
   sessionState: string;
+  mcpToolChain?: ToolInvocation[];
 }
 
 export interface OrchestratorConfig {

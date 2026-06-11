@@ -48,6 +48,17 @@ export interface ConversationTurn {
   role: 'user' | 'assistant';
   content: string;
   actions?: ClassroomAction[];
+  mcp_tool_chain?: ToolInvocation[];
+}
+
+export interface ToolInvocation {
+  tool_name: string;
+  arguments: any;
+  status: 'success' | 'failure' | 'running';
+  latency_ms: number;
+  error_message?: string;
+  response?: any;
+  timestamp: string;
 }
 
 export interface TutorResponse {
@@ -65,6 +76,7 @@ export interface TutorResponse {
   breakdown_followup?: boolean;
   resolved_references?: string[];
   conversation_thread?: string[];
+  mcp_tool_chain?: ToolInvocation[];
 }
 
 export interface ConversationContext {

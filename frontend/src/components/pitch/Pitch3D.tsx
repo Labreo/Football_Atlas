@@ -124,7 +124,9 @@ const Pitch3D: React.FC = () => {
 
   // Dynamic check — any concept with a registered animation module
   // is routed to the interactive engine. No hardcoded IDs.
-  const isInteractive = !!(currentConcept && 
+  // We ALSO default to the interactive engine if there is no selected concept yet,
+  // which ensures the learningOrchestrator's animation engine is initialized and ready.
+  const isInteractive = !currentConcept || !!(currentConcept && 
     animationModuleRegistry.getModule(currentConcept.concept_id));
 
   if (isInteractive) {

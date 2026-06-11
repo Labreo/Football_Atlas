@@ -4,6 +4,7 @@ import { usePitchAnimation } from '../../hooks/usePitchAnimation';
 import { usePitchEngine } from '../../hooks/usePitchEngine';
 import { animationRegistry } from '../../tacticalModules';
 import { DebugTools } from '../../tacticalEngine/components/DebugTools';
+import TransitionInspector from '../../tacticalEngine/components/TransitionInspector';
 import { learningOrchestrator } from '../../tacticalOrchestrator/orchestrator';
 import { animationModuleRegistry } from '../../tacticalOrchestrator/registry';
 import { useBreakdownStore } from '../../stores/useBreakdownStore';
@@ -95,6 +96,9 @@ const InteractivePitchPlayer: React.FC = () => {
 
       {/* DevTools HUD integration */}
       <DebugTools engine={engine} moduleInstance={moduleInstance} />
+
+      {/* Transition Inspector HUD (backtick to toggle) */}
+      {process.env.NODE_ENV === 'development' && <TransitionInspector />}
     </div>
   );
 };

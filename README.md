@@ -1,6 +1,6 @@
 # Football Atlas ⚽🗺️
 
-> **The State-of-the-Art Interactive Tactical Education Platform**
+> **Every goal has a reason. See the logic behind the magic.**
 
 Football Atlas bridges the gap between tactical theory, interactive 3D pitch visualizations, and grounded, evidence-backed historical match analysis. By integrating the **IBM Granite** reasoning engine and **IBM Docling** ingestion parser, it turns unstructured coaching literature into live, searchable, and interactive simulations.
 

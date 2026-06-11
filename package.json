@@ -1,7 +1,7 @@
 {
   "name": "football-atlas-monorepo",
   "version": "1.0.0",
-  "description": "Football Atlas - AI-powered interactive football learning platform",
+  "description": "Football Atlas - Every goal has a reason. See the logic behind the magic.",
   "private": true,
   "workspaces": [
     "shared",

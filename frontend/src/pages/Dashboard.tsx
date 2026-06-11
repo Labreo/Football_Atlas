@@ -251,7 +251,7 @@ const LandingPage: React.FC<{
             Football <span className="text-[#10B981]">Atlas</span>
           </h1>
           <p className="text-sm lg:text-base text-slate-400 font-display max-w-xl mx-auto leading-relaxed">
-            A state-of-the-art tactical education platform connecting interactive 3D pitch animations with evidence-backed historical analysis.
+            Every goal has a reason. See the logic behind the magic.
           </p>
         </div>
 
@@ -328,16 +328,6 @@ const LandingPage: React.FC<{
                   <td className="p-4 text-center text-emerald-400 font-semibold">★ ★ ★ ★ ★ (High)</td>
                   <td className="p-4 text-center text-emerald-400 font-semibold">★ ★ ★ ★ ★ (High)</td>
                   <td className="p-4 text-center text-emerald-400 font-semibold">★ ★ ★ ★ ★ (Highest)</td>
-                </tr>
-                <tr 
-                  onClick={() => alert("Messi vs. Netherlands Assist (2022) is not currently ingested as an interactive tactical simulation.")}
-                  className="cursor-pointer hover:bg-slate-800/40 hover:text-white transition-colors"
-                >
-                  <td className="p-4">Messi vs. Netherlands Assist (2022)</td>
-                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
-                  <td className="p-4 text-center text-slate-400">★ ★ ★ ☆ ☆</td>
-                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
-                  <td className="p-4 text-center text-slate-400">★ ★ ★ ☆ ☆</td>
                 </tr>
                 <tr 
                   onClick={() => onLaunchMatch('liverpool_2019_hp', 'high_press')}

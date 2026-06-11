@@ -26,6 +26,7 @@ interface BreakdownState {
   updateProgress: (progress: number) => void;
   stopBreakdown: () => void;
   applyCameraPreset: (view: string) => void;
+  syncWithEngine: () => void;
 }
 
 export const useBreakdownStore = create<BreakdownState>((set, get) => {
@@ -56,9 +57,26 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
       set({ isLoading: true, error: null, currentExample: example, selectedConcept: null });
 
       try {
-        // 1. Fetch breakdown data
+        // 1. Fetch breakdown data and concept details
         const breakdown = await tacticalApi.getHistoricalBreakdown(example.example_id);
         console.log('[startBreakdown] Fetched breakdown successfully:', breakdown.title, breakdown);
+
+        const concept = await tacticalApi.getConceptById(example.concept_id);
+
+        // Pre-set the current concept in the global store to trigger mounting the InteractivePitchPlayer
+        useTacticalStore.setState({ currentConcept: concept });
+
+        // Wait for WebGL / Pitch3D canvas to finish mounting and registering the engine
+        await new Promise<void>((resolve) => {
+          const check = () => {
+            if ((learningOrchestrator as any).engine) {
+              resolve();
+            } else {
+              setTimeout(check, 50);
+            }
+          };
+          check();
+        });
 
         // 2. Co-load the corresponding concept animation module
         await learningOrchestrator.loadConceptAnimation(example.concept_id);
@@ -94,66 +112,71 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
           mode: get().learningMode,
         });
 
-        // 4. Seek to the first moment's timestamp
-        const firstMoment = breakdown.key_moments[0];
-        if (firstMoment) {
-          const engine = (learningOrchestrator as any).engine;
-          if (engine) {
-            engine.seek(firstMoment.timestamp);
-            set({ timelineProgress: firstMoment.timestamp });
-            get().applyCameraPreset(firstMoment.camera_view);
-          }
-        }
-
-        // Subscribe to engine tick events for progress synchronization
-        const engineInstance = (learningOrchestrator as any).engine;
-        if (engineInstance) {
-          tickSubscription = engineInstance.subscribeTelemetry((telemetry: any) => {
-            const progress = telemetry.currentTime;
-            set({ timelineProgress: progress });
-
-            const currentBrk = get().currentBreakdown;
-            if (!currentBrk) return;
-
-            // Guided Mode: Auto progression logic
-            if (get().learningMode === 'guided') {
-              const nextMoment = currentBrk.key_moments[get().currentMomentIndex + 1];
-
-              // Check if we passed into the next moment's threshold
-              if (nextMoment && progress >= nextMoment.timestamp) {
-                const nextIdx = get().currentMomentIndex + 1;
-                set({ currentMomentIndex: nextIdx });
-                get().applyCameraPreset(nextMoment.camera_view);
-              }
-
-              // Check if play finished (near 1.0)
-              if (progress >= 0.98 && get().playbackState === 'playing') {
-                set({ playbackState: 'paused' });
-              }
-            } else if (get().learningMode === 'free' && get().playbackState === 'playing') {
-              // Check if play finished (near 1.0)
-              if (progress >= 0.98) {
-                set({ playbackState: 'paused' });
-              } else {
-                // Free Explore Mode: Auto-pause at the next moment threshold
-                const nextMoment = currentBrk.key_moments[get().currentMomentIndex + 1];
-                if (nextMoment && progress >= nextMoment.timestamp) {
-                  const nextIdx = get().currentMomentIndex + 1;
-                  set({ currentMomentIndex: nextIdx, playbackState: 'paused' });
-                  const engine = (learningOrchestrator as any).engine;
-                  if (engine) {
-                    engine.pause();
-                    engine.seek(nextMoment.timestamp);
-                  }
-                  get().applyCameraPreset(nextMoment.camera_view);
-                }
-              }
-            }
-          });
-        }
+        // 4. Synchronize with the 3D animation engine
+        get().syncWithEngine();
       } catch (err: any) {
         set({ error: err.message, isLoading: false });
       }
+    },
+
+    syncWithEngine: () => {
+      cleanupSubscription();
+      const engineInstance = (learningOrchestrator as any).engine;
+      if (!engineInstance) {
+        console.log('[useBreakdownStore] Engine not yet initialized. Postponing subscription.');
+        return;
+      }
+
+      const breakdown = get().currentBreakdown;
+      if (!breakdown) return;
+
+      const currentMoment = breakdown.key_moments[get().currentMomentIndex];
+      if (currentMoment) {
+        engineInstance.seek(currentMoment.timestamp);
+        set({ timelineProgress: currentMoment.timestamp });
+        get().applyCameraPreset(currentMoment.camera_view);
+      }
+
+      tickSubscription = engineInstance.subscribeTelemetry((telemetry: any) => {
+        const progress = telemetry.currentTime;
+        set({ timelineProgress: progress });
+
+        const currentBrk = get().currentBreakdown;
+        if (!currentBrk) return;
+
+        // Guided Mode: Auto progression logic
+        if (get().learningMode === 'guided') {
+          const nextMoment = currentBrk.key_moments[get().currentMomentIndex + 1];
+
+          // Check if we passed into the next moment's threshold
+          if (nextMoment && progress >= nextMoment.timestamp) {
+            const nextIdx = get().currentMomentIndex + 1;
+            set({ currentMomentIndex: nextIdx });
+            get().applyCameraPreset(nextMoment.camera_view);
+          }
+
+          // Check if play finished (near 1.0)
+          if (progress >= 0.98 && get().playbackState === 'playing') {
+            set({ playbackState: 'paused' });
+          }
+        } else if (get().learningMode === 'free' && get().playbackState === 'playing') {
+          // Check if play finished (near 1.0)
+          if (progress >= 0.98) {
+            set({ playbackState: 'paused' });
+          } else {
+            // Free Explore Mode: Auto-pause at the next moment threshold
+            const nextMoment = currentBrk.key_moments[get().currentMomentIndex + 1];
+            if (nextMoment && progress >= nextMoment.timestamp) {
+              const nextIdx = get().currentMomentIndex + 1;
+              set({ currentMomentIndex: nextIdx, playbackState: 'paused' });
+              engineInstance.pause();
+              engineInstance.seek(nextMoment.timestamp);
+              get().applyCameraPreset(nextMoment.camera_view);
+            }
+          }
+        }
+      });
+      console.log('[useBreakdownStore] Synced timeline and subscribed to engine ticks.');
     },
 
     setMoment: (index: number) => {

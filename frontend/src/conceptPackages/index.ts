@@ -9,6 +9,7 @@ import { invertedWingerPackage } from './invertedWinger.package';
 import { backThreeWingBackPackage } from './backThreeWingBack.package';
 import { thirdManRunPackage } from './thirdManRun.package';
 import { compactnessPressingLinesPackage } from './compactnessPressingLines.package';
+import { argentinaFrance2022Package } from './argentinaFrance2022.package';
 
 // ────────────────────────────────────────────────────────────
 // ALL CONCEPT PACKAGES
@@ -32,6 +33,7 @@ export const allConceptPackages: ConceptPackage[] = [
   backThreeWingBackPackage,
   thirdManRunPackage,
   compactnessPressingLinesPackage,
+  argentinaFrance2022Package,
 ];
 
 // Re-export individual packages for direct access
@@ -45,3 +47,4 @@ export { invertedWingerPackage } from './invertedWinger.package';
 export { backThreeWingBackPackage } from './backThreeWingBack.package';
 export { thirdManRunPackage } from './thirdManRun.package';
 export { compactnessPressingLinesPackage } from './compactnessPressingLines.package';
+export { argentinaFrance2022Package } from './argentinaFrance2022.package';

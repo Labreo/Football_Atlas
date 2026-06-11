@@ -35,6 +35,9 @@ export class LearningOrchestrator {
     }
 
     learningStateStore.getState().setTelemetry({ sessionState: 'ready' });
+
+    // Automatically synchronize any active historical breakdown timeline/presets
+    useBreakdownStore.getState().syncWithEngine();
   }
 
   /**

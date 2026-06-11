@@ -30,15 +30,14 @@ const PlaybookInterface: React.FC = () => {
     isLoading, 
     fetchConcepts, 
     triggerCameraReset,
-    visualMode
+    visualMode,
+    playbookSubTab,
+    setPlaybookSubTab,
   } = useTacticalStore();
 
   const { currentBreakdown } = useBreakdownStore();
 
-
-
   const [branch, setBranch] = useState<'A' | 'B'>('A');
-  const [activeSubTab, setActiveSubTab] = useState<'lecture' | 'examples'>('lecture');
 
   // Load concepts on mount (no autoplay — board starts clean)
   useEffect(() => {
@@ -58,7 +57,7 @@ const PlaybookInterface: React.FC = () => {
       const concept = await tacticalApi.getConceptById(conceptId);
       
       // Reset sub-tab to guide
-      setActiveSubTab('lecture');
+      setPlaybookSubTab('lecture');
 
       // Update UI store
       useLearningUIStore.getState().setCurrentConcept(concept);
@@ -297,9 +296,9 @@ const PlaybookInterface: React.FC = () => {
                 {/* Sub-Tab Navigation (Guide vs Matches) */}
                 <div className="flex border-b border-[#23324C]/60 text-xs font-mono select-none">
                   <button
-                    onClick={() => setActiveSubTab('lecture')}
+                    onClick={() => setPlaybookSubTab('lecture')}
                     className={`flex-1 pb-2 font-display font-bold uppercase tracking-wider text-center transition-all ${
-                      activeSubTab === 'lecture'
+                      playbookSubTab === 'lecture'
                         ? 'border-b-2 border-[#10B981] text-[#10B981]'
                         : 'text-slate-500 hover:text-slate-300'
                     }`}
@@ -307,9 +306,9 @@ const PlaybookInterface: React.FC = () => {
                     Guide
                   </button>
                   <button
-                    onClick={() => setActiveSubTab('examples')}
+                    onClick={() => setPlaybookSubTab('examples')}
                     className={`flex-1 pb-2 font-display font-bold uppercase tracking-wider text-center transition-all ${
-                      activeSubTab === 'examples'
+                      playbookSubTab === 'examples'
                         ? 'border-b-2 border-[#10B981] text-[#10B981]'
                         : 'text-slate-500 hover:text-slate-300'
                     }`}
@@ -318,7 +317,7 @@ const PlaybookInterface: React.FC = () => {
                   </button>
                 </div>
 
-                {activeSubTab === 'lecture' ? (
+                {playbookSubTab === 'lecture' ? (
                   <div className="space-y-5">
                     {/* Dynamic Phase / Interactive Branch Scenario Toggle */}
                     {current_concept.concept_id === 'false_9' && (

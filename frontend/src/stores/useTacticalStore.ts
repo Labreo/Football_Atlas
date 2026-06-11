@@ -53,6 +53,10 @@ interface TacticalState {
   visualMode: VisualMode;
   setVisualMode: (mode: VisualMode) => void;
 
+  // Sub-tab selection in Playbook
+  playbookSubTab: 'lecture' | 'examples';
+  setPlaybookSubTab: (tab: 'lecture' | 'examples') => void;
+
   // Grounded Historical Intelligence Layer
   activeEvidence: HistoricalEvidence[];
   selectedEvidenceItem: HistoricalEvidence | null;
@@ -97,6 +101,8 @@ export const useTacticalStore = create<TacticalState>((set) => ({
   cameraZoom: 1.0,
   tacticalThread: [],
   visualMode: 'concept',
+  playbookSubTab: 'lecture',
+  setPlaybookSubTab: (playbookSubTab) => set({ playbookSubTab }),
 
 
   fetchConcepts: async () => {

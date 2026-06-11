@@ -136,7 +136,7 @@ export class ComposedTacticalModule implements TacticalModule {
     };
 
     // Smooth transition from previous coordinates if players exist in engine
-    if (this.engine.getPlayerManager().getPlayers().size > 0) {
+    if (this.engine.getPlayerManager().getPlayers().size > 0 && this.visualMode !== 'historical') {
       conceptData = transitionManager.prepareTransition(this.engine, conceptData);
     }
 

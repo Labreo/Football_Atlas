@@ -76,7 +76,7 @@ export class PlayerManager {
     if (range === 0) return { x: prev.x, z: prev.z };
 
     const t = (time - prev.time) / range;
-    const easedT = this.ease(t, prev.easing);
+    const easedT = this.ease(t, next.easing || 'linear');
 
     return {
       x: prev.x + (next.x - prev.x) * easedT,

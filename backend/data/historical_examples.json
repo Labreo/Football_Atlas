@@ -1940,5 +1940,46 @@
       "suitability_score": 91
     },
     "beginner_friendly": false
+  },
+  {
+    "example_id": "argentina_france_2022_equaliser",
+    "concept_id": "compactness_pressing_lines",
+    "match_name": "Argentina vs France (2022 World Cup Final)",
+    "competition": "FIFA World Cup",
+    "season": "2022",
+    "teams": [
+      "Argentina",
+      "France"
+    ],
+    "date": "2022-12-18",
+    "coach": "Lionel Scaloni",
+    "players": [
+      "Kylian Mbappé",
+      "Marcus Thuram",
+      "Adrien Rabiot",
+      "Lionel Messi"
+    ],
+    "description": "France's dramatic equalizer in the 81st minute of the World Cup Final, triggered by a defensive compactness breakdown three passes before Kylian Mbappé's volley.",
+    "tactical_summary": "Argentina's midfield line became vertically disconnected from their backline under fatigue. As Adrien Rabiot progressed the ball, Argentina's defensive block stretched, opening central spaces for Kylian Mbappé and the No. 9 to link up and create the equalizer.",
+    "source_references": [
+      "FIFA World Cup Qatar 2022 Technical Report",
+      "Football Atlas In-Depth Study"
+    ],
+    "confidence_score": 98,
+    "tags": [
+      "world-cup",
+      "compactness",
+      "defensive-breakdown",
+      "transition",
+      "classic",
+      "beginner"
+    ],
+    "review_status": "approved",
+    "validation_metadata": {
+      "difficulty": "beginner",
+      "educational_value": "Shows how fatigue and high-pressure transitions cause vertical disconnection between midfield and defensive lines.",
+      "suitability_score": 98
+    },
+    "beginner_friendly": true
   }
 ]

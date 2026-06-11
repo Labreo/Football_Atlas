@@ -1243,12 +1243,18 @@ export class DribbleBall implements TacticalPrimitive {
     
     sorted.forEach(kf => {
       if (kf.time > this.startTime && kf.time < this.endTime) {
-        context.ballKeyFrames.push({ time: kf.time, x: kf.x, z: kf.z });
+        context.ballKeyFrames.push({ time: kf.time, x: kf.x, z: kf.z, easing: kf.easing });
       }
     });
 
     const endPos = context.getPlayerPosition(this.playerId, this.endTime);
-    context.ballKeyFrames.push({ time: this.endTime, x: endPos.x, z: endPos.z });
+    const playerEndKf = player.keyFrames.find(kf => Math.abs(kf.time - this.endTime) < 0.0001);
+    context.ballKeyFrames.push({ 
+      time: this.endTime, 
+      x: endPos.x, 
+      z: endPos.z,
+      easing: playerEndKf?.easing
+    });
   }
 }
 

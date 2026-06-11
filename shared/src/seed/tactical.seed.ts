@@ -690,7 +690,22 @@ export const compactnessPressingLinesSeed: TacticalConcept = {
       RequiredOverlay.PASSING_LANES
     ]
   },
-  historical_examples: [], // Placeholder as requested by system
+  historical_examples: [
+    {
+      match_id: 'argentina_france_22',
+      title: 'Mbappé Equaliser Sequence (Argentina vs France)',
+      competition: 'FIFA World Cup',
+      season: '2022',
+      teams: 'Argentina vs. France',
+      tactical_context: 'France wins the ball three passes before the goal, exploiting Argentina\'s fatigue-induced vertical line disconnection.',
+      summary: 'Argentina\'s midfield line became disconnected from their defensive line, leaving central space. Rabiot passed wide to Mbappé, who played inside to Thuram. Thuram\'s wall-pass layout set up Mbappé\'s volley.',
+      relevance_score: 98,
+      event_timestamps: [
+        { name: 'France possession recovery', timestamp: '80:30' },
+        { name: 'Mbappé equaliser volley', timestamp: '81:15' }
+      ]
+    }
+  ],
   related_concepts: ['high_press', 'defensive_block', 'pressing_trap', 'counter_attack_trigger'],
   docling_chunks: [],
   schema_version: '1.0.0',

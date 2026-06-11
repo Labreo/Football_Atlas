@@ -260,5 +260,111 @@
       "Understand how cover shadows block vertical escape passing lanes.",
       "Observe the transition from winning the ball to a direct shot on goal."
     ]
+  },
+  {
+    "breakdown_id": "breakdown_argentina_france_2022",
+    "example_id": "argentina_france_2022_equaliser",
+    "concept_id": "compactness_pressing_lines",
+    "title": "Mbappé's Equaliser vs Argentina (2022 World Cup Final)",
+    "description": "A detailed breakdown of the exact moment Argentina lost defensive compactness, leading to Kylian Mbappé's dramatic volley.",
+    "timeline": [0.10, 0.35, 0.60, 0.80, 0.95],
+    "key_moments": [
+      {
+        "moment_id": "arg_fra_22_m1",
+        "timestamp": 0.10,
+        "title": "Rabiot Recovers Ball",
+        "description": "France wins possession in midfield. Rabiot gathers the ball. Argentina's midfield is in a compact defensive shape initially.",
+        "camera_view": "overview",
+        "animation_sequence": "argentina_stable",
+        "granite_context": "France wins possession. Argentina starts in a stable, compact shape, but fatigue begins to stretch their horizontal and vertical lines.",
+        "annotations": []
+      },
+      {
+        "moment_id": "arg_fra_22_m2",
+        "timestamp": 0.35,
+        "title": "Pass to Mbappé Wide",
+        "description": "Rabiot passes wide to Mbappé. Argentina's midfield shifts, but fatigue prevents them from dropping centrally.",
+        "camera_view": "passing_lane",
+        "animation_sequence": "pass_to_mbappe",
+        "granite_context": "Adrien Rabiot releases the ball to Kylian Mbappé on the left flank. Argentina's defensive line drops to cover space, but the midfield line stays flat.",
+        "annotations": [
+          {
+            "type": "passing_lane",
+            "target": "pass_rabiot_to_mbappe",
+            "color": "#00F3FF"
+          }
+        ]
+      },
+      {
+        "moment_id": "arg_fra_22_m3",
+        "timestamp": 0.60,
+        "title": "Central Delivery to No. 9",
+        "description": "Mbappé plays the ball inside to the No. 9. Argentina's midfield and backline are now completely disconnected, creating a central gap.",
+        "camera_view": "tactical_shape",
+        "animation_sequence": "pass_to_thuram",
+        "granite_context": "Mbappé plays a diagonal pass to the No. 9. Notice the vertical disconnection between Argentina's midfield and backline—this shape distortion exposes the central corridor.",
+        "annotations": [
+          {
+            "type": "player_highlight",
+            "target": "att_thuram",
+            "color": "#39FF14"
+          },
+          {
+            "type": "shape_overlay",
+            "target": "midfield_disconnection_poly",
+            "color": "#EF4444"
+          }
+        ]
+      },
+      {
+        "moment_id": "arg_fra_22_m4",
+        "timestamp": 0.80,
+        "title": "One-Touch Lay-off",
+        "description": "The No. 9 plays a one-touch lay-off pass back to Mbappé making an inside run. Romero steps up late, leaving space behind.",
+        "camera_view": "space_creation",
+        "animation_sequence": "thuram_layoff",
+        "granite_context": "The No. 9 cushions a first-time wall pass back into Kylian Mbappé's run. Romero is drawn out of the defensive line, creating the final space France needed.",
+        "annotations": [
+          {
+            "type": "arrow",
+            "target": "arrow_layoff",
+            "color": "#39FF14"
+          },
+          {
+            "type": "space_highlight",
+            "target": "overlay_exposed_box",
+            "color": "#FF0055"
+          }
+        ]
+      },
+      {
+        "moment_id": "arg_fra_22_m5",
+        "timestamp": 0.95,
+        "title": "Mbappé Equaliser Volley",
+        "description": "Mbappé executes a first-time volley past Martínez into the far post to level the match.",
+        "camera_view": "player_focus",
+        "animation_sequence": "mbappe_volley",
+        "granite_context": "Mbappé executes a first-time volley into the net. Within just three passes, Argentina's defensive block was completely dismantled due to a lack of compactness.",
+        "annotations": [
+          {
+            "type": "arrow",
+            "target": "arrow_volley_shot",
+            "color": "#EAB308"
+          }
+        ]
+      }
+    ],
+    "commentary": [
+      "Rabiot recovers the ball in midfield for France.",
+      "Argentina's lines shift horizontally but stay high.",
+      "Mbappé cuts inside, finding the No. 9 between the disconnected lines.",
+      "The No. 9 lays it back with one touch to Mbappé running behind.",
+      "Mbappé strikes a brilliant volley past Martínez into the goal."
+    ],
+    "learning_goals": [
+      "Analyze vertical line disconnection in defensive blocks under fatigue.",
+      "Understand how rapid one-two combinations bypass stretched defenders.",
+      "Observe how space opens in central zones when midfield and defense disconnect."
+    ]
   }
 ]

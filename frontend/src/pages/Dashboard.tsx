@@ -1,21 +1,23 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useTacticalStore } from '../stores/useTacticalStore';
 import { useLearningUIStore } from '../stores/LearningUIStore';
+import { useBreakdownStore } from '../stores/useBreakdownStore';
 import { learningOrchestrator } from '../tacticalOrchestrator/orchestrator';
 import { learningStateStore } from '../tacticalOrchestrator/store';
 import ConversationalLearningInterface from '../components/chat/ConversationalLearningInterface';
 import PlaybookInterface from '../components/playbook/PlaybookInterface';
 import { tacticalApi } from '../apiClients/tacticalApi';
+import { useHistoricalExplorerStore } from '../stores/useHistoricalExplorerStore';
 
 // Lazy-load developer tools (only rendered in dev mode Settings tab)
 const ConceptExplorer = lazy(() => import('../components/dev/ConceptExplorer'));
 const PrimitiveExplorer = lazy(() => import('../components/dev/PrimitiveExplorer'));
 const HistoricalExampleExplorer = lazy(() => import('../components/dev/HistoricalExampleExplorer'));
 
-type Tab = 'playbook' | 'classroom' | 'explore' | 'settings';
+type Tab = 'landing' | 'playbook' | 'classroom' | 'explore' | 'settings';
 
 const Dashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('playbook');
+  const [activeTab, setActiveTab] = useState<Tab>('landing');
   const { fetchConcepts } = useTacticalStore();
 
   // Load tactical concepts library on startup
@@ -23,13 +25,52 @@ const Dashboard: React.FC = () => {
     fetchConcepts();
   }, [fetchConcepts]);
 
+  const handleLaunchMatch = async (exampleId: string, conceptId: string) => {
+    try {
+      const concept = await tacticalApi.getConceptById(conceptId);
+      const examples = await tacticalApi.searchHistoricalExamples({});
+      const example = examples.find(e => e.example_id === exampleId);
 
+      if (concept && example) {
+        // 1. Select the concept in global store and UI stores
+        useTacticalStore.setState({ 
+          currentConcept: concept,
+          playbookSubTab: 'examples',
+          playState: 'stopped'
+        });
+
+        useLearningUIStore.getState().setCurrentConcept(concept);
+        useLearningUIStore.getState().setCurrentExplanation(concept.core_explanation);
+        useLearningUIStore.getState().setPhaseInfo(1, 'Initial Shape');
+        useLearningUIStore.getState().setPhaseAnnotation('');
+        useLearningUIStore.getState().clearFollowUpChain();
+
+        learningStateStore.getState().setCurrentConcept(concept);
+        learningStateStore.getState().setCurrentAnimation(null);
+        learningStateStore.getState().setAnimationStatus('stopped');
+
+        // 2. Set the selected example in historical explorer store
+        useHistoricalExplorerStore.getState().setSelectedExample(example);
+
+        // 3. Navigate to playbook tab
+        setActiveTab('playbook');
+      } else {
+        console.error(`Concept ${conceptId} or Example ${exampleId} not found.`);
+      }
+    } catch (err) {
+      console.error('Failed to launch match breakdown:', err);
+    }
+  };
+
+  const handleLaunchHeroMoment = () => {
+    handleLaunchMatch('argentina_france_2022_equaliser', 'compactness_pressing_lines');
+  };
 
   // Reset the board to a clean default state whenever the user switches tabs.
   // This prevents stale animations from carrying over between Playbook ↔ Classroom.
   useEffect(() => {
-    // Bypass clear if we are navigating to playbook with a concept already selected
-    if (activeTab === 'playbook' && useTacticalStore.getState().currentConcept) {
+    // Bypass clear if we are navigating to playbook with a concept already selected or breakdown active
+    if (activeTab === 'playbook' && (useTacticalStore.getState().currentConcept || useBreakdownStore.getState().currentBreakdown)) {
       return;
     }
 
@@ -59,14 +100,33 @@ const Dashboard: React.FC = () => {
         
         {/* Top: Stylized Football Atlas Logo */}
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-xl bg-[#10B981] flex items-center justify-center shadow-lg shadow-[#10B981]/25 hover:scale-105 transition-transform duration-200 cursor-pointer">
+          <div 
+            onClick={() => setActiveTab('landing')}
+            className="w-10 h-10 rounded-xl bg-[#10B981] flex items-center justify-center shadow-lg shadow-[#10B981]/25 hover:scale-105 transition-transform duration-200 cursor-pointer"
+          >
             <span className="font-display font-extrabold text-white text-xl">F</span>
           </div>
         </div>
 
         {/* Center: Main Navigation Rail Icons */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           
+          {/* Home / Landing Tab */}
+          <button
+            onClick={() => setActiveTab('landing')}
+            className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-1 group transition-all duration-200 ${
+              activeTab === 'landing'
+                ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 shadow-md shadow-[#10B981]/10'
+                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40'
+            }`}
+            title="Home"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span className="text-[9px] font-medium tracking-wide">Home</span>
+          </button>
+
           {/* Playbook Tab */}
           <button
             onClick={() => setActiveTab('playbook')}
@@ -115,7 +175,6 @@ const Dashboard: React.FC = () => {
             <span className="text-[9px] font-medium tracking-wide">Explore</span>
           </button>
 
-
         </div>
 
         {/* Bottom: Settings Gear */}
@@ -143,6 +202,10 @@ const Dashboard: React.FC = () => {
       {/* MAIN VIEWPORT AREA                                           */}
       {/* ──────────────────────────────────────────────────────────── */}
       <div className="flex-1 h-full relative overflow-hidden">
+        {activeTab === 'landing' && (
+          <LandingPage onLaunchHero={handleLaunchHeroMoment} onLaunchMatch={handleLaunchMatch} onNavigate={setActiveTab} />
+        )}
+
         {activeTab === 'playbook' && (
           <PlaybookInterface />
         )}
@@ -155,12 +218,189 @@ const Dashboard: React.FC = () => {
           <ExploreTab />
         )}
 
-
         {activeTab === 'settings' && (
           <SettingsTab />
         )}
       </div>
 
+    </div>
+  );
+};
+
+// ────────────────────────────────────────────────────────────
+// LANDING PAGE SHOWCASE COMPONENT
+// ────────────────────────────────────────────────────────────
+const LandingPage: React.FC<{
+  onLaunchHero: () => void;
+  onLaunchMatch: (exampleId: string, conceptId: string) => void;
+  onNavigate: (tab: Tab) => void;
+}> = ({ onLaunchHero, onLaunchMatch, onNavigate }) => {
+  return (
+    <div className="w-full h-full p-6 lg:p-8 overflow-y-auto bg-[#0A0D14] flex flex-col justify-start items-center relative">
+      {/* Ambient gradient backgrounds */}
+      <div className="absolute top-10 left-10 w-96 h-96 bg-[#10B981]/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#00F3FF]/5 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="max-w-4xl w-full space-y-8 py-6 relative z-10 animate-fadeIn">
+        {/* Header Block */}
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#10B981]/10 border border-[#10B981]/30 text-[#10B981] text-[10px] font-bold uppercase tracking-wider font-mono">
+            <span>✨ Introducing the Showcase Moment</span>
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-extrabold font-display tracking-tight text-white uppercase mt-2">
+            Football <span className="text-[#10B981]">Atlas</span>
+          </h1>
+          <p className="text-sm lg:text-base text-slate-400 font-display max-w-xl mx-auto leading-relaxed">
+            A state-of-the-art tactical education platform connecting interactive 3D pitch animations with evidence-backed historical analysis.
+          </p>
+        </div>
+
+        {/* Hero CTA Showcase Card (Glassmorphic, glowing) */}
+        <div className="relative rounded-3xl border border-[#23324C]/60 bg-gradient-to-br from-[#121826]/90 to-[#0A0D14]/85 p-6 lg:p-8 shadow-2xl overflow-hidden group">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-lg">
+              <span className="text-[10px] text-emerald-400 font-mono font-bold uppercase tracking-widest block">
+                Showcase Simulation
+              </span>
+              <h2 className="text-2xl font-bold font-display text-white tracking-tight leading-snug">
+                Watch the moment Argentina lost control.
+              </h2>
+              <p className="text-xs text-slate-300 leading-relaxed font-light">
+                "Here's the exact moment Argentina's defensive shape broke down. Three passes before Mbappé's equaliser. Watch it happen."
+              </p>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <span className="px-2.5 py-0.5 rounded bg-slate-900 border border-slate-700/60 text-slate-400 text-[9px] font-mono">
+                  Qatar 2022 Final
+                </span>
+                <span className="px-2.5 py-0.5 rounded bg-slate-900 border border-slate-700/60 text-slate-400 text-[9px] font-mono">
+                  Argentina 3 - 3 France
+                </span>
+                <span className="px-2.5 py-0.5 rounded bg-[#10B981]/10 border border-[#10B981]/30 text-[#10B981] text-[9px] font-mono font-bold">
+                  Compactness Collapse
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={onLaunchHero}
+              className="px-6 py-4 bg-gradient-to-r from-[#10B981] to-[#00F3FF] text-slate-950 font-display font-extrabold text-xs rounded-2xl hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[#10B981]/25 shrink-0 uppercase tracking-wider flex items-center gap-2 group-hover:shadow-[#10B981]/40"
+            >
+              <span>Watch Hero Moment</span>
+              <span className="text-sm group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Candidate Evaluation Matrix Section */}
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-display font-bold text-xs tracking-wider text-slate-300 uppercase">
+              Moment Evaluation Matrix
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1 font-display">
+              Why the 2022 World Cup Final sequence was selected as the canonical Hero Moment over other candidates.
+            </p>
+          </div>
+
+          <div className="overflow-hidden border border-[#23324C]/40 rounded-2xl bg-[#121826]/30 shadow-inner">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-[#121826]/80 text-[#10B981] font-mono uppercase tracking-wider text-[10px] border-b border-[#23324C]/40">
+                  <th className="p-4 font-bold">Candidate Moment</th>
+                  <th className="p-4 font-bold text-center">Visual Recognition</th>
+                  <th className="p-4 font-bold text-center">Tactical Causality</th>
+                  <th className="p-4 font-bold text-center">Spatial Complexity</th>
+                  <th className="p-4 font-bold text-center">Value Alignment</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#23324C]/20 text-slate-300">
+                <tr 
+                  onClick={() => onLaunchMatch('argentina_france_2022_equaliser', 'compactness_pressing_lines')}
+                  className="bg-[#10B981]/5 font-semibold text-slate-100 cursor-pointer hover:bg-[#10B981]/15 hover:text-white transition-colors"
+                >
+                  <td className="p-4">
+                    <div className="flex flex-col">
+                      <span>Mbappé Equaliser Sequence (2022 Final)</span>
+                      <span className="text-[9px] text-[#10B981] uppercase font-mono mt-0.5">Primary Selection</span>
+                    </div>
+                  </td>
+                  <td className="p-4 text-center text-emerald-400 font-semibold">★ ★ ★ ★ ★ (Highest)</td>
+                  <td className="p-4 text-center text-emerald-400 font-semibold">★ ★ ★ ★ ★ (High)</td>
+                  <td className="p-4 text-center text-emerald-400 font-semibold">★ ★ ★ ★ ★ (High)</td>
+                  <td className="p-4 text-center text-emerald-400 font-semibold">★ ★ ★ ★ ★ (Highest)</td>
+                </tr>
+                <tr 
+                  onClick={() => alert("Messi vs. Netherlands Assist (2022) is not currently ingested as an interactive tactical simulation.")}
+                  className="cursor-pointer hover:bg-slate-800/40 hover:text-white transition-colors"
+                >
+                  <td className="p-4">Messi vs. Netherlands Assist (2022)</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ☆ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ☆ ☆</td>
+                </tr>
+                <tr 
+                  onClick={() => onLaunchMatch('liverpool_2019_hp', 'high_press')}
+                  className="cursor-pointer hover:bg-slate-800/40 hover:text-white transition-colors"
+                >
+                  <td className="p-4">Liverpool vs. Barcelona Corner (2019)</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ☆ ☆ ☆ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ☆ ☆ ☆ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ☆ ☆ ☆ ☆</td>
+                </tr>
+                <tr 
+                  onClick={() => onLaunchMatch('spain_2012_f9', 'false_9')}
+                  className="cursor-pointer hover:bg-slate-800/40 hover:text-white transition-colors"
+                >
+                  <td className="p-4">Spain vs. Italy Euro Final (2012)</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ☆ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                </tr>
+                <tr 
+                  onClick={() => onLaunchMatch('barcelona_2009_f9', 'false_9')}
+                  className="cursor-pointer hover:bg-slate-800/40 hover:text-white transition-colors"
+                >
+                  <td className="p-4">Barcelona vs. Man United UCL Final (2009)</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                  <td className="p-4 text-center text-slate-400">★ ★ ★ ★ ☆</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Feature Navigation / CTA Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+          <div className="p-5 bg-[#121826]/40 border border-[#23324C]/40 rounded-2xl space-y-2 hover:border-[#10B981]/50 cursor-pointer transition-all" onClick={() => onNavigate('playbook')}>
+            <span className="text-xl">📚</span>
+            <h4 className="font-bold text-sm text-slate-200">Interactive Playbook</h4>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Browse our static catalog of 11 tactical concepts on the interactive 3D board, complete with dynamic branch pathways.
+            </p>
+          </div>
+
+          <div className="p-5 bg-[#121826]/40 border border-[#23324C]/40 rounded-2xl space-y-2 hover:border-[#10B981]/50 cursor-pointer transition-all" onClick={() => onNavigate('classroom')}>
+            <span className="text-xl">🤖</span>
+            <h4 className="font-bold text-sm text-slate-200">Granite Classroom</h4>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Ask natural language questions to IBM Granite, adapting dynamically to Beginner, Intermediate, and Advanced profiles.
+            </p>
+          </div>
+
+          <div className="p-5 bg-[#121826]/40 border border-[#23324C]/40 rounded-2xl space-y-2 hover:border-[#10B981]/50 cursor-pointer transition-all" onClick={() => onNavigate('explore')}>
+            <span className="text-xl">🔍</span>
+            <h4 className="font-bold text-sm text-slate-200">Docling Explorer</h4>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Ingest tactical PDF/Markdown documents via IBM Docling and explore the grounded, segmented knowledge chunks.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

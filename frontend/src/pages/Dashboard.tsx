@@ -987,11 +987,13 @@ const SettingsTab: React.FC = () => {
             onClick={async () => {
               if (window.confirm("Are you sure you want to clear the entire tactical database store? This cannot be undone.")) {
                 try {
-                  await fetch('http://localhost:3001/documents', { method: 'DELETE' });
-                  alert("Knowledge store reset successfully. Restart the server to apply clean slate.");
-                } catch (_) {
-                  alert("Database store cleared. Restart the server.");
-                }
+                      const apiHost = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_HOST || '';
+                      const deleteUrl = apiHost ? `${apiHost.replace(/\/$/, '')}/documents` : '/documents';
+                      await fetch(deleteUrl, { method: 'DELETE' });
+                      alert("Knowledge store reset successfully. Restart the server to apply clean slate.");
+                    } catch (_) {
+                      alert("Database store cleared. Restart the server.");
+                    }
               }
             }}
             className="px-4 py-2 border border-red-500/30 hover:border-red-500/60 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-display text-xs font-semibold rounded-xl transition-all"

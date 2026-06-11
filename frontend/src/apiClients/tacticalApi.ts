@@ -1,6 +1,9 @@
 import { TacticalConcept, TutorResponse, ConversationTurn, HistoricalExample, HistoricalBreakdown, AudienceMode } from '@football-atlas/shared';
 
-const API_BASE = 'http://localhost:3001/api/tactical';
+const apiHost = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_HOST || '';
+const API_BASE = apiHost
+  ? `${apiHost.replace(/\/$/, '')}/api/tactical`
+  : '/api/tactical';
 
 export const tacticalApi = {
   async getConcepts(): Promise<TacticalConcept[]> {
@@ -31,7 +34,8 @@ export const tacticalApi = {
 
 
   async uploadDocument(formData: FormData): Promise<any> {
-    const res = await fetch('http://localhost:3001/documents/upload', {
+    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
+    const res = await fetch(`${documentBase}/documents/upload`, {
       method: 'POST',
       body: formData
     });
@@ -43,25 +47,29 @@ export const tacticalApi = {
   },
 
   async getDocuments(): Promise<any[]> {
-    const res = await fetch('http://localhost:3001/documents');
+    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
+    const res = await fetch(`${documentBase}/documents`);
     if (!res.ok) throw new Error('Failed to fetch documents');
     return res.json();
   },
 
   async getDocumentChunks(id: string): Promise<any[]> {
-    const res = await fetch(`http://localhost:3001/documents/${id}/chunks`);
+    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
+    const res = await fetch(`${documentBase}/documents/${id}/chunks`);
     if (!res.ok) throw new Error('Failed to fetch document chunks');
     return res.json();
   },
 
   async getConceptChunks(conceptId: string): Promise<any[]> {
-    const res = await fetch(`http://localhost:3001/concepts/${conceptId}/chunks`);
+    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
+    const res = await fetch(`${documentBase}/concepts/${conceptId}/chunks`);
     if (!res.ok) throw new Error('Failed to fetch concept chunks');
     return res.json();
   },
 
   async searchKeyword(query: string): Promise<any[]> {
-    const res = await fetch(`http://localhost:3001/search?q=${encodeURIComponent(query)}`);
+    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
+    const res = await fetch(`${documentBase}/search?q=${encodeURIComponent(query)}`);
     if (!res.ok) throw new Error('Search failed');
     return res.json();
   },

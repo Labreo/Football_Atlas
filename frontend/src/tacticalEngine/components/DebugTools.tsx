@@ -29,7 +29,9 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
   const mcpToolChain = useOrchestratorStore((state) => state.mcpToolChain);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/tactical/mcp/tools')
+    const apiHost = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_HOST || '';
+    const mcpUrl = apiHost ? `${apiHost.replace(/\/$/, '')}/api/tactical/mcp/tools` : '/api/tactical/mcp/tools';
+    fetch(mcpUrl)
       .then(res => res.json())
       .then(data => setMcpTools(data))
       .catch(err => console.error('Failed to fetch MCP tools:', err));

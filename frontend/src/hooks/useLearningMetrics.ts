@@ -50,7 +50,10 @@ export interface TrackEventPayload {
   payload?: Record<string, unknown>;
 }
 
-const API_BASE = 'http://localhost:3001/api/metrics';
+const apiHost = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_HOST || '';
+const API_BASE = apiHost
+  ? `${apiHost.replace(/\/$/, '')}/api/metrics`
+  : '/api/metrics';
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 

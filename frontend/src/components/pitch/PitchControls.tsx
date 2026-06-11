@@ -3,6 +3,8 @@ import { useTacticalStore } from '../../stores/useTacticalStore';
 import { useLearningUIStore } from '../../stores/LearningUIStore';
 import { learningOrchestrator } from '../../tacticalOrchestrator/orchestrator';
 import { useBreakdownStore } from '../../stores/useBreakdownStore';
+import { useAudioCommentaryStore } from '../../audioCommentary/useAudioCommentaryStore';
+import { audioCommentaryManager } from '../../audioCommentary/AudioCommentaryManager';
 
 const PitchControls: React.FC = () => {
   const { 
@@ -28,11 +30,27 @@ const PitchControls: React.FC = () => {
     stopBreakdown,
   } = useBreakdownStore();
 
+  const { enabled: audioEnabled, isPlaying: audioPlaying } = useAudioCommentaryStore();
+
   const isBreakdownActive = !!currentBreakdown;
   const isLoaded = isBreakdownActive ? true : !!currentConcept;
 
   const activeModule = learningOrchestrator.getActiveModule();
   const phases = activeModule ? activeModule.getPhases() : [];
+
+  const toggleAudio = async () => {
+    if (audioEnabled) {
+      audioCommentaryManager.stop();
+      useAudioCommentaryStore.getState().setEnabled(false);
+      return;
+    }
+
+    useAudioCommentaryStore.getState().setEnabled(true);
+    audioCommentaryManager.setPlaybackSpeed(useAudioCommentaryStore.getState().playbackSpeed);
+    audioCommentaryManager.setMute(useAudioCommentaryStore.getState().isMuted);
+    audioCommentaryManager.setVolume(useAudioCommentaryStore.getState().volume);
+    await audioCommentaryManager.play();
+  };
 
   return (
     <div className="flex flex-col gap-4 select-none w-full">
@@ -153,6 +171,18 @@ const PitchControls: React.FC = () => {
               </button>
             ))}
           </div>
+
+          <button
+            onClick={toggleAudio}
+            disabled={!isLoaded}
+            className={`h-8 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${
+              audioEnabled
+                ? 'bg-[#10B981]/15 border border-[#10B981] text-[#10B981]'
+                : 'bg-[#182235] border border-transparent text-slate-400 hover:text-slate-200'
+            } disabled:opacity-30 disabled:cursor-not-allowed`}
+          >
+            {audioEnabled ? (audioPlaying ? 'Audio On' : 'Audio On') : 'Audio Off'}
+          </button>
         </div>
 
         {/* Camera Zoom Control Slider (Always active/accessible) */}

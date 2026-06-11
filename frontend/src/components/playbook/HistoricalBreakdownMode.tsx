@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useBreakdownStore } from '../../stores/useBreakdownStore';
 import { analyticsTracker } from '../../tacticalOrchestrator/analytics';
+import { audioCommentaryManager } from '../../audioCommentary/AudioCommentaryManager';
 
 interface HistoricalBreakdownModeProps {
   onNavigateToConcept: (conceptId: string) => void;
@@ -35,6 +36,11 @@ export const HistoricalBreakdownMode: React.FC<HistoricalBreakdownModeProps> = (
       }
     }
   }, [currentMomentIndex, currentBreakdown]);
+
+  useEffect(() => {
+    if (!currentBreakdown) return;
+    audioCommentaryManager.prepareHistoricalNarration();
+  }, [currentBreakdown]);
 
   if (isLoading) {
     return (

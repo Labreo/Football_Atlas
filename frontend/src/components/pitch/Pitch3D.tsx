@@ -8,6 +8,7 @@ import TransitionInspector from '../../tacticalEngine/components/TransitionInspe
 import { learningOrchestrator } from '../../tacticalOrchestrator/orchestrator';
 import { animationModuleRegistry } from '../../tacticalOrchestrator/registry';
 import { useBreakdownStore } from '../../stores/useBreakdownStore';
+import { audioCommentaryManager } from '../../audioCommentary/AudioCommentaryManager';
 
 
 const InteractivePitchPlayer: React.FC = () => {
@@ -19,12 +20,14 @@ const InteractivePitchPlayer: React.FC = () => {
   // Hook: New generic Tactical Engine
   const { containerRef, canvasRef, engine } = usePitchEngine();
 
-  // Initialize learning orchestrator with the pitch engine
+  // Initialize learning orchestrator and audio commentary manager with the pitch engine
   useEffect(() => {
     if (!engine) return;
     learningOrchestrator.init(engine);
+    audioCommentaryManager.init(engine);
     return () => {
       learningOrchestrator.destroy();
+      audioCommentaryManager.destroy();
     };
   }, [engine]);
 
@@ -54,6 +57,11 @@ const InteractivePitchPlayer: React.FC = () => {
       setModuleInstance(null);
     };
   }, [engine, currentConcept]);
+
+  useEffect(() => {
+    if (!moduleInstance || currentBreakdown) return;
+    audioCommentaryManager.prepareConceptNarration();
+  }, [moduleInstance, currentBreakdown]);
 
   // Synchronize complexity level from Zustand store to our active module instance
   useEffect(() => {

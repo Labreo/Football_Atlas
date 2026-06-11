@@ -487,7 +487,6 @@ const ConversationalLearningInterface: React.FC = () => {
                 </button>
               </div>
             </div>
-
             {/* Content Feed Container */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
               {conversation.map((turn, turnIdx) => {

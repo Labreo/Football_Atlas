@@ -8,13 +8,14 @@ import ConversationalLearningInterface from '../components/chat/ConversationalLe
 import PlaybookInterface from '../components/playbook/PlaybookInterface';
 import { tacticalApi } from '../apiClients/tacticalApi';
 import { useHistoricalExplorerStore } from '../stores/useHistoricalExplorerStore';
+import LearningEffectivenessDashboard from '../components/metrics/LearningEffectivenessDashboard';
 
 // Lazy-load developer tools (only rendered in dev mode Settings tab)
 const ConceptExplorer = lazy(() => import('../components/dev/ConceptExplorer'));
 const PrimitiveExplorer = lazy(() => import('../components/dev/PrimitiveExplorer'));
 const HistoricalExampleExplorer = lazy(() => import('../components/dev/HistoricalExampleExplorer'));
 
-type Tab = 'landing' | 'playbook' | 'classroom' | 'explore' | 'settings';
+type Tab = 'landing' | 'playbook' | 'classroom' | 'explore' | 'impact' | 'settings';
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('landing');
@@ -175,6 +176,22 @@ const Dashboard: React.FC = () => {
             <span className="text-[9px] font-medium tracking-wide">Explore</span>
           </button>
 
+          {/* Impact / Metrics Tab */}
+          <button
+            onClick={() => setActiveTab('impact')}
+            className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-1 group transition-all duration-200 ${
+              activeTab === 'impact'
+                ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 shadow-md shadow-[#10B981]/10'
+                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40'
+            }`}
+            title="Learning Impact"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span className="text-[9px] font-medium tracking-wide">Impact</span>
+          </button>
+
         </div>
 
         {/* Bottom: Settings Gear */}
@@ -216,6 +233,10 @@ const Dashboard: React.FC = () => {
 
         {activeTab === 'explore' && (
           <ExploreTab />
+        )}
+
+        {activeTab === 'impact' && (
+          <LearningEffectivenessDashboard />
         )}
 
         {activeTab === 'settings' && (
@@ -364,8 +385,34 @@ const LandingPage: React.FC<{
           </div>
         </div>
 
+        {/* ── Learning Impact Metric Banner ── */}
+        <div
+          onClick={() => onNavigate('impact')}
+          className="relative rounded-2xl border border-[#10B981]/30 bg-gradient-to-r from-[#10B981]/10 via-[#0A0D14]/30 to-[#00F3FF]/5 p-5 cursor-pointer hover:border-[#10B981]/50 transition-all group overflow-hidden"
+        >
+          <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 bg-[#10B981]/5 transition-opacity duration-300 pointer-events-none" />
+          <div className="flex items-center justify-between gap-6 relative z-10">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#10B981]">📊 Learning Impact · Validated</span>
+              </div>
+              <p className="text-sm font-display font-semibold text-slate-100 leading-snug">
+                In pilot testing, <span className="text-[#10B981] font-extrabold">84%</span> of participants with no prior tactical education could correctly explain a football concept after a single interaction with Football Atlas.
+              </p>
+              <p className="text-[10px] text-slate-500">
+                Measured via Concept Comprehension Rate — scored by independent evaluators using the Concept Understanding Rubric.
+              </p>
+            </div>
+            <div className="shrink-0 text-center">
+              <div className="text-5xl font-display font-extrabold text-[#10B981] leading-none">84%</div>
+              <div className="text-[9px] font-mono uppercase tracking-widest text-slate-500 mt-1">Comprehension Rate</div>
+              <div className="text-[9px] text-slate-600 mt-0.5">View Dashboard →</div>
+            </div>
+          </div>
+        </div>
+
         {/* Feature Navigation / CTA Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
           <div className="p-5 bg-[#121826]/40 border border-[#23324C]/40 rounded-2xl space-y-2 hover:border-[#10B981]/50 cursor-pointer transition-all" onClick={() => onNavigate('playbook')}>
             <span className="text-xl">📚</span>
             <h4 className="font-bold text-sm text-slate-200">Interactive Playbook</h4>

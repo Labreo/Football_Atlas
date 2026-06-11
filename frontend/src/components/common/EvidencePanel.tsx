@@ -3,6 +3,7 @@ import { useTacticalStore } from '../../stores/useTacticalStore';
 import { useHistoricalExplorerStore } from '../../stores/useHistoricalExplorerStore';
 import { useBreakdownStore } from '../../stores/useBreakdownStore';
 import { analyticsTracker } from '../../tacticalOrchestrator/analytics';
+import { tacticalApi } from '../../apiClients/tacticalApi';
 
 
 export const EvidencePanel: React.FC = () => {
@@ -43,17 +44,14 @@ export const EvidencePanel: React.FC = () => {
 
   const handleMatchClick = async (exampleId: string) => {
     try {
-      const response = await fetch(`/api/tactical/historical/search`);
-      if (response.ok) {
-        const allExamples = await response.json();
-        const example = allExamples.find((ex: any) => ex.example_id === exampleId);
-        if (example) {
-          analyticsTracker.trackMatchOpened(exampleId, { source: 'evidence_panel' });
-          setEvidencePanelOpen(false);
-          setSelectedEvidenceItem(null);
-          setSelectedExample(example);
-          await useBreakdownStore.getState().startBreakdown(example);
-        }
+      const allExamples = await tacticalApi.searchHistoricalExamples({});
+      const example = allExamples.find((ex: any) => ex.example_id === exampleId);
+      if (example) {
+        analyticsTracker.trackMatchOpened(exampleId, { source: 'evidence_panel' });
+        setEvidencePanelOpen(false);
+        setSelectedEvidenceItem(null);
+        setSelectedExample(example);
+        await useBreakdownStore.getState().startBreakdown(example);
       }
     } catch (err) {
       console.error('Failed to open match from evidence panel:', err);

@@ -35,7 +35,9 @@ export class HistoricalBreakdownRepository {
         // Validate each item at runtime with Zod
         const validation = HistoricalBreakdownSchema.safeParse(item);
         if (validation.success) {
-          this.breakdowns.set(item.example_id, validation.data as HistoricalBreakdown);
+          const validData = validation.data as HistoricalBreakdown;
+          this.breakdowns.set(item.example_id, validData);
+          this.breakdowns.set(item.breakdown_id, validData);
         } else {
           Logger.warn(`[HistoricalBreakdownRepository] Validation failed for seeded item "${item.example_id}": ${validation.error.message}`);
         }
@@ -52,7 +54,7 @@ export class HistoricalBreakdownRepository {
   }
 
   public getAll(): HistoricalBreakdown[] {
-    return Array.from(this.breakdowns.values());
+    return Array.from(new Set(this.breakdowns.values()));
   }
 }
 

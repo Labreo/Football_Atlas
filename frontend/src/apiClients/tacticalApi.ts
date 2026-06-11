@@ -1,4 +1,4 @@
-import { TacticalConcept, TutorResponse, ConversationTurn, HistoricalExample, HistoricalBreakdown, AudienceMode } from '@football-atlas/shared';
+import { TacticalConcept, TutorResponse, ConversationTurn, HistoricalExample, HistoricalBreakdown, AudienceMode, HistoricalEvidence } from '@football-atlas/shared';
 
 const apiHost = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_HOST || '';
 const API_BASE = apiHost
@@ -97,6 +97,12 @@ export const tacticalApi = {
   async getHistoricalBreakdown(exampleId: string): Promise<HistoricalBreakdown> {
     const res = await fetch(`${API_BASE}/historical/breakdowns/${exampleId}`);
     if (!res.ok) throw new Error(`Failed to fetch historical breakdown for example: ${exampleId}`);
+    return res.json();
+  },
+
+  async getHistoricalEvidence(exampleId: string): Promise<HistoricalEvidence[]> {
+    const res = await fetch(`${API_BASE}/historical/evidence/${exampleId}`);
+    if (!res.ok) throw new Error(`Failed to fetch evidence for example: ${exampleId}`);
     return res.json();
   },
 };

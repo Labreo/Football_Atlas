@@ -168,11 +168,8 @@ export const useTacticalStore = create<TacticalState>((set) => ({
 
   fetchEvidenceForExample: async (exampleId: string) => {
     try {
-      const response = await fetch(`/api/tactical/historical/evidence/${exampleId}`);
-      if (response.ok) {
-        const activeEvidence = await response.json();
-        set({ activeEvidence });
-      }
+      const activeEvidence = await tacticalApi.getHistoricalEvidence(exampleId);
+      set({ activeEvidence });
     } catch (err) {
       console.error('Failed to fetch evidence for example:', err);
     }

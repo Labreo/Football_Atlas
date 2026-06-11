@@ -141,20 +141,22 @@ Football Atlas is structured as a TypeScript monorepo with strict package bounda
 
 # AI Architecture
 
-Football Atlas isolates the IBM Granite LLM from direct data stores using the Model Context Protocol (MCP) and a Context Forge gateway.
+Football Atlas isolates the IBM Granite LLM from direct data stores using the Model Context Protocol (MCP) powered by the **Context Forge** gateway.
 
-Rather than allowing the model to hallucinate numbers, match summaries, or coordinate maps, Granite is restricted to interacting with the application layer through a set of six typed MCP tools. When a user asks a tactical question, Granite performs reasoning, generates a sequence of tool calls, and synthesizes the final response once the tools return structured data.
+As the central MCP Gateway, **Context Forge** orchestrates all tool execution, session management, and LLM communication. Rather than allowing the model to hallucinate numbers, match summaries, or coordinate maps, Granite is restricted to interacting with the application layer through a set of eight typed MCP tools registered on the Football Atlas MCP Server. When a user asks a tactical question, Context Forge manages the turn: it invokes the knowledge level analyzer, maps the user's intent to a sequence of tool calls, executes them locally against the structured repositories, and feeds the compiled telemetry and Docling-parsed evidence to Granite to synthesize a grounded educational response.
 
 ### Custom MCP Tools
 
-*   `get_concept_explanation`: Retrieves canonical definitions, key principles, and defensive counter-measures for a tactical concept.
-*   `trigger_animation`: Dispatches coordinates and visual overlay schemas to the frontend's Three.js runtime.
-*   `fetch_historical_example`: Queries historical match lists matching tactical categories or coaches.
-*   `launch_breakdown`: Triggers a synchronized frame-by-frame match timeline for visual analysis.
-*   `compose_concepts`: Synthesizes relationships between multiple tactical concepts (e.g. how a *False 9* feeds a *Third Man Run*).
-*   `assess_knowledge_level`: Analyzes learner profile history to adjust tutor tone, narration detail, and recommendations.
+*   `get_concept_explanation`: Retrieves canonical definitions, key principles, and defensive counter-measures for a tactical concept, adapted to the user's knowledge level.
+*   `trigger_animation`: Generates animation coordinate setups and visual overlay schemas for rendering on the 3D WebGL pitch.
+*   `fetch_historical_example`: Searches and retrieves historical matches or performance examples matching specific concepts, players, or coaches.
+*   `launch_breakdown`: Retrieves coordinate files, camera setups, and narrative timeline milestones for interactive match visualization.
+*   `compose_concepts`: Generates comparative tactical relationship analyses connecting two different concepts (e.g. False 9 and Inverted Winger).
+*   `assess_knowledge_level`: Analyzes user chat messages and history to calibrate tutor difficulty and response complexity.
+*   `retrieve_source_evidence`: Extracts parsed evidence chunks and document excerpts grounded by IBM Docling.
+*   `suggest_next_concept`: Generates recommendations for the next tactical concept to study based on prerequisites and mastery profiles.
 
-*Why this matters: Restricting the LLM to a strict tool-calling contract eliminates hallucinations and ensures that tactical explanations are verified against actual coaching datasets.*
+*Why this matters: Restricting the LLM to a strict tool-calling contract orchestrated by Context Forge eliminates hallucinations and ensures that tactical explanations are verified against actual coaching datasets.*
 
 ---
 
@@ -192,8 +194,9 @@ The `AudienceDetectionEngine` monitors user input register and automatically tog
 
 *   **IBM Granite (via watsonx.ai / OpenRouter)**: Serves as the primary reasoning engine, orchestrating MCP tool chains and narrating the dynamic lessons.
 *   **IBM Docling**: Runs the document ingestion pipeline. It parses unstructured PDF, MD, and DOCX tactical playbooks, extracting table data and headers to seed the grounded knowledge base.
+*   **Context Forge (MCP Gateway)**: Acts as the Model Context Protocol (MCP) tool gateway, mediating safe, structured interactions between IBM Granite and internal data models while monitoring telemetry.
 
-*Why this matters: Relying on enterprise-grade document extraction (Docling) and reasoning models (Granite) guarantees a high-fidelity grounding pipeline, avoiding manual data formatting.*
+*Why this matters: Integrating enterprise-grade document extraction (Docling) and reasoning models (Granite) with a standardized MCP gateway (Context Forge) guarantees a secure, zero-hallucination RAG pipeline.*
 
 ---
 
@@ -273,9 +276,9 @@ Ensure the following variables are configured in the production environment:
 
 # Team
 
-*   **Engineering**: The Football Atlas Team.
+Built for the IBM SkillsBuild AI Builders Challenge, May 2026.
 
-*Why this matters: Demonstrates the collaborative technical execution behind the project.*
+Kanak Waradkar · BTech (Computer Engineering), Goa College Of Engineering · [GitHub](https://github.com/Labreo) · [LinkedIn](https://www.linkedin.com/in/kanak-waradkar-52a123304/)
 
 ---
 

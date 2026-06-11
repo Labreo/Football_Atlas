@@ -9,7 +9,8 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "test:client": "ts-node-dev --respawn --transpile-only src/test-client.ts",
     "test:level": "ts-node src/test-level-detection.ts",
-    "test:followup": "ts-node src/test-follow-up.ts"
+    "test:followup": "ts-node src/test-follow-up.ts",
+    "test:granite-route": "ts-node src/test-granite-route.ts"
   },
   "dependencies": {
     "@football-atlas/shared": "*",

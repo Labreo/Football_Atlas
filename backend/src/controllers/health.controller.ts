@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { envConfig } from '../config/env.config';
 import { Logger } from '../utils/logger';
+import { footballAtlasMCPServer } from '../services/mcpServer.service';
 
 async function checkIamToken(): Promise<{ ok: boolean; detail?: string }> {
   const controller = new AbortController();
@@ -32,21 +33,43 @@ async function checkIamToken(): Promise<{ ok: boolean; detail?: string }> {
   }
 }
 
-async function checkMcp(): Promise<{ ok: boolean; detail?: string }> {
+async function checkMcp(): Promise<{ ok: boolean; mode: 'local' | 'external'; registeredTools: string[]; detail?: string }> {
   const mcpUrl = envConfig.mcpServerUrl;
-  if (!mcpUrl) return { ok: false, detail: 'MCP_SERVER_URL not configured' };
+  if (!mcpUrl) {
+    // Local mode — return registered tools from in-process MCP server
+    try {
+      const localTools = footballAtlasMCPServer.listTools().map((t) => t.name);
+      return { ok: true, mode: 'local', registeredTools: localTools };
+    } catch (err: any) {
+      Logger.warn('Local MCP check failed', { err: String(err) });
+      return { ok: false, mode: 'local', registeredTools: [], detail: String(err) };
+    }
+  }
+
   const probe = mcpUrl.endsWith('/') ? `${mcpUrl}health` : `${mcpUrl}/health`;
+  const toolsEndpoint = mcpUrl.endsWith('/') ? `${mcpUrl}tools` : `${mcpUrl}/tools`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 4000);
   try {
     const resp = await fetch(probe, { method: 'GET', signal: controller.signal });
     clearTimeout(timeout);
-    if (!resp.ok) return { ok: false, detail: `MCP responded ${resp.status}` };
-    return { ok: true };
+    if (!resp.ok) return { ok: false, mode: 'external', registeredTools: [], detail: `MCP health responded ${resp.status}` };
+
+    // Fetch registered tools list
+    try {
+      const tResp = await fetch(toolsEndpoint, { method: 'GET', signal: AbortSignal.timeout(4000) });
+      if (!tResp.ok) return { ok: true, mode: 'external', registeredTools: [], detail: `MCP /tools returned ${tResp.status}` };
+      const data = await tResp.json();
+      const remoteNames = Array.isArray(data) ? data.map((t: any) => t.name) : [];
+      return { ok: true, mode: 'external', registeredTools: remoteNames };
+    } catch (tErr: any) {
+      Logger.warn('Failed to fetch MCP /tools', { err: String(tErr) });
+      return { ok: true, mode: 'external', registeredTools: [], detail: String(tErr) };
+    }
   } catch (err: any) {
     clearTimeout(timeout);
     Logger.warn('MCP health check failed', { err: String(err) });
-    return { ok: false, detail: String(err) };
+    return { ok: false, mode: 'external', registeredTools: [], detail: String(err) };
   }
 }
 
@@ -54,19 +77,25 @@ export const getHealth = async (_req: Request, res: Response) => {
   const start = Date.now();
   const env = process.env.NODE_ENV || 'development';
 
-  // Run external checks in parallel but with sensible timeouts
-  const [iam, mcp] = await Promise.all([checkIamToken(), checkMcp()]);
+  // Run checks in parallel but keep MCP check slightly independent
+  const [iam, mcpResult] = await Promise.all([checkIamToken(), checkMcp()]);
 
-  const overallOk = iam.ok && mcp.ok;
+  const mcpStatus = mcpResult.ok ? 'UP' : 'DOWN';
+  const overallOk = iam.ok && mcpResult.ok;
 
-  const payload = {
+  const payload: any = {
     status: overallOk ? 'UP' : 'DEGRADED',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: env,
     checks: {
       watsonx: iam.ok ? { status: 'UP' } : { status: 'DOWN', detail: iam.detail },
-      mcp: mcp.ok ? { status: 'UP' } : { status: 'DOWN', detail: mcp.detail },
+      mcp: {
+        mode: mcpResult.mode,
+        status: mcpStatus,
+        registeredTools: mcpResult.registeredTools || [],
+        detail: mcpResult.detail || undefined
+      },
       database: { status: 'NOT_CONFIGURED' }
     },
     latency_ms: Date.now() - start

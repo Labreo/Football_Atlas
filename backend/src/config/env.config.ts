@@ -9,7 +9,7 @@ const requiredEnv = [
   'IBM_PROJECT_ID',
   'IBM_GRANITE_MODEL',
   'IBM_BASE_URL',
-  'MCP_SERVER_URL'
+  // MCP_SERVER_URL is optional in production; use in-process MCP by default
 ];
 
 export function validateEnv(): void {

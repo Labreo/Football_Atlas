@@ -17,12 +17,10 @@ const PORT = envConfig.port;
 
 async function start() {
   // Verify MCP registration before accepting traffic in production
-  if (envConfig.mcpServerUrl) {
-    const result = await verifyAndRegisterTools();
-    if (!result.ok) {
-      Logger.error('MCP registration verification failed. Aborting startup.', { detail: result.detail });
-      process.exit(1);
-    }
+  const result = await verifyAndRegisterTools();
+  if (!result.ok) {
+    Logger.error('MCP registration verification failed. Aborting startup.', { detail: result.detail });
+    process.exit(1);
   }
 
   app.listen(PORT, () => {

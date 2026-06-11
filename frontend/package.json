@@ -10,7 +10,7 @@
     "test:visual-language": "npx tsx src/visualLanguage/VisualLanguageTestSuite.ts"
   },
   "dependencies": {
-    "@football-atlas/shared": "*",
+    "@football-atlas/shared": "file:../shared",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.1",

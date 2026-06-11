@@ -5,7 +5,6 @@
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "ignoreDeprecations": "6.0",
     "types": ["vite/client", "node"],
 
     /* Bundler mode */
@@ -15,7 +14,6 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
       "@football-atlas/shared": ["../shared/src/index.ts"]
     },

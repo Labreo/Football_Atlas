@@ -1,24 +1,26 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Install deps
+# Copy workspace manifests so npm can resolve shared workspace packages.
 COPY package.json package-lock.json ./
-RUN npm ci --only=production
+COPY backend/package.json ./backend/package.json
+COPY backend/tsconfig.json ./backend/tsconfig.json
+COPY shared ./shared
+COPY backend/src ./backend/src
 
-# Copy source
-COPY . .
-
-# Build (if there is a build step; keep simple for runtime TS via ts-node or compiled dist)
-RUN npm run build || true
+# Install backend workspace dependencies and build.
+RUN npm ci --workspace backend
+WORKDIR /app/backend
+RUN npm run build
+RUN npm prune --production
 
 FROM node:18-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copy production deps
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/backend/node_modules ./node_modules
+COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/package.json ./package.json
 
 EXPOSE 3001
 

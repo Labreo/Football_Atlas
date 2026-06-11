@@ -1,4 +1,4 @@
-import { TacticalConcept, TutorResponse, ConversationTurn, HistoricalExample, HistoricalBreakdown } from '@football-atlas/shared';
+import { TacticalConcept, TutorResponse, ConversationTurn, HistoricalExample, HistoricalBreakdown, AudienceMode } from '@football-atlas/shared';
 
 const API_BASE = 'http://localhost:3001/api/tactical';
 
@@ -15,17 +15,20 @@ export const tacticalApi = {
     return res.json();
   },
 
-  async askTutor(prompt: string, history: ConversationTurn[]): Promise<TutorResponse> {
+  async askTutor(
+    prompt: string,
+    history: ConversationTurn[],
+    audienceMode?: AudienceMode
+  ): Promise<TutorResponse> {
     const res = await fetch(`${API_BASE}/tutor`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ prompt, history })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, history, audience_mode: audienceMode })
     });
     if (!res.ok) throw new Error('Failed to query tactical tutor');
     return res.json();
   },
+
 
   async uploadDocument(formData: FormData): Promise<any> {
     const res = await fetch('http://localhost:3001/documents/upload', {

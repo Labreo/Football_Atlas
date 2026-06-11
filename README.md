@@ -59,6 +59,43 @@ When launching the Hero Moment, the system enters a specialized showcase state c
 
 ---
 
+## 🎭 Dual Audience Mode
+
+Football Atlas serves multiple audiences. **A casual fan and a football student can ask the same question and each get exactly what they need.**
+
+The same concept. The same 3D animation. Two completely different explanations.
+
+### Audience Types
+
+| Mode | Focus | Language |
+|---|---|---|
+| 🏟 **Fan View** | Stories, players, emotion, moments | Plain football language |
+| 📐 **Tactical View** | Structure, space, decisions, transitions | Precise tactical vocabulary |
+
+### Auto-Detection
+
+Every question is analysed by the `AudienceDetectionEngine` — a zero-latency keyword classifier that detects the user's natural register:
+
+**Casual Fan signals:** *"Why did Mbappé score?"*, *"How did France come back?"*, *"Who won the battle in midfield?"*
+
+**Tactical Student signals:** *"How did the half-space collapse?"*, *"What structural weakness allowed the press to fail?"*, *"Describe the transition trigger."*
+
+If confidence ≥ 60%, the mode is automatically switched. The **✦auto** label appears next to the toggle pill to indicate a detection occurred.
+
+### Hero Moment Comparison: Mbappé Equaliser (2022 World Cup Final)
+
+**🏟 Fan View:**
+> *Kylian Mbappé looked like he had no chance. Argentina were 2-0 up in the World Cup Final with just over 20 minutes left. Then everything changed. A penalty. Mbappé stepped up and buried it — cool as you like. Within 97 seconds he scored again with a bicycle kick that left everyone stunned. That's the thing about Mbappé: defenders know what he can do, and he does it anyway.*
+
+**📐 Tactical View:**
+> *Mbappé's equaliser sequence exposed a structural fragility in Argentina's defensive shape. After the 80th-minute penalty, Argentina's back four dropped progressively deeper, conceding the half-spaces to Theo Hernandez. The bicycle kick arrived from a breakdown in Argentina's transition press — when Hernandez drove into the left channel, the Argentine midfield failed to collapse centrally. Mbappé exploited the gap between Otamendi and Molina in the right half-space, receiving a clipped cross behind the retreating defensive line. Key failure: Argentina stopped pressing triggers after 2-0, inviting France into a positional game they were structurally dominant in.*
+
+### UI
+
+The **audience toggle pill** (🏟 Fan / 📐 Tactical) sits in the Classroom Chat header. Clicking it manually switches the mode for all future responses. Each assistant bubble is stamped with a coloured badge (amber for Fan, sky for Tactical) so users can see at a glance which voice answered.
+
+---
+
 ## 🏗️ System Architecture & Monorepo Layout
 
 Football Atlas is structured as a TypeScript monorepo using standard package workspaces:

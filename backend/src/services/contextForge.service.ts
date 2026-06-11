@@ -1,7 +1,8 @@
-import { ComplexityLevel, TutorResponse, ToolInvocation, ConversationTurn, ClassroomAction } from '@football-atlas/shared';
+import { ComplexityLevel, TutorResponse, ToolInvocation, ConversationTurn, ClassroomAction, AudienceMode } from '@football-atlas/shared';
 import { footballAtlasMCPServer } from './mcpServer.service';
 import { contextManager } from './context.manager';
 import { classroomIntentEngine } from './classroomIntentEngine.service';
+import { narrationAdapterService } from './narrationAdapter.service';
 import { envConfig } from '../config/env.config';
 import { Logger } from '../utils/logger';
 
@@ -24,7 +25,8 @@ export class ContextForgeGateway {
     question: string,
     conversationId: string = 'default-session',
     traceId: string = 'system-request',
-    history?: ConversationTurn[]
+    history?: ConversationTurn[],
+    audienceMode: AudienceMode = AudienceMode.CASUAL_FAN
   ): Promise<TutorResponse> {
     const startTime = Date.now();
     const session = contextManager.getOrCreateSessionContext(conversationId);
@@ -140,15 +142,19 @@ export class ContextForgeGateway {
 
     if (!isMock) {
       try {
-        // Run Granite Live Synthesis
-        finalExplanation = await this.synthesizeGraniteLive(question, toolOutputs, detectedLevel, traceId);
+        // Run Granite Live Synthesis with audience-aware system prompt
+        finalExplanation = await this.synthesizeGraniteLive(question, toolOutputs, detectedLevel, traceId, audienceMode);
       } catch (err: any) {
         Logger.warn(`Granite live synthesis failed, falling back to local template compiler. Error: ${err.message}`);
-        finalExplanation = this.synthesizeLocalTemplates(question, toolOutputs, detectedLevel);
+        finalExplanation = narrationAdapterService.adaptExplanation(
+          this.synthesizeLocalTemplates(question, toolOutputs, detectedLevel),
+          audienceMode
+        );
       }
     } else {
-      // Run Local Template Compiler
-      finalExplanation = this.synthesizeLocalTemplates(question, toolOutputs, detectedLevel);
+      // Run Local Template Compiler + apply audience adaptation
+      const rawExplanation = this.synthesizeLocalTemplates(question, toolOutputs, detectedLevel);
+      finalExplanation = narrationAdapterService.adaptExplanation(rawExplanation, audienceMode);
     }
 
     // Resolve details from tool outputs to populate response fields
@@ -220,7 +226,8 @@ export class ContextForgeGateway {
       actions: actions.slice(0, 2),
       mcp_tool_chain: mcpToolChain,
       resolved_references: evidenceOutput ? evidenceOutput.map((e: any) => e.source_title) : [],
-      conversation_thread: [...session.conversation_thread]
+      conversation_thread: [...session.conversation_thread],
+      audience_mode: audienceMode,
     };
   }
 
@@ -231,12 +238,14 @@ export class ContextForgeGateway {
     question: string,
     toolOutputs: any[],
     level: ComplexityLevel,
-    traceId: string
+    traceId: string,
+    audienceMode: AudienceMode = AudienceMode.CASUAL_FAN
   ): Promise<string> {
     const formattedOutputs = toolOutputs.map(t => {
-      return `[Tool: ${t.tool}]
-Response Data: ${JSON.stringify(t.response, null, 2)}`;
+      return `[Tool: ${t.tool}]\nResponse Data: ${JSON.stringify(t.response, null, 2)}`;
     }).join('\n\n');
+
+    const audienceAddition = narrationAdapterService.buildSystemPromptAddition(audienceMode);
 
     const systemPrompt = `You are the Football Atlas AI Tactical Tutor, an elite UEFA Pro License analyst.
 Your job is to synthesize a natural, engaging, and structured educational explanation for the user's question, based strictly on the MCP tool outputs provided below.
@@ -246,6 +255,7 @@ INSTRUCTIONS:
 2. Adapt your tone to the knowledge level: ${level}.
 3. Cite the sources or tools naturally if they contain historical data or coaching excerpts.
 4. Respond with the plain-text final explanation ONLY. Do not wrap in JSON blocks.
+${audienceAddition}
 
 MCP TOOL OUTPUTS DATA:
 ${formattedOutputs}`;

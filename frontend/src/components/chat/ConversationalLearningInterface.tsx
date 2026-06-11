@@ -6,11 +6,12 @@ import { learningStateStore } from '../../tacticalOrchestrator/store';
 import { analyticsTracker } from '../../tacticalOrchestrator/analytics';
 import { useBreakdownStore } from '../../stores/useBreakdownStore';
 import { tacticalApi } from '../../apiClients/tacticalApi';
-import { ClassroomAction } from '@football-atlas/shared';
+import { ClassroomAction, AudienceMode } from '@football-atlas/shared';
 import { HistoricalBreakdownMode } from '../playbook/HistoricalBreakdownMode';
 import Pitch3D from '../pitch/Pitch3D';
 import PitchControls from '../pitch/PitchControls';
 import { EvidencePanel } from '../common/EvidencePanel';
+import { useAudienceStore } from '../../stores/useAudienceStore';
 
 // Comprehensive markdown → HTML parser processed line-by-line
 function parseMarkdown(text: string): string {
@@ -130,6 +131,8 @@ const ConversationalLearningInterface: React.FC = () => {
 
   const orchestratorStore = learningStateStore((state) => state.telemetry);
   const { currentBreakdown } = useBreakdownStore();
+  const { audienceMode, autoDetected, toggleAudienceMode } = useAudienceStore();
+  const isCasual = audienceMode === AudienceMode.CASUAL_FAN;
 
   const [input, setInput] = useState('');
   const [showDebug, setShowDebug] = useState(false);
@@ -453,11 +456,36 @@ const ConversationalLearningInterface: React.FC = () => {
               <h2 className="font-display font-bold text-xs tracking-wider text-slate-300 uppercase">
                 Classroom Chat
               </h2>
-              {current_concept && (
-                <span className="text-[9px] bg-[#1B253B] text-slate-400 font-bold px-2 py-0.5 rounded border border-[#2B3B5E]/30 uppercase tracking-wider font-mono">
-                  {current_concept.complexity}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {current_concept && (
+                  <span className="text-[9px] bg-[#1B253B] text-slate-400 font-bold px-2 py-0.5 rounded border border-[#2B3B5E]/30 uppercase tracking-wider font-mono">
+                    {current_concept.complexity}
+                  </span>
+                )}
+                {/* Audience Mode Toggle Pill */}
+                <button
+                  onClick={() => {
+                    toggleAudienceMode();
+                    analyticsTracker.trackAudienceSwitch(
+                      audienceMode,
+                      isCasual ? AudienceMode.TACTICAL_STUDENT : AudienceMode.CASUAL_FAN,
+                      'manual_toggle'
+                    );
+                  }}
+                  title={`Switch to ${isCasual ? 'Tactical Student' : 'Casual Fan'} view`}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[9px] font-bold font-mono tracking-wider uppercase transition-all ${
+                    isCasual
+                      ? 'bg-amber-500/10 border-amber-400/30 text-amber-400 hover:bg-amber-500/20'
+                      : 'bg-sky-500/10 border-sky-400/30 text-sky-400 hover:bg-sky-500/20'
+                  }`}
+                >
+                  <span>{isCasual ? '🏟' : '📐'}</span>
+                  <span>{isCasual ? 'Fan' : 'Tactical'}</span>
+                  {autoDetected && (
+                    <span className="text-[7px] opacity-60 ml-0.5">✦auto</span>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Content Feed Container */}
@@ -469,10 +497,21 @@ const ConversationalLearningInterface: React.FC = () => {
                     key={turnIdx}
                     className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} space-y-1`}
                   >
-                    {/* Header (Sender Name) */}
-                    <span className="text-[9px] font-mono text-slate-500 uppercase px-1">
-                      {isUser ? 'You' : 'Granite AI Analyst'}
-                    </span>
+                    {/* Header (Sender Name + audience badge) */}
+                    <div className="flex items-center gap-1.5 px-1">
+                      <span className="text-[9px] font-mono text-slate-500 uppercase">
+                        {isUser ? 'You' : 'Granite AI Analyst'}
+                      </span>
+                      {!isUser && turn.audience_mode && (
+                        <span className={`text-[7px] font-bold font-mono uppercase px-1.5 py-0.5 rounded-full border ${
+                          turn.audience_mode === AudienceMode.CASUAL_FAN
+                            ? 'bg-amber-500/10 border-amber-400/25 text-amber-400'
+                            : 'bg-sky-500/10 border-sky-400/25 text-sky-400'
+                        }`}>
+                          {turn.audience_mode === AudienceMode.CASUAL_FAN ? '🏟 Fan' : '📐 Tactical'}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Message Bubble */}
                     <div

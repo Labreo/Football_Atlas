@@ -9,7 +9,8 @@ import {
   TacticalConceptSchema,
   GraniteResponseSchema
 } from '../schemas/tactical.schemas';
-import { ComplexityLevel } from '../enums/tactical.enums';
+import { ComplexityLevel, AudienceMode } from '../enums/tactical.enums';
+
 
 export type KeyPrinciple = z.infer<typeof KeyPrincipleSchema>;
 export type DefensiveResponse = z.infer<typeof DefensiveResponseSchema>;
@@ -49,6 +50,8 @@ export interface ConversationTurn {
   content: string;
   actions?: ClassroomAction[];
   mcp_tool_chain?: ToolInvocation[];
+  /** Which audience voice generated this assistant turn */
+  audience_mode?: AudienceMode;
 }
 
 export interface ToolInvocation {
@@ -77,6 +80,8 @@ export interface TutorResponse {
   resolved_references?: string[];
   conversation_thread?: string[];
   mcp_tool_chain?: ToolInvocation[];
+  /** Audience mode used to generate this response */
+  audience_mode?: AudienceMode;
 }
 
 export interface ConversationContext {

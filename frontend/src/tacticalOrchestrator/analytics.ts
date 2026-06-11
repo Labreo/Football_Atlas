@@ -166,6 +166,36 @@ export class AnalyticsTracker {
     this.track('source_followup_asked', { question, ...data });
   }
 
+  // ──────────────── Audience Mode Tracking ────────────────
+
+  /**
+   * Tracks when a specific audience mode is active (logged once per question).
+   */
+  public trackAudienceMode(mode: string, trigger: 'auto' | 'manual', data: any = {}): void {
+    this.track('audience_mode', { mode, trigger, ...data });
+  }
+
+  /**
+   * Tracks a switch from one audience mode to another.
+   */
+  public trackAudienceSwitch(from: string, to: string, trigger: string, data: any = {}): void {
+    this.track('audience_switch', { from, to, trigger, ...data });
+  }
+
+  /**
+   * Tracks when the system auto-detected an audience mode.
+   */
+  public trackAutoDetectedMode(mode: string, confidence: number, signals: string[], data: any = {}): void {
+    this.track('auto_detected_mode', { mode, confidence: Math.round(confidence * 100), signals, ...data });
+  }
+
+  /**
+   * Tracks accuracy feedback when a user corrects the auto-detected mode.
+   */
+  public trackModeAccuracy(detected: string, correctedTo: string, data: any = {}): void {
+    this.track('mode_accuracy', { detected, corrected_to: correctedTo, was_correct: detected === correctedTo, ...data });
+  }
+
   // ──────────────── Session Buffer ────────────────
 
   /**

@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { tacticalRegistry, TutorResponse, ComplexityLevel, ConversationTurn } from '@football-atlas/shared';
+import { tacticalRegistry, TutorResponse, ComplexityLevel, ConversationTurn, AudienceMode } from '@football-atlas/shared';
 import { GraniteService } from '../services/granite.service';
 import { historicalExampleService } from '../services/historicalExample.service';
 import { historicalExampleRepository } from '../repositories/historicalExample.repository';
@@ -38,10 +38,11 @@ router.get('/concepts/:id', (req: Request, res: Response) => {
 /**
  * POST /api/tactical/tutor
  * Interacts with the Context Forge MCP Gateway to orchestrate tool selection and synthesis.
+ * Accepts optional audience_mode ('CASUAL_FAN' | 'TACTICAL_STUDENT') to shape the Granite voice.
  */
 router.post('/tutor', async (req: Request, res: Response, next: NextFunction) => {
   const traceId = (req as any).traceId || 'unknown-trace';
-  const { prompt, history } = req.body;
+  const { prompt, history, audience_mode } = req.body;
 
   if (!prompt) {
     return res.status(400).json({
@@ -50,13 +51,26 @@ router.post('/tutor', async (req: Request, res: Response, next: NextFunction) =>
     });
   }
 
+  // Validate and coerce audience_mode — default to CASUAL_FAN if missing/invalid
+  const validModes: AudienceMode[] = [AudienceMode.CASUAL_FAN, AudienceMode.TACTICAL_STUDENT];
+  const resolvedAudienceMode: AudienceMode = validModes.includes(audience_mode)
+    ? audience_mode
+    : AudienceMode.CASUAL_FAN;
+
   try {
-    const tutorResponse = await contextForgeGateway.queryTutor(prompt, 'default-session', traceId, history);
+    const tutorResponse = await contextForgeGateway.queryTutor(
+      prompt,
+      'default-session',
+      traceId,
+      history,
+      resolvedAudienceMode
+    );
     res.json(tutorResponse);
   } catch (error) {
     next(error);
   }
 });
+
 
 /**
  * GET /api/tactical/historical/concepts/:id

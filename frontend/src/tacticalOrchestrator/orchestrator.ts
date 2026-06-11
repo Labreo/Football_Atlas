@@ -12,6 +12,8 @@ import { runtimeValidator } from '../conceptRuntime/RuntimeValidator';
 import { conceptGraph } from '../conceptRuntime/ConceptGraph';
 import { allConceptPackages } from '../conceptPackages';
 import { useBreakdownStore } from '../stores/useBreakdownStore';
+import { audienceDetectionEngine } from './audienceDetection';
+import { useAudienceStore } from '../stores/useAudienceStore';
 
 export class LearningOrchestrator {
   private engine: TacticalAnimationEngine | null = null;
@@ -144,8 +146,22 @@ export class LearningOrchestrator {
         analyticsTracker.trackSourceFollowupAsked(question);
       }
 
-      // 2. Call Granite AI Tutoring API
-      const response = await tacticalApi.askTutor(question, globalStore.conversation);
+      // 1b. Audience mode auto-detection (zero-latency, before API call)
+      const audienceStore = useAudienceStore.getState();
+      const detectionResult = audienceDetectionEngine.detect(question, audienceStore.audienceMode);
+      if (detectionResult.isAutoDetected && detectionResult.mode !== audienceStore.audienceMode) {
+        audienceStore.setAudienceMode(detectionResult.mode, 'auto', detectionResult.confidence);
+        analyticsTracker.track('auto_detected_mode', {
+          mode: detectionResult.mode,
+          confidence: Math.round(detectionResult.confidence * 100),
+          signals: detectionResult.signals,
+          question,
+        });
+      }
+
+      // 2. Call Granite AI Tutoring API (with audience mode)
+      const currentAudienceMode = useAudienceStore.getState().audienceMode;
+      const response = await tacticalApi.askTutor(question, globalStore.conversation, currentAudienceMode);
       const endTime = performance.now();
       const latency = Math.round(endTime - startTime);
 
@@ -200,21 +216,29 @@ export class LearningOrchestrator {
           analyticsTracker.track('breakdown_followup', { question });
         }
 
-        const newThread = response.conversation_thread && response.conversation_thread.length > 0
-          ? response.conversation_thread
-          : state.tacticalThread;
+        // 3b. Stamp audience_mode on assistant turn
+        const audienceModeForTurn = useAudienceStore.getState().audienceMode;
 
         return {
+          ...state,
+          detectedLevel: response.detected_level,
+          tacticalThread: response.conversation_thread && response.conversation_thread.length > 0
+            ? response.conversation_thread
+            : state.tacticalThread,
+          followUpSuggestions: response.follow_up_suggestions && response.follow_up_suggestions.length > 0
+            ? response.follow_up_suggestions
+            : state.followUpSuggestions,
           conversation: [
             ...state.conversation,
             { role: 'user', content: question },
-            { role: 'assistant', content: response.explanation, actions: response.actions, mcp_tool_chain: response.mcp_tool_chain }
-          ],
-          detectedLevel: response.detected_level,
-          tacticalThread: newThread,
-          followUpSuggestions: response.follow_up_suggestions && response.follow_up_suggestions.length > 0
-            ? response.follow_up_suggestions
-            : state.followUpSuggestions
+            { 
+              role: 'assistant', 
+              content: response.explanation, 
+              actions: response.actions, 
+              mcp_tool_chain: response.mcp_tool_chain,
+              audience_mode: audienceModeForTurn 
+            }
+          ]
         };
       });
 

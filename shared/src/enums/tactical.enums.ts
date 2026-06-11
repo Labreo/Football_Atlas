@@ -20,3 +20,15 @@ export enum RequiredOverlay {
   SPACE_CONTROL = 'SPACE_CONTROL',
   DEFENSIVE_LINES = 'DEFENSIVE_LINES'
 }
+
+/**
+ * AudienceMode — the lens through which an explanation is framed.
+ * CASUAL_FAN:      story, players, emotion, plain football language.
+ * TACTICAL_STUDENT: structure, spatial relationships, tactical vocabulary.
+ * Same animation always plays; only the narration voice changes.
+ */
+export enum AudienceMode {
+  CASUAL_FAN = 'CASUAL_FAN',
+  TACTICAL_STUDENT = 'TACTICAL_STUDENT'
+}
+

@@ -459,6 +459,12 @@ const ExploreTab: React.FC = () => {
   const [docChunks, setDocChunks] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
 
+  const [concepts, setConcepts] = useState<any[]>([]);
+  const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null);
+  const [conceptChunks, setConceptChunks] = useState<any[]>([]);
+  const [loadingConcepts, setLoadingConcepts] = useState(false);
+  const [loadingConceptChunks, setLoadingConceptChunks] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
@@ -468,12 +474,61 @@ const ExploreTab: React.FC = () => {
     try {
       const docs = await tacticalApi.getDocuments();
       setDocuments(docs);
-    } catch (_) {}
+    } catch (_) {
+      setDocuments([]);
+    }
     setLoadingDocs(false);
+  };
+
+  const loadConcepts = async () => {
+    setLoadingConcepts(true);
+    try {
+      const data = await tacticalApi.getConcepts();
+      setConcepts(data);
+    } catch (_) {
+      setConcepts([]);
+    }
+    setLoadingConcepts(false);
+  };
+
+  const handleConceptSelect = async (conceptId: string) => {
+    setSelectedConceptId(conceptId);
+    setSelectedDocId(null);
+    setSearchResults([]);
+    setSearchQuery('');
+    setConceptChunks([]);
+    setLoadingConceptChunks(true);
+
+    try {
+      const chunks = await tacticalApi.getConceptChunks(conceptId);
+      setConceptChunks(chunks);
+    } catch (_) {
+      setConceptChunks([]);
+    }
+
+    setLoadingConceptChunks(false);
+  };
+
+  const handleQuickSearch = async (query: string) => {
+    setSearchQuery(query);
+    setSelectedDocId(null);
+    setSelectedConceptId(null);
+    setSearchResults([]);
+    setSearching(true);
+
+    try {
+      const results = await tacticalApi.searchKeyword(query);
+      setSearchResults(results);
+    } catch (_) {
+      setSearchResults([]);
+    }
+
+    setSearching(false);
   };
 
   useEffect(() => {
     loadDocs();
+    loadConcepts();
   }, []);
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
@@ -503,21 +558,30 @@ const ExploreTab: React.FC = () => {
 
   const handleDocClick = async (docId: string) => {
     setSelectedDocId(docId);
+    setSelectedConceptId(null);
+    setSearchQuery('');
+    setSearchResults([]);
     setDocChunks([]);
     try {
       const chunks = await tacticalApi.getDocumentChunks(docId);
       setDocChunks(chunks);
-    } catch (_) {}
+    } catch (_) {
+      setDocChunks([]);
+    }
   };
 
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
+    setSelectedDocId(null);
+    setSelectedConceptId(null);
     setSearching(true);
     try {
       const results = await tacticalApi.searchKeyword(searchQuery);
       setSearchResults(results);
-    } catch (_) {}
+    } catch (_) {
+      setSearchResults([]);
+    }
     setSearching(false);
   };
 
@@ -662,25 +726,89 @@ const ExploreTab: React.FC = () => {
       {/* Right Column (lg:col-span-7): Keyword search & Selected Chunks list */}
       <div className="lg:col-span-7 flex flex-col gap-6 overflow-hidden h-full">
         
-        {/* Keyword Search Card */}
-        <div className="bg-[#121826]/70 border border-[#23324C]/60 rounded-2xl p-4 shadow-lg shrink-0">
-          <form onSubmit={handleSearchSubmit} className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Search tactical keywords (e.g. Messi, false 9, Gegenpressing, low block)..."
-              value={searchQuery}
-              required
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 h-10 px-3.5 rounded-xl text-xs font-sans bg-[#182235]/40 border border-[#23324C]/60 text-slate-100 focus:outline-none focus:border-[#10B981] transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={searching}
-              className="h-10 px-5 bg-[#10B981] text-white font-display text-xs font-semibold rounded-xl hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
-            >
-              {searching ? 'Searching...' : 'Search'}
-            </button>
-          </form>
+        {/* Keyword Search + Concept Library */}
+        <div className="grid grid-cols-1 gap-4">
+          <div className="bg-[#121826]/70 border border-[#23324C]/60 rounded-2xl p-4 shadow-lg shrink-0">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-xs font-display font-bold uppercase tracking-wider text-slate-300">Explore Tactical Grounding</h4>
+                  <p className="text-[10px] text-slate-500 mt-1">Search ingested playbooks, browse concept chunks, and discover grounded evidence from your document corpus.</p>
+                </div>
+                <span className="text-[10px] text-[#10B981] font-bold uppercase tracking-wider">Explore</span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {['false 9', 'high press', 'pressing trap', 'midfield overload', 'counter attack', 'low block'].map((query) => (
+                  <button
+                    key={query}
+                    type="button"
+                    onClick={() => handleQuickSearch(query)}
+                    className="px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#182235]/80 border border-[#23324C]/70 text-slate-300 hover:bg-[#10B981]/15 hover:text-[#10B981] transition-all"
+                  >
+                    {query}
+                  </button>
+                ))}
+              </div>
+
+              <form onSubmit={handleSearchSubmit} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Search tactical keywords (e.g. Messi, false 9, Gegenpressing, low block)..."
+                  value={searchQuery}
+                  required
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 h-10 px-3.5 rounded-xl text-xs font-sans bg-[#182235]/40 border border-[#23324C]/60 text-slate-100 focus:outline-none focus:border-[#10B981] transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={searching}
+                  className="h-10 px-5 bg-[#10B981] text-white font-display text-xs font-semibold rounded-xl hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {searching ? 'Searching...' : 'Search'}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div className="bg-[#121826]/70 border border-[#23324C]/60 rounded-2xl p-4 shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="text-xs font-display font-bold uppercase tracking-wider text-slate-300">Concept Library</h4>
+                <p className="text-[10px] text-slate-500 mt-1">Browse tactical concepts and open the grounded chunks that support them.</p>
+              </div>
+              <button
+                type="button"
+                onClick={loadConcepts}
+                className="text-[10px] text-slate-400 hover:text-slate-100"
+              >
+                Refresh
+              </button>
+            </div>
+            {loadingConcepts ? (
+              <div className="h-20 flex items-center justify-center text-xs text-slate-500">Loading tactics...</div>
+            ) : concepts.length === 0 ? (
+              <div className="text-xs text-slate-500">No tactical concepts found.</div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {concepts.slice(0, 12).map((concept) => (
+                  <button
+                    key={concept.concept_id}
+                    type="button"
+                    onClick={() => handleConceptSelect(concept.concept_id)}
+                    className={`rounded-xl p-3 text-left text-[10px] font-semibold transition-all border ${
+                      selectedConceptId === concept.concept_id
+                        ? 'border-[#10B981] bg-[#10B981]/10 text-slate-100'
+                        : 'border-[#23324C]/60 bg-[#182235]/70 text-slate-300 hover:border-[#10B981] hover:text-[#10B981]'
+                    }`}
+                  >
+                    <div className="truncate font-bold">{concept.concept_name || concept.concept_id.replace(/_/g, ' ')}</div>
+                    <div className="text-[9px] text-slate-500 mt-1">{concept.complexity || 'intermediate'}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Chunks Output Board */}
@@ -691,18 +819,18 @@ const ExploreTab: React.FC = () => {
                 ? `Search Matches for "${searchQuery}" (${searchResults.length})`
                 : selectedDocId
                 ? 'Document Chunk Records'
+                : selectedConceptId
+                ? `Concept Chunks for ${selectedConceptId.replace(/_/g, ' ')}`
                 : 'Chunks & Grounding Viewer'}
             </h3>
-            {selectedDocId && (
+            {(selectedDocId || selectedConceptId) && (
               <span className="text-[10px] font-mono text-[#10B981] bg-[#10B981]/5 px-2 py-0.5 rounded border border-[#10B981]/25">
-                {docChunks.length} segments
+                {selectedDocId ? `${docChunks.length} segments` : `${conceptChunks.length} chunks`}
               </span>
             )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            
-            {/* Show search results if searching */}
             {searchQuery && searchResults.length > 0 ? (
               searchResults.map((hit, idx) => (
                 <div key={hit.chunk_id || idx} className="p-4 rounded-xl bg-[#182235]/30 border border-[#23324C]/40 space-y-2.5">
@@ -716,7 +844,7 @@ const ExploreTab: React.FC = () => {
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {hit.concept_tags && hit.concept_tags.map((tag: string) => (
                       <span key={tag} className="text-[8px] font-bold bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/25 px-1.5 py-0.5 rounded uppercase tracking-wider">
-                        {tag.replace('_', ' ')}
+                        {tag.replace(/_/g, ' ')}
                       </span>
                     ))}
                   </div>
@@ -741,7 +869,39 @@ const ExploreTab: React.FC = () => {
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {chunk.concept_tags.map((tag: string) => (
                           <span key={tag} className="text-[8px] font-bold bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/25 px-1.5 py-0.5 rounded uppercase tracking-wider">
-                            {tag.replace('_', ' ')}
+                            {tag.replace(/_/g, ' ')}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )
+            ) : selectedConceptId ? (
+              loadingConceptChunks ? (
+                <div className="h-full flex items-center justify-center text-xs text-slate-500">Loading concept chunks...</div>
+              ) : conceptChunks.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-slate-500 text-xs py-16 text-center select-none space-y-2">
+                  <span className="text-3xl">📘</span>
+                  <p className="max-w-[280px] leading-relaxed font-display">
+                    No grounded chunks were found for this tactical concept yet. Try another concept or upload a document with more tactical details.
+                  </p>
+                </div>
+              ) : (
+                conceptChunks.map((chunk, idx) => (
+                  <div key={chunk.chunk_id || idx} className="p-4 rounded-xl bg-[#182235]/30 border border-[#23324C]/40 space-y-2.5">
+                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-[#23324C]/20 pb-1.5">
+                      <span>{chunk.section_title || 'Section'} (Page {chunk.page_number})</span>
+                      <span className="text-[#10B981]">Lang: {chunk.language}</span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed font-sans font-light">
+                      {chunk.content}
+                    </p>
+                    {chunk.concept_tags && chunk.concept_tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {chunk.concept_tags.map((tag: string) => (
+                          <span key={tag} className="text-[8px] font-bold bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/25 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                            {tag.replace(/_/g, ' ')}
                           </span>
                         ))}
                       </div>
@@ -753,7 +913,7 @@ const ExploreTab: React.FC = () => {
               <div className="h-full flex flex-col items-center justify-center text-slate-500 text-xs py-16 text-center select-none space-y-2">
                 <span className="text-3xl">📂</span>
                 <p className="max-w-[280px] leading-relaxed font-display">
-                  Select an Ingested Playbook from the left list to inspect its segmented chunks, or search keywords directly.
+                  Select an Ingested Playbook from the left list to inspect its segmented chunks, browse the concept library, or search keywords directly.
                 </p>
               </div>
             )}

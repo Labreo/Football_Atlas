@@ -83,6 +83,12 @@ export const tacticalApi = {
     return res.json();
   },
 
+  async getHistoricalExampleById(exampleId: string): Promise<HistoricalExample> {
+    const res = await fetch(`${API_BASE}/historical/examples/${exampleId}`);
+    if (!res.ok) throw new Error(`Failed to fetch historical example: ${exampleId}`);
+    return res.json();
+  },
+
   async searchHistoricalExamples(filters: { coach?: string; team?: string; player?: string }): Promise<HistoricalExample[]> {
     const params = new URLSearchParams();
     if (filters.coach) params.append('coach', filters.coach);

@@ -140,6 +140,22 @@ router.get('/historical/evidence/:exampleId', (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/tactical/historical/examples/:exampleId
+ * Returns a specific historical example by ID.
+ */
+router.get('/historical/examples/:exampleId', (req: Request, res: Response) => {
+  const exampleId = req.params.exampleId;
+  const example = historicalExampleRepository.getById(exampleId);
+  if (!example) {
+    return res.status(404).json({
+      error: 'Not Found',
+      message: `Historical example with ID ${exampleId} does not exist.`
+    });
+  }
+  return res.json(example);
+});
+
+/**
  * GET /api/tactical/historical/examples/:exampleId/evidence
  * Alternative path to retrieve supporting evidence.
  */

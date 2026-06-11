@@ -29,8 +29,14 @@ const Dashboard: React.FC = () => {
   const handleLaunchMatch = async (exampleId: string, conceptId: string) => {
     try {
       const concept = await tacticalApi.getConceptById(conceptId);
-      const examples = await tacticalApi.searchHistoricalExamples({});
-      const example = examples.find(e => e.example_id === exampleId);
+      let example = null;
+
+      try {
+        example = await tacticalApi.getHistoricalExampleById(exampleId);
+      } catch (err) {
+        const examples = await tacticalApi.getHistoricalExamplesByConcept(conceptId);
+        example = examples.find(e => e.example_id === exampleId) || null;
+      }
 
       if (concept && example) {
         // 1. Select the concept in global store and UI stores

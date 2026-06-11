@@ -13,7 +13,7 @@
     "test:granite-route": "ts-node src/test-granite-route.ts"
   },
   "dependencies": {
-    "@football-atlas/shared": "*",
+    "@football-atlas/shared": "file:./shared.tgz",
     "@sentry/node": "^7.59.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

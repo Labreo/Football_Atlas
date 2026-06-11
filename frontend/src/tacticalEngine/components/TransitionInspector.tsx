@@ -13,8 +13,8 @@
  */
 
 import React, { useEffect, useCallback } from 'react';
-import { useTransitionStore } from '../../tacticalOrchestrator/TransitionStateStore';
-import type { TransitionType } from '../../tacticalOrchestrator/TransitionEngine';
+import { useTransitionStore, type TransitionHistoryRecord } from '../../tacticalOrchestrator/TransitionStateStore.ts';
+import type { TransitionType } from '../../tacticalOrchestrator/TransitionEngine.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LABEL HELPERS
@@ -78,11 +78,11 @@ const TransitionInspector: React.FC = () => {
   }, [handleKeyDown]);
 
   // Compute average duration from history
-  const successfulHistory = history.filter((h) => h.success && h.durationMs > 0);
+  const successfulHistory = history.filter((h: TransitionHistoryRecord) => h.success && h.durationMs > 0);
   const avgDuration =
     successfulHistory.length > 0
       ? Math.round(
-          successfulHistory.reduce((sum, h) => sum + h.durationMs, 0) / successfulHistory.length
+          successfulHistory.reduce((sum: number, h: TransitionHistoryRecord) => sum + h.durationMs, 0) / successfulHistory.length
         )
       : 0;
 
@@ -180,7 +180,7 @@ const TransitionInspector: React.FC = () => {
           {history.length === 0 && (
             <div className="text-slate-600 italic text-[9px]">No transitions yet this session.</div>
           )}
-          {history.slice(0, 20).map((record) => {
+          {history.slice(0, 20).map((record: TransitionHistoryRecord) => {
             const meta = TYPE_LABELS[record.type] ?? { label: record.type, color: '#6B7280' };
             return (
               <div

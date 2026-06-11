@@ -55,14 +55,6 @@ export class AnimationModuleRegistry {
   }
 
   /**
-   * Returns the currently active instance for a concept ID (if loaded).
-   * Used by the orchestrator to sync its own reference after a transition.
-   */
-  public getActiveInstance(conceptId: string): TacticalModule | undefined {
-    return this.activeInstances.get(conceptId);
-  }
-
-  /**
    * Returns all registered concept IDs (for health checks).
    */
   public getRegisteredIds(): string[] {

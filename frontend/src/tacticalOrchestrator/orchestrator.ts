@@ -14,7 +14,6 @@ import { allConceptPackages } from '../conceptPackages';
 import { useBreakdownStore } from '../stores/useBreakdownStore';
 import { audienceDetectionEngine } from './audienceDetection';
 import { useAudienceStore } from '../stores/useAudienceStore';
-import { transitionEngine } from './TransitionEngine';
 
 export class LearningOrchestrator {
   private engine: TacticalAnimationEngine | null = null;
@@ -36,9 +35,6 @@ export class LearningOrchestrator {
     if (!this.runtimeBooted) {
       this.bootRuntime();
     }
-
-    // Wire the TransitionEngine to the new 3D engine instance
-    transitionEngine.init(engine);
 
     learningStateStore.getState().setTelemetry({ sessionState: 'ready' });
 
@@ -262,9 +258,7 @@ export class LearningOrchestrator {
               const examples = await tacticalApi.getHistoricalExamplesByConcept(autoLaunchable.payload.concept_id || '');
               const targetEx = examples.find(e => e.example_id === autoLaunchable.payload.example_id);
               if (targetEx) {
-                console.log('[AutoLaunch] Smooth transition → historical breakdown:', targetEx.example_id);
-                // Camera glides to cinematic preset before breakdown takes over
-                await transitionEngine.transitionToBreakdown(targetEx.example_id);
+                console.log('[AutoLaunch] Launching historical breakdown simulation:', targetEx.example_id);
                 useBreakdownStore.getState().startBreakdown(targetEx);
               }
             } catch (autoErr) {
@@ -324,7 +318,7 @@ export class LearningOrchestrator {
               }
             }
           } else if (this.engine) {
-            // Different concept — drive through the TransitionEngine for smooth glide
+            // Different concept — load the new animation
             await this.loadConceptAnimation(conceptId);
           } else {
             // Engine not initialized yet. Update store to trigger mounting the InteractivePitchPlayer
@@ -397,9 +391,13 @@ export class LearningOrchestrator {
       throw new Error('[Orchestrator Error] Animation engine has not been initialized.');
     }
 
-    // Bypass loading if the requested concept is already active and loaded on this engine.
-    // This avoids redundant network requests and duplicate lifecycle hooks.
-    if (this.activeModuleInstance && store.currentConcept?.concept_id === conceptId) {
+    // Resolve module key first
+    const resolvedModule = ConceptRouter.resolveAnimationModule(conceptId);
+
+    // Bypass loading if the resolved animation module is already loaded and active on this engine.
+    // This avoids redundant network requests and duplicate lifecycle hooks, while
+    // correctly reloading if a breakdown switches the active module for the same concept.
+    if (this.activeModuleInstance && store.currentAnimation === resolvedModule && store.currentConcept?.concept_id === conceptId) {
       return;
     }
 
@@ -407,76 +405,92 @@ export class LearningOrchestrator {
     store.setTelemetry({ sessionState: 'loading_animation' });
 
     try {
+      // 1. Fetch details from API
+      const concept = await tacticalApi.getConceptById(conceptId);
+      
+      useLearningUIStore.getState().setCurrentConcept(concept);
+      useLearningUIStore.getState().setLoading(false);
       analyticsTracker.trackConceptOpened(conceptId);
-
-      // ── Determine transition type ────────────────────────────────────────
-      const fromConceptId = store.currentConcept?.concept_id ?? null;
-      const isFirstLoad  = fromConceptId === null;
-      const transitionType = isFirstLoad ? 'CLASSROOM_TO_ANIMATION' : 'CONCEPT_TO_CONCEPT';
-
-      // ── Resolve animation module before committing ───────────────────────
-      const resolvedModule = ConceptRouter.resolveAnimationModule(conceptId);
-
+      
       if (!resolvedModule) {
-        // No 3D module — update stores without touching the engine
-        const concept = await tacticalApi.getConceptById(conceptId);
+        // Fallback: No animation module is registered for this concept ID.
+        // We still load the concept metadata and explanation in the UI, but do not load a 3D module.
+        
         const loadEnd = performance.now();
-        store.setTelemetry({
+        store.setTelemetry({ 
           animationLatencyMs: Math.round(loadEnd - loadStart),
           loadedModuleId: 'none',
-          sessionState: 'loaded_text_only',
+          sessionState: 'loaded_text_only'
         });
 
-        useLearningUIStore.getState().setCurrentConcept(concept);
-        useLearningUIStore.getState().setLoading(false);
-        useLearningUIStore.getState().setAnimationState('stopped');
-
+        // Update state stores safely to avoid React/API fetch infinite loops
         const currentGlobalConcept = useTacticalStore.getState().currentConcept;
         if (currentGlobalConcept?.concept_id !== conceptId) {
-          useTacticalStore.setState({ currentConcept: concept, playState: 'stopped' });
+          useTacticalStore.setState({ 
+            currentConcept: concept, 
+            playState: 'stopped'
+          });
         }
 
         store.setCurrentConcept(concept);
         store.setCurrentAnimation(null);
         store.setAnimationStatus('stopped');
+        useLearningUIStore.getState().setAnimationState('stopped');
         return;
       }
+      
+      // 3. Load via registry
+      const instance = animationModuleRegistry.loadModule(resolvedModule, this.engine);
+      this.activeModuleInstance = instance;
 
-      // ── Drive through the TransitionEngine ──────────────────────────────
-      // The engine handles:
-      //   1. Camera glide (parallel, non-blocking)
-      //   2. Player position interpolation (startPos carry-over via TransitionManager)
-      //   3. Store updates
-      //   4. Analytics events (transition_started / transition_completed)
-      const result = await transitionEngine.transitionTo(conceptId, transitionType, {
-        playerGlideDurationMs: isFirstLoad ? 0 : 900,
-        cameraDurationMs: isFirstLoad ? 600 : 1200,
-        positionTransitionFraction: isFirstLoad ? 0 : 0.18,
-      });
-
-      // Keep orchestrator's own module reference in sync
-      this.activeModuleInstance = animationModuleRegistry.getActiveInstance(resolvedModule) ?? null;
-
-      // ── Apply branch if question warrants it ────────────────────────────
-      if (this.activeModuleInstance?.setBranch) {
+      // Set initial branch if applicable based on the question text
+      if (instance.setBranch) {
         const q = store.currentQuestion?.toLowerCase() || '';
         if (q.includes('defend') || q.includes('respond') || q.includes('counter') || q.includes('reaction')) {
           const branch = (q.includes('hold') || q.includes('free')) ? 'B' : 'A';
-          this.activeModuleInstance.setBranch(branch);
+          instance.setBranch(branch);
         }
       }
 
+      // 4. Set listeners
+      instance.onPhaseChange = (index: number, name: string) => {
+        useLearningUIStore.getState().setPhaseInfo(index, name);
+      };
+      instance.onAnnotationChange = (annotation: string) => {
+        useLearningUIStore.getState().setPhaseAnnotation(annotation);
+      };
+      instance.onAnalyticsEvent = (_name: string, _data: any) => {
+        // Sub-module events not tracked under the current strict telemetry criteria
+      };
+
+      // Reset the instance to trigger the initial phase and annotation listeners immediately
+      instance.reset();
+
       const loadEnd = performance.now();
       const latency = Math.round(loadEnd - loadStart);
-      store.setTelemetry({
+      store.setTelemetry({ 
         animationLatencyMs: latency,
         loadedModuleId: resolvedModule,
-        sessionState: result.success ? 'loaded' : 'error',
+        sessionState: 'loaded'
       });
 
-      if (!result.success && result.error) {
-        throw new Error(result.error);
+      // 5. Update state stores safely to avoid React/API fetch infinite loops
+      const currentGlobalConcept = useTacticalStore.getState().currentConcept;
+      if (currentGlobalConcept?.concept_id !== conceptId) {
+        useTacticalStore.setState({ 
+          currentConcept: concept, 
+          playState: 'playing' 
+        });
+      } else if (useTacticalStore.getState().playState !== 'playing') {
+        useTacticalStore.setState({ 
+          playState: 'playing' 
+        });
       }
+
+      store.setCurrentConcept(concept);
+      store.setCurrentAnimation(resolvedModule);
+      store.setAnimationStatus('playing');
+      useLearningUIStore.getState().setAnimationState('playing');
 
     } catch (err: any) {
       store.setError(`Failed to load tactical animation: ${err.message}`);
@@ -606,11 +620,6 @@ export class LearningOrchestrator {
       try { this.activeModuleInstance.destroy(); } catch (_) {}
       this.activeModuleInstance = null;
     }
-
-    // Abort any pending transitions and detach from the engine
-    transitionEngine.abort();
-    transitionEngine.detach();
-
     this.engine = null;
     // Reset the booted flag so modules are re-registered on the next init,
     // in case the registry was cleared for any other reason.

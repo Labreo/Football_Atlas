@@ -43,44 +43,44 @@ import { useTransitionStore } from './TransitionStateStore';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type TransitionType =
-  | 'CONCEPT_TO_CONCEPT'
-  | 'CONCEPT_TO_BREAKDOWN'
-  | 'BREAKDOWN_TO_CONCEPT'
-  | 'CLASSROOM_TO_ANIMATION'
-  | 'SAME_CONCEPT_FOLLOW_UP';
+    | 'CONCEPT_TO_CONCEPT'
+    | 'CONCEPT_TO_BREAKDOWN'
+    | 'BREAKDOWN_TO_CONCEPT'
+    | 'CLASSROOM_TO_ANIMATION'
+    | 'SAME_CONCEPT_FOLLOW_UP';
 
 export interface TransitionRequest {
-  fromConceptId: string | null;
-  toConceptId: string | null;
-  type: TransitionType;
-  requestId: string;
-  /** Duration of the player position glide phase (ms) */
-  playerGlideDurationMs?: number;
-  /** Duration of the camera slide phase (ms) */
-  cameraDurationMs?: number;
-  /** Fraction of the animation timeline reserved for the initial position slide */
-  positionTransitionFraction?: number;
+    fromConceptId: string | null;
+    toConceptId: string | null;
+    type: TransitionType;
+    requestId: string;
+    /** Duration of the player position glide phase (ms) */
+    playerGlideDurationMs?: number;
+    /** Duration of the camera slide phase (ms) */
+    cameraDurationMs?: number;
+    /** Fraction of the animation timeline reserved for the initial position slide */
+    positionTransitionFraction?: number;
 }
 
 export interface TransitionResult {
-  success: boolean;
-  requestId: string;
-  fromConceptId: string | null;
-  toConceptId: string | null;
-  type: TransitionType;
-  durationMs: number;
-  statePreserved: {
-    playerPositions: boolean;
-    cameraPosition: boolean;
-    overlays: boolean;
-    narrationState: boolean;
-  };
-  error?: string;
+    success: boolean;
+    requestId: string;
+    fromConceptId: string | null;
+    toConceptId: string | null;
+    type: TransitionType;
+    durationMs: number;
+    statePreserved: {
+        playerPositions: boolean;
+        cameraPosition: boolean;
+        overlays: boolean;
+        narrationState: boolean;
+    };
+    error?: string;
 }
 
 export interface ConceptCameraPreset {
-  position: THREE.Vector3;
-  target: THREE.Vector3;
+    position: THREE.Vector3;
+    target: THREE.Vector3;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -88,62 +88,62 @@ export interface ConceptCameraPreset {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CAMERA_PRESETS: Record<string, ConceptCameraPreset> = {
-  // Overhead tactical view — default
-  default: {
-    position: new THREE.Vector3(0, 110, 5),
-    target: new THREE.Vector3(0, 0, 0),
-  },
-  // Slight angle to show depth — attacking concepts
-  false_9: {
-    position: new THREE.Vector3(25, 90, 12),
-    target: new THREE.Vector3(10, 0, 0),
-  },
-  midfield_overload: {
-    position: new THREE.Vector3(0, 100, 8),
-    target: new THREE.Vector3(0, 0, 0),
-  },
-  third_man_run: {
-    position: new THREE.Vector3(-10, 85, 15),
-    target: new THREE.Vector3(5, 0, 0),
-  },
-  high_press: {
-    position: new THREE.Vector3(30, 95, 10),
-    target: new THREE.Vector3(20, 0, 0),
-  },
-  pressing_trap: {
-    position: new THREE.Vector3(20, 90, 10),
-    target: new THREE.Vector3(10, 0, 0),
-  },
-  compactness_pressing_lines: {
-    position: new THREE.Vector3(0, 105, 5),
-    target: new THREE.Vector3(0, 0, 0),
-  },
-  defensive_block: {
-    position: new THREE.Vector3(-15, 95, 8),
-    target: new THREE.Vector3(-5, 0, 0),
-  },
-  counter_attack_trigger: {
-    position: new THREE.Vector3(0, 90, 12),
-    target: new THREE.Vector3(5, 0, 0),
-  },
-  back_three_wing_back: {
-    position: new THREE.Vector3(-20, 95, 10),
-    target: new THREE.Vector3(-10, 0, 0),
-  },
-  inverted_winger: {
-    position: new THREE.Vector3(10, 88, 12),
-    target: new THREE.Vector3(15, 0, 3),
-  },
-  // Historical breakdown mode: low-angle cinematic
-  breakdown: {
-    position: new THREE.Vector3(0, 80, 20),
-    target: new THREE.Vector3(0, 0, 0),
-  },
+    // Overhead tactical view — default
+    default: {
+        position: new THREE.Vector3(0, 110, 5),
+        target: new THREE.Vector3(0, 0, 0),
+    },
+    // Slight angle to show depth — attacking concepts
+    false_9: {
+        position: new THREE.Vector3(25, 90, 12),
+        target: new THREE.Vector3(10, 0, 0),
+    },
+    midfield_overload: {
+        position: new THREE.Vector3(0, 100, 8),
+        target: new THREE.Vector3(0, 0, 0),
+    },
+    third_man_run: {
+        position: new THREE.Vector3(-10, 85, 15),
+        target: new THREE.Vector3(5, 0, 0),
+    },
+    high_press: {
+        position: new THREE.Vector3(30, 95, 10),
+        target: new THREE.Vector3(20, 0, 0),
+    },
+    pressing_trap: {
+        position: new THREE.Vector3(20, 90, 10),
+        target: new THREE.Vector3(10, 0, 0),
+    },
+    compactness_pressing_lines: {
+        position: new THREE.Vector3(0, 105, 5),
+        target: new THREE.Vector3(0, 0, 0),
+    },
+    defensive_block: {
+        position: new THREE.Vector3(-15, 95, 8),
+        target: new THREE.Vector3(-5, 0, 0),
+    },
+    counter_attack_trigger: {
+        position: new THREE.Vector3(0, 90, 12),
+        target: new THREE.Vector3(5, 0, 0),
+    },
+    back_three_wing_back: {
+        position: new THREE.Vector3(-20, 95, 10),
+        target: new THREE.Vector3(-10, 0, 0),
+    },
+    inverted_winger: {
+        position: new THREE.Vector3(10, 88, 12),
+        target: new THREE.Vector3(15, 0, 3),
+    },
+    // Historical breakdown mode: low-angle cinematic
+    breakdown: {
+        position: new THREE.Vector3(0, 80, 20),
+        target: new THREE.Vector3(0, 0, 0),
+    },
 };
 
 const getCameraPreset = (conceptId: string | null): ConceptCameraPreset => {
-  if (!conceptId) return CAMERA_PRESETS.default;
-  return CAMERA_PRESETS[conceptId] ?? CAMERA_PRESETS.default;
+    if (!conceptId) return CAMERA_PRESETS.default;
+    return CAMERA_PRESETS[conceptId] ?? CAMERA_PRESETS.default;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -151,10 +151,10 @@ const getCameraPreset = (conceptId: string | null): ConceptCameraPreset => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface NarrationState {
-  activeConcept: string | null;
-  explanation: string;
-  phase: number;
-  phaseName: string;
+    activeConcept: string | null;
+    explanation: string;
+    phase: number;
+    phaseName: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -162,503 +162,503 @@ interface NarrationState {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export class TransitionEngine {
-  private static instance: TransitionEngine;
+    private static instance: TransitionEngine;
 
-  // ── Core engine references ───────────────────────────────────────────────
-  private engine: TacticalAnimationEngine | null = null;
+    // ── Core engine references ───────────────────────────────────────────────
+    private engine: TacticalAnimationEngine | null = null;
 
-  // ── Queue & lock ─────────────────────────────────────────────────────────
-  private transitionQueue: TransitionRequest[] = [];
-  private isTransitioning: boolean = false;
-  private abortController: AbortController | null = null;
+    // ── Queue & lock ─────────────────────────────────────────────────────────
+    private transitionQueue: TransitionRequest[] = [];
+    private isTransitioning: boolean = false;
+    private abortController: AbortController | null = null;
 
-  // ── State snapshots ──────────────────────────────────────────────────────
-  private lastNarrationState: NarrationState | null = null;
-  private requestCounter: number = 0;
+    // ── State snapshots ──────────────────────────────────────────────────────
+    private lastNarrationState: NarrationState | null = null;
+    private requestCounter: number = 0;
 
-  // ── Analytics ────────────────────────────────────────────────────────────
-  private transitionHistory: TransitionResult[] = [];
+    // ── Analytics ────────────────────────────────────────────────────────────
+    private transitionHistory: TransitionResult[] = [];
 
-  private constructor() {}
+    private constructor() { }
 
-  public static getInstance(): TransitionEngine {
-    if (!TransitionEngine.instance) {
-      TransitionEngine.instance = new TransitionEngine();
-    }
-    return TransitionEngine.instance;
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // INIT
-  // ─────────────────────────────────────────────────────────────────────────
-
-  public init(engine: TacticalAnimationEngine): void {
-    this.engine = engine;
-  }
-
-  public detach(): void {
-    this.abort();
-    this.engine = null;
-    this.transitionQueue = [];
-    this.isTransitioning = false;
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // PUBLIC API
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Primary entry point: transition to a new tactical concept.
-   * Enqueues the request and processes sequentially.
-   */
-  public async transitionTo(
-    toConceptId: string,
-    type: TransitionType = 'CONCEPT_TO_CONCEPT',
-    options: Partial<Pick<TransitionRequest, 'playerGlideDurationMs' | 'cameraDurationMs' | 'positionTransitionFraction'>> = {}
-  ): Promise<TransitionResult> {
-    const fromConceptId = useTacticalStore.getState().currentConcept?.concept_id ?? null;
-
-    const request: TransitionRequest = {
-      fromConceptId,
-      toConceptId,
-      type: fromConceptId === null ? 'CLASSROOM_TO_ANIMATION' : type,
-      requestId: this.generateRequestId(),
-      playerGlideDurationMs: options.playerGlideDurationMs ?? 900,
-      cameraDurationMs: options.cameraDurationMs ?? 1200,
-      positionTransitionFraction: options.positionTransitionFraction ?? 0.18,
-    };
-
-    return this.enqueue(request);
-  }
-
-  /**
-   * Transition into historical breakdown mode.
-   * Does NOT reset the pitch — smoothly moves camera to cinematic preset
-   * and dims the current overlay before the breakdown module takes over.
-   */
-  public async transitionToBreakdown(exampleId: string): Promise<TransitionResult> {
-    const fromConceptId = useTacticalStore.getState().currentConcept?.concept_id ?? null;
-    const request: TransitionRequest = {
-      fromConceptId,
-      toConceptId: exampleId,
-      type: 'CONCEPT_TO_BREAKDOWN',
-      requestId: this.generateRequestId(),
-      cameraDurationMs: 1400,
-      playerGlideDurationMs: 0, // breakdown handles its own player setup
-      positionTransitionFraction: 0.12,
-    };
-    return this.enqueue(request);
-  }
-
-  /**
-   * Return from historical breakdown to abstract concept view.
-   */
-  public async transitionFromBreakdown(toConceptId: string): Promise<TransitionResult> {
-    const request: TransitionRequest = {
-      fromConceptId: null,
-      toConceptId,
-      type: 'BREAKDOWN_TO_CONCEPT',
-      requestId: this.generateRequestId(),
-      cameraDurationMs: 1100,
-      playerGlideDurationMs: 800,
-      positionTransitionFraction: 0.16,
-    };
-    return this.enqueue(request);
-  }
-
-  /**
-   * Abort any in-progress transition and clear the queue.
-   * Call when user explicitly navigates away.
-   */
-  public abort(): void {
-    this.abortController?.abort();
-    this.transitionQueue = [];
-    this.isTransitioning = false;
-    useTransitionStore.setState({
-      isTransitioning: false,
-      activeTransition: null,
-    });
-  }
-
-  /**
-   * Snapshot the current narration state before a transition.
-   */
-  public snapshotNarrationState(): void {
-    const ui = useLearningUIStore.getState();
-    this.lastNarrationState = {
-      activeConcept: learningStateStore.getState().currentConcept?.concept_id ?? null,
-      explanation: ui.current_explanation ?? '',
-      phase: ui.current_phase_index ?? 1,
-      phaseName: ui.current_phase_name ?? '',
-    };
-  }
-
-  /** Returns the last snapshotted narration state. */
-  public getNarrationSnapshot(): NarrationState | null {
-    return this.lastNarrationState;
-  }
-
-  /** Returns the full transition history for the Inspector. */
-  public getTransitionHistory(): TransitionResult[] {
-    return [...this.transitionHistory];
-  }
-
-  /** Returns whether a transition is currently active. */
-  public getIsTransitioning(): boolean {
-    return this.isTransitioning;
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // QUEUE PROCESSOR
-  // ─────────────────────────────────────────────────────────────────────────
-
-  private enqueue(request: TransitionRequest): Promise<TransitionResult> {
-    // If transitioning to the exact same concept that is already active and
-    // a module is loaded, treat it as a silent same-concept follow-up.
-    const activeConcept = learningStateStore.getState().currentConcept;
-    if (
-      activeConcept?.concept_id === request.toConceptId &&
-      request.type !== 'CONCEPT_TO_BREAKDOWN' &&
-      request.type !== 'BREAKDOWN_TO_CONCEPT'
-    ) {
-      return Promise.resolve(this.buildNoOpResult(request));
+    public static getInstance(): TransitionEngine {
+        if (!TransitionEngine.instance) {
+            TransitionEngine.instance = new TransitionEngine();
+        }
+        return TransitionEngine.instance;
     }
 
-    // Replace the queue tail if the incoming request targets the same destination.
-    // This prevents stacking 3 identical transitions during rapid AI output.
-    const tail = this.transitionQueue[this.transitionQueue.length - 1];
-    if (tail && tail.toConceptId === request.toConceptId && tail.type === request.type) {
-      this.transitionQueue[this.transitionQueue.length - 1] = request;
-      return Promise.resolve(this.buildNoOpResult(request));
+    // ─────────────────────────────────────────────────────────────────────────
+    // INIT
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public init(engine: TacticalAnimationEngine): void {
+        this.engine = engine;
     }
 
-    return new Promise<TransitionResult>((resolve) => {
-      (request as any)._resolve = resolve;
-      this.transitionQueue.push(request);
-      if (!this.isTransitioning) {
-        this.processNext();
-      }
-    });
-  }
-
-  private async processNext(): Promise<void> {
-    if (this.transitionQueue.length === 0) {
-      this.isTransitioning = false;
-      return;
+    public detach(): void {
+        this.abort();
+        this.engine = null;
+        this.transitionQueue = [];
+        this.isTransitioning = false;
     }
 
-    this.isTransitioning = true;
-    const request = this.transitionQueue.shift()!;
-    this.abortController = new AbortController();
-    const signal = this.abortController.signal;
+    // ─────────────────────────────────────────────────────────────────────────
+    // PUBLIC API
+    // ─────────────────────────────────────────────────────────────────────────
 
-    const startTime = performance.now();
-    let result: TransitionResult;
+    /**
+     * Primary entry point: transition to a new tactical concept.
+     * Enqueues the request and processes sequentially.
+     */
+    public async transitionTo(
+        toConceptId: string,
+        type: TransitionType = 'CONCEPT_TO_CONCEPT',
+        options: Partial<Pick<TransitionRequest, 'playerGlideDurationMs' | 'cameraDurationMs' | 'positionTransitionFraction'>> = {}
+    ): Promise<TransitionResult> {
+        const fromConceptId = useTacticalStore.getState().currentConcept?.concept_id ?? null;
 
-    try {
-      switch (request.type) {
-        case 'CONCEPT_TO_CONCEPT':
-        case 'CLASSROOM_TO_ANIMATION':
-        case 'BREAKDOWN_TO_CONCEPT':
-          result = await this.executeConceptTransition(request, signal);
-          break;
-        case 'CONCEPT_TO_BREAKDOWN':
-          result = await this.executeBreakdownEntry(request, signal);
-          break;
-        case 'SAME_CONCEPT_FOLLOW_UP':
-          result = this.buildNoOpResult(request);
-          break;
-        default:
-          result = await this.executeConceptTransition(request, signal);
-      }
-    } catch (err: any) {
-      const endTime = performance.now();
-      result = {
-        success: false,
-        requestId: request.requestId,
-        fromConceptId: request.fromConceptId,
-        toConceptId: request.toConceptId,
-        type: request.type,
-        durationMs: Math.round(endTime - startTime),
-        statePreserved: { playerPositions: false, cameraPosition: false, overlays: false, narrationState: false },
-        error: err?.message ?? 'Unknown transition error',
-      };
-      analyticsTracker.track('transition_interrupted', {
-        request_id: request.requestId,
-        from: request.fromConceptId,
-        to: request.toConceptId,
-        error: result.error,
-      });
-    } finally {
-      result!.durationMs = Math.round(performance.now() - startTime);
-      this.transitionHistory.unshift(result!);
-      if (this.transitionHistory.length > 50) this.transitionHistory.pop();
+        const request: TransitionRequest = {
+            fromConceptId,
+            toConceptId,
+            type: fromConceptId === null ? 'CLASSROOM_TO_ANIMATION' : type,
+            requestId: this.generateRequestId(),
+            playerGlideDurationMs: options.playerGlideDurationMs ?? 900,
+            cameraDurationMs: options.cameraDurationMs ?? 1200,
+            positionTransitionFraction: options.positionTransitionFraction ?? 0.18,
+        };
 
-      useTransitionStore.setState({ isTransitioning: false, activeTransition: null });
-      (request as any)._resolve?.(result!);
-
-      this.isTransitioning = false;
-
-      analyticsTracker.track('transition_completed', {
-        request_id: result!.requestId,
-        from: result!.fromConceptId,
-        to: result!.toConceptId,
-        type: result!.type,
-        duration_ms: result!.durationMs,
-        success: result!.success,
-      });
-
-      // Process next item in queue
-      this.processNext();
-    }
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // CONCEPT TRANSITION
-  // ─────────────────────────────────────────────────────────────────────────
-
-  private async executeConceptTransition(
-    request: TransitionRequest,
-    signal: AbortSignal
-  ): Promise<TransitionResult> {
-    const { fromConceptId, toConceptId, requestId, type } = request;
-    const startTime = performance.now();
-
-    if (!toConceptId) throw new Error('toConceptId is required for concept transitions');
-
-    // ── 1. Announce transition start ─────────────────────────────────────
-    analyticsTracker.track('transition_started', {
-      request_id: requestId,
-      from: fromConceptId,
-      to: toConceptId,
-      type,
-    });
-
-    useTransitionStore.setState({
-      isTransitioning: true,
-      activeTransition: {
-        requestId,
-        fromConceptId,
-        toConceptId,
-        type,
-        startedAt: Date.now(),
-        playerGlideDurationMs: request.playerGlideDurationMs ?? 900,
-        cameraDurationMs: request.cameraDurationMs ?? 1200,
-      },
-    });
-
-    // ── 2. Snapshot narration before overwriting ──────────────────────────
-    this.snapshotNarrationState();
-    const statePreserved = {
-      playerPositions: false,
-      cameraPosition: false,
-      overlays: false,
-      narrationState: true,
-    };
-
-    if (signal.aborted) throw new Error('Transition aborted');
-
-    // ── 3. Resolve animation module ──────────────────────────────────────
-    const moduleKey = ConceptRouter.resolveAnimationModule(toConceptId);
-    if (!moduleKey) {
-      // Concept has no 3D module — do a lightweight store update only
-      const concept = await tacticalApi.getConceptById(toConceptId);
-      useTacticalStore.setState({ currentConcept: concept, playState: 'stopped' });
-      useLearningUIStore.getState().setCurrentConcept(concept);
-      learningStateStore.getState().setCurrentConcept(concept);
-      return {
-        success: true, requestId, fromConceptId, toConceptId, type,
-        durationMs: Math.round(performance.now() - startTime),
-        statePreserved,
-      };
+        return this.enqueue(request);
     }
 
-    if (signal.aborted) throw new Error('Transition aborted');
+    /**
+     * Transition into historical breakdown mode.
+     * Does NOT reset the pitch — smoothly moves camera to cinematic preset
+     * and dims the current overlay before the breakdown module takes over.
+     */
+    public async transitionToBreakdown(exampleId: string): Promise<TransitionResult> {
+        const fromConceptId = useTacticalStore.getState().currentConcept?.concept_id ?? null;
+        const request: TransitionRequest = {
+            fromConceptId,
+            toConceptId: exampleId,
+            type: 'CONCEPT_TO_BREAKDOWN',
+            requestId: this.generateRequestId(),
+            cameraDurationMs: 1400,
+            playerGlideDurationMs: 0, // breakdown handles its own player setup
+            positionTransitionFraction: 0.12,
+        };
+        return this.enqueue(request);
+    }
 
-    // ── 4. Run parallel: camera glide + player slide ─────────────────────
-    const cameraPreset = getCameraPreset(toConceptId);
-    const [concept] = await Promise.all([
-      tacticalApi.getConceptById(toConceptId),
-      this.runCameraTransition(cameraPreset, request.cameraDurationMs ?? 1200, signal),
-    ]);
-    statePreserved.cameraPosition = true;
+    /**
+     * Return from historical breakdown to abstract concept view.
+     */
+    public async transitionFromBreakdown(toConceptId: string): Promise<TransitionResult> {
+        const request: TransitionRequest = {
+            fromConceptId: null,
+            toConceptId,
+            type: 'BREAKDOWN_TO_CONCEPT',
+            requestId: this.generateRequestId(),
+            cameraDurationMs: 1100,
+            playerGlideDurationMs: 800,
+            positionTransitionFraction: 0.16,
+        };
+        return this.enqueue(request);
+    }
 
-    if (signal.aborted) throw new Error('Transition aborted');
+    /**
+     * Abort any in-progress transition and clear the queue.
+     * Call when user explicitly navigates away.
+     */
+    public abort(): void {
+        this.abortController?.abort();
+        this.transitionQueue = [];
+        this.isTransitioning = false;
+        useTransitionStore.setState({
+            isTransitioning: false,
+            activeTransition: null,
+        });
+    }
 
-    // ── 5. Load the new module — the TransitionManager handles player slides ─
-    const hasExistingPlayers = this.engine
-      ? this.engine.getPlayerManager().getPlayers().size > 0
-      : false;
+    /**
+     * Snapshot the current narration state before a transition.
+     */
+    public snapshotNarrationState(): void {
+        const ui = useLearningUIStore.getState();
+        this.lastNarrationState = {
+            activeConcept: learningStateStore.getState().currentConcept?.concept_id ?? null,
+            explanation: ui.current_explanation ?? '',
+            phase: ui.current_phase_index ?? 1,
+            phaseName: ui.current_phase_name ?? '',
+        };
+    }
 
-    const newModuleInstance = animationModuleRegistry.loadModule(moduleKey, this.engine!);
+    /** Returns the last snapshotted narration state. */
+    public getNarrationSnapshot(): NarrationState | null {
+        return this.lastNarrationState;
+    }
 
-    // Wire lifecycle callbacks
-    newModuleInstance.onPhaseChange = (index: number, name: string) => {
-      useLearningUIStore.getState().setPhaseInfo(index, name);
-    };
-    newModuleInstance.onAnnotationChange = (annotation: string) => {
-      useLearningUIStore.getState().setPhaseAnnotation(annotation);
-    };
-    newModuleInstance.onAnalyticsEvent = (_name: string, _data: any) => {};
+    /** Returns the full transition history for the Inspector. */
+    public getTransitionHistory(): TransitionResult[] {
+        return [...this.transitionHistory];
+    }
 
-    // reset() fires the module's init sequence — TransitionManager already
-    // rewrote startPos values from the previous player positions, so the
-    // very first frame shows players in their OLD positions and they glide
-    // to new positions over the first positionTransitionFraction of the timeline.
-    statePreserved.playerPositions = hasExistingPlayers;
-    newModuleInstance.reset();
+    /** Returns whether a transition is currently active. */
+    public getIsTransitioning(): boolean {
+        return this.isTransitioning;
+    }
 
-    if (signal.aborted) throw new Error('Transition aborted');
+    // ─────────────────────────────────────────────────────────────────────────
+    // QUEUE PROCESSOR
+    // ─────────────────────────────────────────────────────────────────────────
 
-    // ── 6. Update all stores ──────────────────────────────────────────────
-    useLearningUIStore.getState().setCurrentConcept(concept);
-    useLearningUIStore.getState().setLoading(false);
-    learningStateStore.getState().setCurrentConcept(concept);
-    learningStateStore.getState().setCurrentAnimation(moduleKey);
-    learningStateStore.getState().setAnimationStatus('playing');
+    private enqueue(request: TransitionRequest): Promise<TransitionResult> {
+        // If transitioning to the exact same concept that is already active and
+        // a module is loaded, treat it as a silent same-concept follow-up.
+        const activeConcept = learningStateStore.getState().currentConcept;
+        if (
+            activeConcept?.concept_id === request.toConceptId &&
+            request.type !== 'CONCEPT_TO_BREAKDOWN' &&
+            request.type !== 'BREAKDOWN_TO_CONCEPT'
+        ) {
+            return Promise.resolve(this.buildNoOpResult(request));
+        }
 
-    useTacticalStore.setState({ currentConcept: concept, playState: 'playing' });
-    useLearningUIStore.getState().setAnimationState('playing');
+        // Replace the queue tail if the incoming request targets the same destination.
+        // This prevents stacking 3 identical transitions during rapid AI output.
+        const tail = this.transitionQueue[this.transitionQueue.length - 1];
+        if (tail && tail.toConceptId === request.toConceptId && tail.type === request.type) {
+            this.transitionQueue[this.transitionQueue.length - 1] = request;
+            return Promise.resolve(this.buildNoOpResult(request));
+        }
 
-    return {
-      success: true, requestId, fromConceptId, toConceptId, type,
-      durationMs: Math.round(performance.now() - startTime),
-      statePreserved: { ...statePreserved, overlays: false },
-    };
-  }
+        return new Promise<TransitionResult>((resolve) => {
+            (request as any)._resolve = resolve;
+            this.transitionQueue.push(request);
+            if (!this.isTransitioning) {
+                this.processNext();
+            }
+        });
+    }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // BREAKDOWN ENTRY
-  // ─────────────────────────────────────────────────────────────────────────
+    private async processNext(): Promise<void> {
+        if (this.transitionQueue.length === 0) {
+            this.isTransitioning = false;
+            return;
+        }
 
-  private async executeBreakdownEntry(
-    request: TransitionRequest,
-    signal: AbortSignal
-  ): Promise<TransitionResult> {
-    const { fromConceptId, toConceptId, requestId } = request;
-    const startTime = performance.now();
+        this.isTransitioning = true;
+        const request = this.transitionQueue.shift()!;
+        this.abortController = new AbortController();
+        const signal = this.abortController.signal;
 
-    analyticsTracker.track('transition_started', {
-      request_id: requestId,
-      from: fromConceptId,
-      to: toConceptId,
-      type: 'CONCEPT_TO_BREAKDOWN',
-    });
+        const startTime = performance.now();
+        let result: TransitionResult;
 
-    useTransitionStore.setState({
-      isTransitioning: true,
-      activeTransition: {
-        requestId,
-        fromConceptId,
-        toConceptId,
-        type: 'CONCEPT_TO_BREAKDOWN',
-        startedAt: Date.now(),
-        playerGlideDurationMs: 0,
-        cameraDurationMs: request.cameraDurationMs ?? 1400,
-      },
-    });
+        try {
+            switch (request.type) {
+                case 'CONCEPT_TO_CONCEPT':
+                case 'CLASSROOM_TO_ANIMATION':
+                case 'BREAKDOWN_TO_CONCEPT':
+                    result = await this.executeConceptTransition(request, signal);
+                    break;
+                case 'CONCEPT_TO_BREAKDOWN':
+                    result = await this.executeBreakdownEntry(request, signal);
+                    break;
+                case 'SAME_CONCEPT_FOLLOW_UP':
+                    result = this.buildNoOpResult(request);
+                    break;
+                default:
+                    result = await this.executeConceptTransition(request, signal);
+            }
+        } catch (err: any) {
+            const endTime = performance.now();
+            result = {
+                success: false,
+                requestId: request.requestId,
+                fromConceptId: request.fromConceptId,
+                toConceptId: request.toConceptId,
+                type: request.type,
+                durationMs: Math.round(endTime - startTime),
+                statePreserved: { playerPositions: false, cameraPosition: false, overlays: false, narrationState: false },
+                error: err?.message ?? 'Unknown transition error',
+            };
+            analyticsTracker.track('transition_interrupted', {
+                request_id: request.requestId,
+                from: request.fromConceptId,
+                to: request.toConceptId,
+                error: result.error,
+            });
+        } finally {
+            result!.durationMs = Math.round(performance.now() - startTime);
+            this.transitionHistory.unshift(result!);
+            if (this.transitionHistory.length > 50) this.transitionHistory.pop();
 
-    this.snapshotNarrationState();
+            useTransitionStore.setState({ isTransitioning: false, activeTransition: null });
+            (request as any)._resolve?.(result!);
 
-    // Camera glides to cinematic breakdown preset
-    await this.runCameraTransition(CAMERA_PRESETS.breakdown, request.cameraDurationMs ?? 1400, signal);
+            this.isTransitioning = false;
 
-    if (signal.aborted) throw new Error('Transition aborted');
+            analyticsTracker.track('transition_completed', {
+                request_id: result!.requestId,
+                from: result!.fromConceptId,
+                to: result!.toConceptId,
+                type: result!.type,
+                duration_ms: result!.durationMs,
+                success: result!.success,
+            });
 
-    // Current concept animation continues to run — the breakdown store takes
-    // over the UI panel. We do NOT reset the engine here.
+            // Process next item in queue
+            this.processNext();
+        }
+    }
 
-    return {
-      success: true,
-      requestId,
-      fromConceptId,
-      toConceptId,
-      type: 'CONCEPT_TO_BREAKDOWN',
-      durationMs: Math.round(performance.now() - startTime),
-      statePreserved: {
-        playerPositions: true,  // engine keeps running
-        cameraPosition: true,
-        overlays: true,
-        narrationState: true,
-      },
-    };
-  }
+    // ─────────────────────────────────────────────────────────────────────────
+    // CONCEPT TRANSITION
+    // ─────────────────────────────────────────────────────────────────────────
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // CAMERA TRANSITION
-  // ─────────────────────────────────────────────────────────────────────────
+    private async executeConceptTransition(
+        request: TransitionRequest,
+        signal: AbortSignal
+    ): Promise<TransitionResult> {
+        const { fromConceptId, toConceptId, requestId, type } = request;
+        const startTime = performance.now();
 
-  /**
-   * Smoothly glides the camera to a target preset using cubicInOut easing.
-   * Runs on a separate rAF loop so it doesn't block the main render cycle.
-   */
-  private runCameraTransition(
-    preset: ConceptCameraPreset,
-    durationMs: number,
-    signal: AbortSignal
-  ): Promise<void> {
-    if (!this.engine) return Promise.resolve();
+        if (!toConceptId) throw new Error('toConceptId is required for concept transitions');
 
-    // Read camera/controls from the engine's stored references
-    const camera: THREE.PerspectiveCamera | null = (this.engine as any).camera ?? null;
-    const controls: any = (this.engine as any).controls ?? null;
+        // ── 1. Announce transition start ─────────────────────────────────────
+        analyticsTracker.track('transition_started', {
+            request_id: requestId,
+            from: fromConceptId,
+            to: toConceptId,
+            type,
+        });
 
-    if (!camera) return Promise.resolve();
+        useTransitionStore.setState({
+            isTransitioning: true,
+            activeTransition: {
+                requestId,
+                fromConceptId,
+                toConceptId,
+                type,
+                startedAt: Date.now(),
+                playerGlideDurationMs: request.playerGlideDurationMs ?? 900,
+                cameraDurationMs: request.cameraDurationMs ?? 1200,
+            },
+        });
 
-    return transitionManager.transitionCamera(
-      camera,
-      controls,
-      preset.position,
-      preset.target,
-      durationMs
-    ).then(() => {
-      if (signal.aborted) return;
-    });
-  }
+        // ── 2. Snapshot narration before overwriting ──────────────────────────
+        this.snapshotNarrationState();
+        const statePreserved = {
+            playerPositions: false,
+            cameraPosition: false,
+            overlays: false,
+            narrationState: true,
+        };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // OVERLAY CROSS-FADE (future: can animate opacity via a tween layer)
-  // ─────────────────────────────────────────────────────────────────────────
+        if (signal.aborted) throw new Error('Transition aborted');
 
-  /**
-   * Fades out the current overlays over durationMs before the new module loads.
-   * Uses the OverlayManager's opacity field — future: use a dedicated tween.
-   */
-  public async fadeOutOverlays(durationMs: number = 300): Promise<void> {
-    // Overlays in Football Atlas are redrawn per-frame from OverlayState data.
-    // A lightweight fade is achieved by waiting for the module load to clear them.
-    await this.delay(durationMs);
-  }
+        // ── 3. Resolve animation module ──────────────────────────────────────
+        const moduleKey = ConceptRouter.resolveAnimationModule(toConceptId);
+        if (!moduleKey) {
+            // Concept has no 3D module — do a lightweight store update only
+            const concept = await tacticalApi.getConceptById(toConceptId);
+            useTacticalStore.setState({ currentConcept: concept, playState: 'stopped' });
+            useLearningUIStore.getState().setCurrentConcept(concept);
+            learningStateStore.getState().setCurrentConcept(concept);
+            return {
+                success: true, requestId, fromConceptId, toConceptId, type,
+                durationMs: Math.round(performance.now() - startTime),
+                statePreserved,
+            };
+        }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // HELPERS
-  // ─────────────────────────────────────────────────────────────────────────
+        if (signal.aborted) throw new Error('Transition aborted');
 
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+        // ── 4. Run parallel: camera glide + player slide ─────────────────────
+        const cameraPreset = getCameraPreset(toConceptId);
+        const [concept] = await Promise.all([
+            tacticalApi.getConceptById(toConceptId),
+            this.runCameraTransition(cameraPreset, request.cameraDurationMs ?? 1200, signal),
+        ]);
+        statePreserved.cameraPosition = true;
 
-  private generateRequestId(): string {
-    this.requestCounter++;
-    return `tx_${Date.now()}_${this.requestCounter}`;
-  }
+        if (signal.aborted) throw new Error('Transition aborted');
 
-  private buildNoOpResult(request: TransitionRequest): TransitionResult {
-    return {
-      success: true,
-      requestId: request.requestId,
-      fromConceptId: request.fromConceptId,
-      toConceptId: request.toConceptId,
-      type: 'SAME_CONCEPT_FOLLOW_UP',
-      durationMs: 0,
-      statePreserved: {
-        playerPositions: true,
-        cameraPosition: true,
-        overlays: true,
-        narrationState: true,
-      },
-    };
-  }
+        // ── 5. Load the new module — the TransitionManager handles player slides ─
+        const hasExistingPlayers = this.engine
+            ? this.engine.getPlayerManager().getPlayers().size > 0
+            : false;
+
+        const newModuleInstance = animationModuleRegistry.loadModule(moduleKey, this.engine!);
+
+        // Wire lifecycle callbacks
+        newModuleInstance.onPhaseChange = (index: number, name: string) => {
+            useLearningUIStore.getState().setPhaseInfo(index, name);
+        };
+        newModuleInstance.onAnnotationChange = (annotation: string) => {
+            useLearningUIStore.getState().setPhaseAnnotation(annotation);
+        };
+        newModuleInstance.onAnalyticsEvent = (_name: string, _data: any) => { };
+
+        // reset() fires the module's init sequence — TransitionManager already
+        // rewrote startPos values from the previous player positions, so the
+        // very first frame shows players in their OLD positions and they glide
+        // to new positions over the first positionTransitionFraction of the timeline.
+        statePreserved.playerPositions = hasExistingPlayers;
+        newModuleInstance.reset();
+
+        if (signal.aborted) throw new Error('Transition aborted');
+
+        // ── 6. Update all stores ──────────────────────────────────────────────
+        useLearningUIStore.getState().setCurrentConcept(concept);
+        useLearningUIStore.getState().setLoading(false);
+        learningStateStore.getState().setCurrentConcept(concept);
+        learningStateStore.getState().setCurrentAnimation(moduleKey);
+        learningStateStore.getState().setAnimationStatus('playing');
+
+        useTacticalStore.setState({ currentConcept: concept, playState: 'playing' });
+        useLearningUIStore.getState().setAnimationState('playing');
+
+        return {
+            success: true, requestId, fromConceptId, toConceptId, type,
+            durationMs: Math.round(performance.now() - startTime),
+            statePreserved: { ...statePreserved, overlays: false },
+        };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BREAKDOWN ENTRY
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private async executeBreakdownEntry(
+        request: TransitionRequest,
+        signal: AbortSignal
+    ): Promise<TransitionResult> {
+        const { fromConceptId, toConceptId, requestId } = request;
+        const startTime = performance.now();
+
+        analyticsTracker.track('transition_started', {
+            request_id: requestId,
+            from: fromConceptId,
+            to: toConceptId,
+            type: 'CONCEPT_TO_BREAKDOWN',
+        });
+
+        useTransitionStore.setState({
+            isTransitioning: true,
+            activeTransition: {
+                requestId,
+                fromConceptId,
+                toConceptId,
+                type: 'CONCEPT_TO_BREAKDOWN',
+                startedAt: Date.now(),
+                playerGlideDurationMs: 0,
+                cameraDurationMs: request.cameraDurationMs ?? 1400,
+            },
+        });
+
+        this.snapshotNarrationState();
+
+        // Camera glides to cinematic breakdown preset
+        await this.runCameraTransition(CAMERA_PRESETS.breakdown, request.cameraDurationMs ?? 1400, signal);
+
+        if (signal.aborted) throw new Error('Transition aborted');
+
+        // Current concept animation continues to run — the breakdown store takes
+        // over the UI panel. We do NOT reset the engine here.
+
+        return {
+            success: true,
+            requestId,
+            fromConceptId,
+            toConceptId,
+            type: 'CONCEPT_TO_BREAKDOWN',
+            durationMs: Math.round(performance.now() - startTime),
+            statePreserved: {
+                playerPositions: true,  // engine keeps running
+                cameraPosition: true,
+                overlays: true,
+                narrationState: true,
+            },
+        };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CAMERA TRANSITION
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Smoothly glides the camera to a target preset using cubicInOut easing.
+     * Runs on a separate rAF loop so it doesn't block the main render cycle.
+     */
+    private runCameraTransition(
+        preset: ConceptCameraPreset,
+        durationMs: number,
+        signal: AbortSignal
+    ): Promise<void> {
+        if (!this.engine) return Promise.resolve();
+
+        // Read camera/controls from the engine's stored references
+        const camera: THREE.PerspectiveCamera | null = (this.engine as any).camera ?? null;
+        const controls: any = (this.engine as any).controls ?? null;
+
+        if (!camera) return Promise.resolve();
+
+        return transitionManager.transitionCamera(
+            camera,
+            controls,
+            preset.position,
+            preset.target,
+            durationMs
+        ).then(() => {
+            if (signal.aborted) return;
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // OVERLAY CROSS-FADE (future: can animate opacity via a tween layer)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Fades out the current overlays over durationMs before the new module loads.
+     * Uses the OverlayManager's opacity field — future: use a dedicated tween.
+     */
+    public async fadeOutOverlays(durationMs: number = 300): Promise<void> {
+        // Overlays in Football Atlas are redrawn per-frame from OverlayState data.
+        // A lightweight fade is achieved by waiting for the module load to clear them.
+        await this.delay(durationMs);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private delay(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    private generateRequestId(): string {
+        this.requestCounter++;
+        return `tx_${Date.now()}_${this.requestCounter}`;
+    }
+
+    private buildNoOpResult(request: TransitionRequest): TransitionResult {
+        return {
+            success: true,
+            requestId: request.requestId,
+            fromConceptId: request.fromConceptId,
+            toConceptId: request.toConceptId,
+            type: 'SAME_CONCEPT_FOLLOW_UP',
+            durationMs: 0,
+            statePreserved: {
+                playerPositions: true,
+                cameraPosition: true,
+                overlays: true,
+                narrationState: true,
+            },
+        };
+    }
 }
 
 export const transitionEngine = TransitionEngine.getInstance();

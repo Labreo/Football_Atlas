@@ -3,12 +3,13 @@ WORKDIR /app
 
 # Copy backend package files and shared bundle.
 COPY package.json package-lock.json shared.tgz ./
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy source
 COPY . .
 
-RUN npm run build || true
+RUN npm run build
+RUN npm prune --production
 
 FROM node:18-alpine AS runtime
 WORKDIR /app

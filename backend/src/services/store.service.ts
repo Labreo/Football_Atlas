@@ -213,6 +213,11 @@ export class KnowledgeStore {
     this.documents.clear();
     this.chunks.clear();
     this.conceptToChunks.clear();
+
+    for (const concept of tacticalRegistry.getAllConcepts()) {
+      concept.docling_chunks = [];
+    }
+
     try {
       if (fs.existsSync(STORE_FILE)) fs.unlinkSync(STORE_FILE);
     } catch (_) {}

@@ -994,7 +994,7 @@ const SettingsTab: React.FC = () => {
               if (window.confirm("Are you sure you want to clear the entire tactical database store? This cannot be undone.")) {
                 try {
                       const apiHost = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_HOST || '';
-                      const deleteUrl = apiHost ? `${apiHost.replace(/\/$/, '')}/documents` : '/documents';
+                      const deleteUrl = apiHost ? `${apiHost.replace(/\/$/, '')}/api/tactical/documents` : '/api/tactical/documents';
                       await fetch(deleteUrl, { method: 'DELETE' });
                       alert("Knowledge store reset successfully. Restart the server to apply clean slate.");
                     } catch (_) {

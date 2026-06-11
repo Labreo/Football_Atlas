@@ -116,6 +116,19 @@ router.get('/documents/:id/chunks', async (req: Request, res: Response, next: Ne
 });
 
 /**
+ * DELETE /documents
+ * Clears all persisted knowledge store state and resets document-chunk indexes.
+ */
+router.delete('/documents', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    knowledgeStore.clear();
+    return res.status(200).json({ success: true, message: 'Knowledge store reset successfully.' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
  * GET /concepts/:id/chunks
  * Returns all chunks linked to a concept.
  */

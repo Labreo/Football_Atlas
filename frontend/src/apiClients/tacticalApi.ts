@@ -34,8 +34,7 @@ export const tacticalApi = {
 
 
   async uploadDocument(formData: FormData): Promise<any> {
-    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
-    const res = await fetch(`${documentBase}/documents/upload`, {
+    const res = await fetch(`${API_BASE}/documents/upload`, {
       method: 'POST',
       body: formData
     });
@@ -47,29 +46,25 @@ export const tacticalApi = {
   },
 
   async getDocuments(): Promise<any[]> {
-    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
-    const res = await fetch(`${documentBase}/documents`);
+    const res = await fetch(`${API_BASE}/documents`);
     if (!res.ok) throw new Error('Failed to fetch documents');
     return res.json();
   },
 
   async getDocumentChunks(id: string): Promise<any[]> {
-    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
-    const res = await fetch(`${documentBase}/documents/${id}/chunks`);
+    const res = await fetch(`${API_BASE}/documents/${id}/chunks`);
     if (!res.ok) throw new Error('Failed to fetch document chunks');
     return res.json();
   },
 
   async getConceptChunks(conceptId: string): Promise<any[]> {
-    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
-    const res = await fetch(`${documentBase}/concepts/${conceptId}/chunks`);
+    const res = await fetch(`${API_BASE}/concepts/${conceptId}/chunks`);
     if (!res.ok) throw new Error('Failed to fetch concept chunks');
     return res.json();
   },
 
   async searchKeyword(query: string): Promise<any[]> {
-    const documentBase = apiHost ? apiHost.replace(/\/$/, '') : '';
-    const res = await fetch(`${documentBase}/search?q=${encodeURIComponent(query)}`);
+    const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
     if (!res.ok) throw new Error('Search failed');
     return res.json();
   },

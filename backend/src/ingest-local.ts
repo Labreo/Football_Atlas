@@ -4,7 +4,9 @@ import { execSync } from 'child_process';
 
 const doclingPath = '/Users/sanjaywaradkar/miniforge3/bin/docling';
 const docsDir = '/Users/sanjaywaradkar/Football_Atlas/football_atlas_docling';
-const serverUrl = 'http://localhost:3001/documents/upload';
+const serverUrl = process.env.BACKEND_URL
+  ? `${process.env.BACKEND_URL.replace(/\/$/, '')}/api/tactical/documents/upload`
+  : 'http://localhost:3001/api/tactical/documents/upload';
 
 async function ingestLocalDocs() {
   console.log('\n====================================================');

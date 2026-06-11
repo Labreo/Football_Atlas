@@ -21,7 +21,7 @@ app.use('/health', healthRoutes);
 app.use('/api/granite', graniteRoutes);
 app.use('/api/tactical', tacticalRoutes);
 app.use('/api/metrics', metricsRoutes);
-app.use('/', documentRoutes);
+app.use('/api/tactical', documentRoutes);
 
 // Global exception catcher boundary
 app.use(errorHandler);

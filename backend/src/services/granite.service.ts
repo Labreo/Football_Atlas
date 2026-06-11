@@ -631,29 +631,16 @@ ${explanationText}`;
       };
     }
 
-    // 1. Trigger mock completion if in Mock Mode
+    // 1. Prevent accidental mock-mode responses in production.
     if (this.isMockMode) {
-      Logger.warn('IBM_API_KEY is not set or is a mock key — running in MOCK mode. Responses are NOT from a real AI model.', { trace_id: traceId });
-      const latency = Math.floor(Math.random() * 400) + 200;
-      await new Promise((r) => setTimeout(r, latency));
-      const mockResult = this.generateMockResponse(question, conversationId);
-
-      if (mockResult && !mockResult.needs_clarification && mockResult.concept_id) {
-        contextManager.updateContext(conversationId, {
-          active_concept: mockResult.concept_id
-        });
-        contextManager.addTurn(conversationId, question, mockResult.explanation);
-      } else if (mockResult && mockResult.needs_clarification) {
-        contextManager.addTurn(conversationId, question, mockResult.clarification_question);
-      }
-
+      Logger.error('Detected mock-mode at runtime. Production must provide a valid IBM API key.');
       return {
-        success: true,
+        success: false,
         is_mocked: true,
-        mode: 'mock',
+        mode: 'error',
         latency_ms: Date.now() - startTime,
-        data: mockResult,
-      };
+        error: 'Server configured in mock mode. Set a valid IBM_API_KEY in production to enable watsonx.ai.'
+      } as any;
     }
 
     // Format the last 5 turns (max 10 messages) of conversation history
@@ -763,25 +750,14 @@ ${explanationText}`;
         };
 
       } catch (err: any) {
-        Logger.warn(`Hugging Face API error: ${err.message}. Falling back to local mock generator. Responses are NOT from a real AI model.`, {
-          trace_id: traceId,
-        });
-        const mockResult = this.generateMockResponse(question, conversationId);
-        if (mockResult && !mockResult.needs_clarification && mockResult.concept_id) {
-          contextManager.updateContext(conversationId, {
-            active_concept: mockResult.concept_id
-          });
-          contextManager.addTurn(conversationId, question, mockResult.explanation);
-        } else if (mockResult && mockResult.needs_clarification) {
-          contextManager.addTurn(conversationId, question, mockResult.clarification_question);
-        }
+        Logger.error(`Hugging Face API error: ${err.message}.`, { trace_id: traceId });
         return {
-          success: true,
-          is_mocked: true,
-          mode: 'mock',
+          success: false,
+          is_mocked: false,
+          mode: 'error',
           latency_ms: Date.now() - startTime,
-          data: mockResult,
-        };
+          error: `Hugging Face API error: ${String(err.message || err)}`
+        } as any;
       }
     }
 
@@ -861,25 +837,14 @@ ${explanationText}`;
         };
 
       } catch (err: any) {
-        Logger.warn(`OpenRouter API error: ${err.message}. Falling back to local mock generator. Responses are NOT from a real AI model.`, {
-          trace_id: traceId,
-        });
-        const mockResult = this.generateMockResponse(question, conversationId);
-        if (mockResult && !mockResult.needs_clarification && mockResult.concept_id) {
-          contextManager.updateContext(conversationId, {
-            active_concept: mockResult.concept_id
-          });
-          contextManager.addTurn(conversationId, question, mockResult.explanation);
-        } else if (mockResult && mockResult.needs_clarification) {
-          contextManager.addTurn(conversationId, question, mockResult.clarification_question);
-        }
+        Logger.error(`OpenRouter API error: ${err.message}.`, { trace_id: traceId });
         return {
-          success: true,
-          is_mocked: true,
-          mode: 'mock',
+          success: false,
+          is_mocked: false,
+          mode: 'error',
           latency_ms: Date.now() - startTime,
-          data: mockResult,
-        };
+          error: `OpenRouter API error: ${String(err.message || err)}`
+        } as any;
       }
     }
 
@@ -968,26 +933,14 @@ ${explanationText}`;
       };
 
     } catch (err: any) {
-      Logger.warn(`IBM Granite API error: ${err.message}. Falling back to local mock generator. Responses are NOT from a real AI model.`, {
-        trace_id: traceId,
-      });
-
-      const mockResult = this.generateMockResponse(question, conversationId);
-      if (mockResult && !mockResult.needs_clarification && mockResult.concept_id) {
-        contextManager.updateContext(conversationId, {
-          active_concept: mockResult.concept_id
-        });
-        contextManager.addTurn(conversationId, question, mockResult.explanation);
-      } else if (mockResult && mockResult.needs_clarification) {
-        contextManager.addTurn(conversationId, question, mockResult.clarification_question);
-      }
+      Logger.error(`IBM Granite API error: ${err.message}.`, { trace_id: traceId });
       return {
-        success: true,
-        is_mocked: true,
-        mode: 'mock',
+        success: false,
+        is_mocked: false,
+        mode: 'error',
         latency_ms: Date.now() - startTime,
-        data: mockResult,
-      };
+        error: `Watsonx/IBM Granite API error: ${String(err.message || err)}`
+      } as any;
     }
   }
 

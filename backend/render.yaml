@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: Football Atlas Backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    envVars:
+      - key: IBM_API_KEY
+      - key: IBM_PROJECT_ID
+      - key: IBM_GRANITE_MODEL
+      - key: IBM_BASE_URL
+      - key: MCP_SERVER_URL
+      - key: PORT

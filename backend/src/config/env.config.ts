@@ -8,7 +8,8 @@ const requiredEnv = [
   'IBM_API_KEY',
   'IBM_PROJECT_ID',
   'IBM_GRANITE_MODEL',
-  'IBM_BASE_URL'
+  'IBM_BASE_URL',
+  'MCP_SERVER_URL'
 ];
 
 export function validateEnv(): void {
@@ -23,6 +24,17 @@ export function validateEnv(): void {
     console.error('Refer to backend/.env.example for guidance.\n');
     process.exit(1);
   }
+
+  // Prevent running in production with placeholder/mock IBM keys
+  const ibmKey = process.env.IBM_API_KEY || '';
+  if (ibmKey.toLowerCase().includes('mock') || ibmKey.toLowerCase().includes('test') || ibmKey.trim() === 'example') {
+    console.error('\n================================================================');
+    console.error('❌ CRITICAL STARTUP ERROR: IBM_API_KEY appears to be a mock or placeholder value');
+    console.error('================================================================');
+    console.error('Set a valid Watsonx/IBM API key in the environment for production.');
+    console.error('Aborting startup to avoid serving non-production responses.\n');
+    process.exit(1);
+  }
 }
 
 export const envConfig = {
@@ -30,6 +42,8 @@ export const envConfig = {
   ibmProjectId: process.env.IBM_PROJECT_ID || '',
   ibmGraniteModel: process.env.IBM_GRANITE_MODEL || 'ibm/granite-13b-chat-v2',
   ibmBaseUrl: process.env.IBM_BASE_URL || 'us-south.ml.cloud.ibm.com',
+  mcpServerUrl: process.env.MCP_SERVER_URL || '',
+  sentryDsn: process.env.SENTRY_DSN || '',
   port: parseInt(process.env.PORT || '3001', 10),
   nodeEnv: process.env.NODE_ENV || 'development'
 };

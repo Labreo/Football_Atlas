@@ -1,115 +1,92 @@
 # Football Atlas Demo Analysis Report
 
-This report analyzes the Football Atlas codebase and maps out the optimal **3-minute presentation strategy** specifically tailored for the **June Innovation Challenge: Soccer, AI, and the World Cup** (sponsored by IBM SkillsBuild).
+This report defines the optimal **3-minute presentation strategy** for the **June Innovation Challenge: Soccer, AI, and the World Cup**, focusing exclusively on the two most impressive and substantive modules: the **Tactical Playbook** and the **Conversational Classroom**.
 
 ---
 
-## Phase 1 — Repository & Challenge Alignment
+## Phase 1 — Demo Structure: Playbook & Classroom
 
-Football Atlas is engineered to align directly with the core themes of the June Challenge, focusing on **Understanding & Explanation**, **Trust & Transparency**, and **Fan & Learning Experiences** while explicitly avoiding out-of-scope pitfalls (like pure outcome predictors or static dashboards).
+By focusing entirely on the **Tactical Playbook** and the **Conversational Classroom**, the presentation showcases how Football Atlas connects deep spatial science with conversational explanation using the IBM technology stack.
 
-### Core User Flows & Hackathon Alignment
-
-| Core User Flow | User Action | Challenge Focus Area | Required IBM Tech Used | Visual / Demo Wow Score |
-| :--- | :--- | :--- | :--- | :---: |
-| **The 2022 World Cup Final Equaliser** | Click "Watch Hero Moment" on Landing. | **Understanding & Explanation** & **Human Behavior** (Fatigue-driven vertical line collapse). | Coordinates parsed via backend, ready to link with AI definitions. | **9.5/10**: Dynamic 3D coordinate movement, desaturated retro grid overlays, and camera preset panning. |
-| **Conversational Classroom Query** | Type question in Classroom Chat (e.g. *"Why did the space collapse?"*). | **Fan & Learning Experiences** (Adaptive "Teach me the game" Tutor). | **IBM Granite** (generates explanation) & **Context Forge** (MCP tool call gateway). | **9.8/10**: Glowing MCP tool execution trees with live millisecond latency metrics inside chat. |
-| **Docling Grounded search** | Inspect parsed manuals and evidence panel. | **Trust & Transparency** (Explainable, document-grounded decision companion). | **IBM Docling** (parses unstructured PDF manuals into RAG chunks). | **8.5/10**: Side-out evidence panels displaying manual citation, author, and chunk excerpt. |
-| **Playbook Lesson Mode** | Click tactical concepts (e.g. "False 9"). | **Understanding & Explanation** (Visualizing passing lanes/pressing traps). | Development workflows accelerated using **IBM Bob**. | **8.5/10**: Dynamic Bezier curves for passing lanes and heatmaps for pressing traps. |
-
-### What Football Atlas Avoids (Hackathon Compliance)
-*   **No Opaque Outcome Prediction**: Rather than predicting *who* will win based on statistical black boxes, it explains *why* a specific tactical mechanism succeeded or failed.
-*   **No Replacement of Referees/Coaches**: It functions as an educational companion, explaining decisions (e.g. Romero's stepping triggers) rather than replacing human arbiters.
-*   **No Static Dashboards**: Visualizations are live, coordinate-driven Three.js scenes synced with AI reasoning, not flat charts.
-*   **No Trivia-Only Focus**: Built around canonical coaching manuals (ingested via Docling) and physical coordinates.
+```
+       TACTICAL PLAYBOOK (0:00 - 1:15)                 CONVERSATIONAL CLASSROOM (1:15 - 2:45)
+┌──────────────────────────────────────────────┐ ┌──────────────────────────────────────────────┐
+│  • 10 Registered Tactical Concepts            │ │  • Natural Language Granite Tutor Chat       │
+│  • 60fps WebGL Playback & Camera Presets     │ │  • Context Forge MCP Tool-Calling Trace HUD  │
+│  • Dynamic Visual Overlays (Passing Lanes)   │ │  • Dynamic Tutor-to-Pitch 3D Orchestration   │
+│  • Historical Match Breakdown timelines      │ │  • Dual Audience Mode (Fan vs. Tactical)     │
+└──────────────────────────────────────────────┘ └──────────────────────────────────────────────┘
+```
 
 ---
 
-## Phase 2 — Required Technologies Integration
-
-1.  **IBM Granite (via watsonx.ai)**: Serves as the conversational intelligence agent. It translates technical tactical jargon into accessible text based on the user's knowledge level.
-2.  **Context Forge (MCP Gateway)**: Isolates the LLM. It acts as the gateway to fetch actual 3D coordinates (`trigger_animation`), concept definitions (`get_concept_explanation`), and match metadata (`fetch_historical_example`), ensuring **zero hallucination**.
-3.  **IBM Docling**: Powers the RAG ingestion. It parses raw PDF tactical files (like positional playbooks) into structured tables and text, feeding the grounding panel.
-4.  **IBM Bob (AI Code Assistant)**: The core development tool used to design type schemas, refactor frontend-backend APIs, and implement local dev server proxies.
-
----
-
-## Phase 3 — The 3-Minute Presentation Narrative
-
-> **"Why did that happen? Explain the moments. Build AI inside the match."**
-
-*   **Narrative Hook**: Focus on the 81st-minute Mbappé equaliser in the 2022 World Cup Final—not as a magical occurrence of individual speed, but as a logical structural failure of vertical compactness due to fatigue.
-*   **Core Message**: Human-centered, explainable AI turns the invisible space and lines of soccer into a visible, understandable vocabulary.
-
----
-
-## Phase 4 — Step-by-Step 3-Minute Demo Script
+## Phase 2 — The 3-Minute Demo Timeline
 
 ```
 +---------------------------------------------------------------------------------+
-| Time  | Screen Action                     | Narration & Highlight Script        |
-| ======| ================================= | =================================== |
-| 0:00  | Home Page / Hover Showcase Card   | "Five billion people watched the    |
-|       |                                   |  2022 World Cup Final equaliser as  |
-|       |                                   |  individual magic. Football Atlas   |
-|       |                                   |  makes the invisible tactics visible."|
-| ------| --------------------------------- | ----------------------------------- |
-| 0:15  | Playbook: Watch Hero Moment       | "In 3D, we see the vertical gap    |
-|       | (Scrub timeline, highlight gap)   |  open in Zone 14. Midfield fatigue  |
-|       |                                   |  left Romero isolated. Goals are    |
-|       |                                   |  logical results of spatial errors."|
-| ------| --------------------------------- | ----------------------------------- |
-| 0:45  | Classroom: Ask "Why did Argentina | "Our Granite Tutor explains: vertical|
-|       | vertical shape collapse?"         |  lines disconnected. Dual Audience  |
-|       |                                   |  toggles: Casuel Fan vs Tech view." |
-| ------| --------------------------------- | ----------------------------------- |
-| 1:20  | Classroom: Click glowing MCP trace| "Context Forge MCP Registry in      |
-|       | pill below chat bubble            |  action. It guides tool calls and   |
-|       |                                   |  eliminates model hallucinations."  |
-| ------| --------------------------------- | ----------------------------------- |
-| 1:55  | Explore: Open Evidence Panel      | "Docling parses unstructured manual|
-|       | (Expose document citation cards)  |  PDFs to verify RAG definitions,    |
-|       |                                   |  ensuring absolute trust/grounding."|
-| ------| --------------------------------- | ----------------------------------- |
-| 2:30  | Impact: Display Comprehension HUD | "Tactical data shouldn't be locked |
-|       | (84% score, prerequisite graphs)  |  in elite suites. We democratize    |
-|       |                                   |  comprehension at global scale."   |
-| ------| --------------------------------- | ----------------------------------- |
-| 2:50  | Presenter Wrap                    | "Thank you. Football Atlas turns    |
-|       |                                   |  moments into visible logic."       |
+| TIME | MODULE     | ACTION                         | DIALOGUE NARRATIVE        |
+|======|============|================================|===========================|
+| 0:00 | Playbook   | Select "False 9" Concept.      | "Tactics are invisible.   |
+|      |            | Play generic 3D simulation.    |  Playbook makes them      |
+|      |            | Toggle overlays.               |  visible and interactive."|
+|------|------------|--------------------------------|---------------------------|
+| 0:35 | Playbook   | Launch Mbappé Equaliser match. | "Scrubbing the timeline   |
+|      |            | Scrub timeline milestones.     |  shows how fatigue broke  |
+|      |            | Point out Zone 14 red overlay. |  defensive compactness."  |
+|------|------------|--------------------------------|---------------------------|
+| 1:15 | Classroom  | Query: "How can teams exploit  | "Our Granite-powered tutor|
+|      |            | space in the 2026 World Cup?"  |  explains the spatial     |
+|      |            | Ask follow-up match example.   |  principles and examples."|
+|------|------------|--------------------------------|---------------------------|
+| 1:50 | Classroom  | Click "Show MCP Trace" pill.   | "Context Forge gateway    |
+|      |            | Expose latency & tool tree.    |  eliminates hallucinations|
+|      |            |                                |  via strict tool safety." |
+|------|------------|--------------------------------|---------------------------|
+| 2:15 | Classroom  | Toggle "Fan View" / "Tactical".| "One set of coordinates;  |
+|      |            | Show adjusted text register.   |  two adapted narratives." |
+|------|------------|--------------------------------|---------------------------|
+| 2:45 | Classroom  | Wrap up on Impact & IBM stack  | "Democratizing spatial    |
+|      |            | details.                       |  literacy. Thank you."    |
 +---------------------------------------------------------------------------------+
 ```
 
 ---
 
-## Phase 5 — Script & Action Prompts
+## Phase 3 — Narrated Demo Script
 
-### 1. The Hook (0:00 - 0:15)
-*   **Action**: Presenter loads the landing page and hovers over the World Cup Final card.
-*   **Dialogue**: *"The World Cup is the most intense shared moment in global culture. Billions watch, but they only see the ball. Why did momentum shift? Why did that tactical change succeed? Football Atlas uses explainable AI to make the invisible structures visible."*
+### Part 1: The Tactical Playbook (0:00 - 1:15)
 
-### 2. Explain the Moment (0:15 - 0:45)
-*   **Action**: Click *"Watch Hero Moment"*. The 3D pitch transitions into a golden archival grid. Scrub the timeline to Phase 3. Point to the highlighted vertical gap in Zone 14.
-*   **Dialogue**: *"Three passes before Kylian Mbappé’s volley, Argentina's midfield line disconnected from their backline due to fatigue. In our 3D engine, this 15-meter space is highlighted. We watch central defender Romero drawn out, leaving a channel. Goals are not magic; they are the logical results of spatial failures."*
+*   **Action**: Presenter starts directly on the **Playbook** tab. Select the **False 9** concept and click **Play**.
+*   **Dialogue**: *"Five billion people watch the World Cup, yet most only see the ball. Tactics are treated as invisible magic. In our Tactical Playbook, we make this spatial structure visible. 
+    Here, users explore ten registered coaching concepts. Selecting the 'False 9' instantiates our WebGL 3D engine at 60 frames per second. As the striker drops deep, the pitch dynamically overlays passing lanes and defensive spaces, showing the exact movement triggers. These player movements and 3D coordinate trajectories are generated dynamically using IBM Bob—allowing us to scale and generate N number of custom match animations on the fly."*
+*   **Action**: Click the sub-tab to launch a historical example: **Mbappé's Equaliser Sequence** (2022 World Cup Final). Scrub the timeline to Phase 3.
+*   **Dialogue**: *"We connect abstract concepts to real World Cup moments. Scrubbing the timeline of the 2022 equaliser shows the exact moment Argentina's lines stretched under fatigue. The engine highlights the 15-meter vertical gap in Zone 14. We watch Romero drawn forward, leaving his channel vacant for Mbappé’s run. Goals are not magic; they are the logical results of spatial failures."*
 
-### 3. Build AI Inside the Match (0:45 - 1:55)
-*   **Action**: Navigate to the Classroom. Type: *"Why was Argentina's midfield shape disconnected?"* 
-*   **Dialogue**: *"How do we explain this? Our Conversational Classroom uses IBM Granite. As it answers, look at this glowing execution tree. This is the Context Forge gateway. It intercepts the question and schedules typed tool calls locally to fetch coordinates and definitions. There are no hallucinations; every word is verified against actual tactical boundaries."*
-*   **Action**: Toggle the Audience Pill from *Tactical* to *Fan*.
-*   **Dialogue**: *"We meet users at their level of expertise. Toggle to 'Fan View' and Granite narrates the emotion of the equaliser. Toggle to 'Tactical View' and it analyzes space and defensive block triggers."*
+### Part 2: The Conversational Classroom (1:15 - 2:45)
 
-### 4. Trust & Transparency (1:55 - 2:30)
-*   **Action**: Click on the Grounding Evidence panel next to the chat.
-*   **Dialogue**: *"We provide complete transparency. The RAG system uses IBM Docling to ingest unstructured coaching manuals. The Grounding Panel displays the exact manual excerpt and confidence scores, linking text directly to our 3D coordinates."*
+*   **Action**: Navigate to the **Classroom** tab. Type into the chat: *"How can teams exploit vertical line disconnections in the 2026 World Cup?"* and submit.
+*   **Dialogue**: *"But how do we help fans teach themselves? We enter the Conversational Classroom. I will ask our AI Tutor, powered by IBM Granite, how teams can exploit space in the 2026 World Cup. Granite reasons over our database and streams the answer, explaining that vertical disconnections between midfield and defensive lines are the easiest to exploit with one-touch lay-offs."*
+*   **Action**: Hover over the assistant's reply and click the glowing **"Show MCP Trace"** pill to expand the execution tree.
+*   **Dialogue**: *"Notice the execution tree. This is the Context Forge MCP Gateway. It intercepts the question, executes local tool calls—like querying concept definitions and assessing user knowledge—and provides verified context to Granite. This completely eliminates model hallucinations. The numbers and rules are 100% accurate."*
+*   **Action**: Toggle the Audience register pill from **Tactical View** to **Fan View**.
+*   **Dialogue**: *"Because World Cup audiences are diverse, we support Dual Audience register switching. With a single click, we can toggle our tutor between 'Tactical View'—focusing on spatial disconnections and vertical lines—and 'Fan View', where Granite narrates the same coordinates through star player emotions and historical drama."*
+*   **Action**: Type a follow-up query: *"Can you show me a real match example of this happening?"* and submit. Click the generated **"View Tactical Breakdown"** card.
+*   **Dialogue**: *"Now we ask for real match evidence. Granite executes 'fetch_historical_example' via Context Forge, returning the 2022 World Cup Final equaliser sequence. With one click on 'View Tactical Breakdown', we instantly synchronize our classroom chat back to the 3D WebGL pitch, loading the player coordinates and timeline milestones dynamically."*
 
-### 5. Accessibility at Scale (2:30 - 3:00)
-*   **Action**: Open the Impact tab, showing the circular comprehension rates (84% score).
-*   **Dialogue**: *"Elite tactical suites are locked behind professional paywalls. Football Atlas democratizes spatial intelligence. In pilot tests, 84% of participants with no tactical background successfully explained a pressing trap after a single session. This is soccer, AI, and explainability built inside the match. Thank you."*
+### Summary & Close (2:45 - 3:00)
+*   **Action**: Presenter points to the screen interface.
+*   **Dialogue**: *"By combining IBM Granite, Context Forge, and Docling, Football Atlas takes complex, professional tactical tools and democratizes them for the global community. It turns 'why did that happen?' into something you can actually see. Thank you."*
 
 ---
 
-## Phase 6 — Technical Backup & Disaster Recovery
+## Phase 4 — Visual Demo Actions & Checkpoints
 
-*   **API Offline / Watsonx Interruption**: If the live watsonx.ai client encounters rate limits or token exhaustion, the Express backend automatically falls back to the local **Template narative compiler** inside `ContextForgeGateway`.
-*   **What to say**: *"Context Forge manages local templates to support offline capabilities, letting coaches run interactive lessons directly on remote training fields."*
-*   **WebGL Fallback**: The rendering pipeline automatically drops shadow maps and uses low-poly models on low-power devices, guaranteeing smooth 60fps performance on any browser.
+### Playbook Checkpoints
+1.  **Concept Selection**: Confirm the transition from selection panel to Three.js canvas is instant.
+2.  **3D Navigation**: Pan and zoom the camera during playback to show active WebGL rendering.
+3.  **Timeline Scrubbing**: Confirm that scrubbing the match milestones updates the 3D player positions synchronously.
+
+### Classroom Checkpoints
+1.  **MCP Observability HUD**: Ensure the glowing execution trace renders directly beneath the chat bubble, listing tool parameters and latencies.
+2.  **Audience adaptation**: Verify that toggling between Fan and Tactical modes renders the corresponding text structure immediately.
+3.  **Response Latency**: Ensure the local template fallback is primed if the remote watsonx API exceeds 3 seconds of latency.

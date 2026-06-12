@@ -140,7 +140,7 @@ Football Atlas is structured as a TypeScript monorepo with strict package bounda
 1.  **IBM Granite (via watsonx.ai)**: Serves as the primary reasoning engine, orchestrating MCP tool chains and narrating the dynamic lessons.
 2.  **Context Forge (MCP Gateway)**: Acts as the Model Context Protocol (MCP) tool gateway, mediating safe, structured interactions between IBM Granite and internal data models while monitoring telemetry.
 3.  **IBM Docling**: Runs the document ingestion pipeline. It parses unstructured PDF, MD, and DOCX tactical playbooks, extracting table data and headers to seed the grounded knowledge base.
-4.  **IBM Bob (AI Code Assistant)**: Used throughout the development process to plan, write, refactor, and verify monorepo typings and Three.js positional tick hooks.
+4.  **IBM Bob (AI Code Assistant)**: Used throughout the development process to plan, write, and verify our TypeScript monorepo, and to dynamically generate 3D animation coordinate schemas and player trajectory modules—enabling the platform to scale and generate N number of custom match animations on the fly.
 
 ---
 

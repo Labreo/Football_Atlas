@@ -57,7 +57,7 @@ export const HistoricalBreakdownMode: React.FC<HistoricalBreakdownModeProps> = (
         <h3 className="text-red-500 font-bold mb-2">Error Loading Breakdown</h3>
         <p className="text-xs text-slate-400 mb-4">{error || 'Breakdown not found.'}</p>
         <button
-          onClick={stopBreakdown}
+          onClick={() => stopBreakdown()}
           className="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded-lg hover:text-white transition-colors"
         >
           Return to Playbook
@@ -96,7 +96,7 @@ export const HistoricalBreakdownMode: React.FC<HistoricalBreakdownModeProps> = (
       {/* 1. Header with back button */}
       <div className="p-4 border-b border-slate-800/60 bg-[#0F1424]/40 flex items-center justify-between">
         <button
-          onClick={stopBreakdown}
+          onClick={() => stopBreakdown()}
           className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-medium transition-colors"
         >
           <span>←</span>

@@ -7,7 +7,7 @@ export class ConceptRouter {
    */
   public static resolveAnimationModule(conceptId: string): string | null {
     const currentExample = useBreakdownStore.getState().currentExample;
-    if (currentExample && currentExample.example_id === 'argentina_france_2022_equaliser') {
+    if (currentExample && currentExample.concept_id === conceptId && currentExample.example_id === 'argentina_france_2022_equaliser') {
       return 'argentina_france_2022_equaliser';
     }
 

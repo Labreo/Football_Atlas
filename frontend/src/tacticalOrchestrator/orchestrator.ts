@@ -391,6 +391,12 @@ export class LearningOrchestrator {
       throw new Error('[Orchestrator Error] Animation engine has not been initialized.');
     }
 
+    // Stop active breakdown if loading a different concept
+    const currentExample = useBreakdownStore.getState().currentExample;
+    if (currentExample && currentExample.concept_id !== conceptId) {
+      useBreakdownStore.getState().stopBreakdown(false);
+    }
+
     // Resolve module key first
     const resolvedModule = ConceptRouter.resolveAnimationModule(conceptId);
 
@@ -439,6 +445,16 @@ export class LearningOrchestrator {
         return;
       }
       
+      // Clean up previous active module instance and its subscriptions
+      if (this.activeModuleInstance) {
+        try {
+          this.activeModuleInstance.destroy();
+        } catch (err) {
+          console.error('[Orchestrator] Error destroying previous module instance:', err);
+        }
+        this.activeModuleInstance = null;
+      }
+
       // 3. Load via registry
       const instance = animationModuleRegistry.loadModule(resolvedModule, this.engine);
       this.activeModuleInstance = instance;

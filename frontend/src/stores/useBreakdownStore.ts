@@ -24,7 +24,7 @@ interface BreakdownState {
   setPlaybackState: (state: 'playing' | 'paused' | 'stopped') => void;
   setLearningMode: (mode: 'guided' | 'free') => void;
   updateProgress: (progress: number) => void;
-  stopBreakdown: () => void;
+  stopBreakdown: (shouldReload?: boolean) => void;
   applyCameraPreset: (view: string) => void;
   syncWithEngine: () => void;
 }
@@ -243,7 +243,7 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
       }
     },
 
-    stopBreakdown: () => {
+    stopBreakdown: (shouldReload = true) => {
       cleanupSubscription();
       set({
         currentExample: null,
@@ -254,9 +254,11 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
       });
       // Restore standard concept settings
       useTacticalStore.getState().setVisualMode('concept');
-      const currentConcept = useTacticalStore.getState().currentConcept;
-      if (currentConcept) {
-        learningOrchestrator.loadConceptAnimation(currentConcept.concept_id);
+      if (shouldReload) {
+        const currentConcept = useTacticalStore.getState().currentConcept;
+        if (currentConcept) {
+          learningOrchestrator.loadConceptAnimation(currentConcept.concept_id);
+        }
       }
     },
 

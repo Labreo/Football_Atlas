@@ -48,6 +48,9 @@ const PlaybookInterface: React.FC = () => {
   const handlePlaybookSelect = async (conceptId: string) => {
     analyticsTracker.trackConceptOpened(conceptId, { source: 'playbook_click' });
     
+    // Stop any active historical breakdown simulation before switching concepts
+    useBreakdownStore.getState().stopBreakdown(false);
+    
     // Set UI loading
     useLearningUIStore.getState().setLoading(true);
     useLearningUIStore.getState().setError(null);

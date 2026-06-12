@@ -4,6 +4,7 @@ import { tacticalApi } from '../apiClients/tacticalApi';
 import { learningOrchestrator } from '../tacticalOrchestrator/orchestrator';
 import { VisualMode } from '../visualLanguage/types';
 import { analyticsTracker } from '../tacticalOrchestrator/analytics';
+import { useBreakdownStore } from './useBreakdownStore';
 
 interface TacticalState {
   concepts: TacticalConcept[];
@@ -116,6 +117,7 @@ export const useTacticalStore = create<TacticalState>((set) => ({
   },
 
   selectConcept: async (conceptId: string) => {
+    useBreakdownStore.getState().stopBreakdown(false);
     set({ isLoading: true, error: null, playState: 'stopped' });
     try {
       const concept = await tacticalApi.getConceptById(conceptId);

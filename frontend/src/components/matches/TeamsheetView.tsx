@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { resolveKits, getKit, GK_KIT, Kit } from '../../kitColors';
 import { flagUrl } from './MatchSelector';
+import { MATCH_API_BASE } from '../../apiClients/apiBase';
 import './TeamsheetView.css';
 
-const API = 'http://localhost:3001/api/tactical/matches';
+const API = MATCH_API_BASE;
 
 function shortName(name: string): string {
   if (!name) return '';

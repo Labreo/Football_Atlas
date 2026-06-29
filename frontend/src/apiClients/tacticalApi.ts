@@ -1,9 +1,5 @@
 import { TacticalConcept, TutorResponse, ConversationTurn, HistoricalExample, HistoricalBreakdown, AudienceMode, HistoricalEvidence } from '@football-atlas/shared';
-
-const apiHost = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_HOST || '';
-const API_BASE = apiHost
-  ? `${apiHost.replace(/\/$/, '')}/api/tactical`
-  : '/api/tactical';
+import { TACTICAL_API_BASE as API_BASE } from './apiBase';
 
 export const tacticalApi = {
   async getConcepts(): Promise<TacticalConcept[]> {

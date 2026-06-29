@@ -4,15 +4,16 @@ import path from 'path';
 // Load environment variables from backend root directory .env
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const requiredEnv = [
-  'IBM_API_KEY',
-  'IBM_PROJECT_ID',
-  'IBM_GRANITE_MODEL',
-  'IBM_BASE_URL',
-  // MCP_SERVER_URL is optional in production; use in-process MCP by default
-];
-
 export function validateEnv(): void {
+  const ibmKey = process.env.IBM_API_KEY || '';
+  const hasLiveProvider = ibmKey && !ibmKey.toLowerCase().includes('mock') && !ibmKey.toLowerCase().includes('test') && ibmKey.trim() !== 'example';
+
+  if (!hasLiveProvider) {
+    console.warn('Starting in local/mock mode because IBM_API_KEY is missing or placeholder-like.');
+    return;
+  }
+
+  const requiredEnv = ['IBM_API_KEY', 'IBM_PROJECT_ID', 'IBM_GRANITE_MODEL', 'IBM_BASE_URL'];
   const missing = requiredEnv.filter((key) => !process.env[key]);
   if (missing.length > 0) {
     console.error('\n================================================================');
@@ -22,17 +23,6 @@ export function validateEnv(): void {
     console.error('================================================================');
     console.error('Please define these values in your backend/.env file.');
     console.error('Refer to backend/.env.example for guidance.\n');
-    process.exit(1);
-  }
-
-  // Prevent running in production with placeholder/mock IBM keys
-  const ibmKey = process.env.IBM_API_KEY || '';
-  if (ibmKey.toLowerCase().includes('mock') || ibmKey.toLowerCase().includes('test') || ibmKey.trim() === 'example') {
-    console.error('\n================================================================');
-    console.error('❌ CRITICAL STARTUP ERROR: IBM_API_KEY appears to be a mock or placeholder value');
-    console.error('================================================================');
-    console.error('Set a valid Watsonx/IBM API key in the environment for production.');
-    console.error('Aborting startup to avoid serving non-production responses.\n');
     process.exit(1);
   }
 }

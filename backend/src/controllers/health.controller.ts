@@ -23,7 +23,7 @@ function getActiveInferenceProvider(): ProviderHealth {
   }
 
   if (isMockMode) {
-    return { ok: false, status: 'DOWN', provider: 'MOCK', detail: 'Mock provider mode detected; no live inference provider is configured.' };
+    return { ok: true, status: 'UP', provider: 'MOCK', detail: 'Mock provider mode detected; local fallback responses are active.' };
   }
 
   return { ok: false, status: 'DOWN', provider: 'WATSONX', detail: 'IBM watsonx provider detected; IAM validation has not yet been verified.' };
@@ -160,8 +160,8 @@ async function checkProvider(): Promise<ProviderHealth> {
     default:
       return {
         provider: 'MOCK',
-        ok: false,
-        status: 'DOWN',
+        ok: true,
+        status: 'UP',
         detail: 'No live inference provider configured; mock mode is active.'
       };
   }

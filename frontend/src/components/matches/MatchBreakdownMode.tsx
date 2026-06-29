@@ -9,9 +9,10 @@ import Pitch3D from '../pitch/Pitch3D';
 import { useTacticalStore } from '../../stores/useTacticalStore';
 import { useBreakdownStore } from '../../stores/useBreakdownStore';
 import { eventColorOf } from '../../kitColors';
+import { MATCH_API_BASE } from '../../apiClients/apiBase';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const BASE_URL = 'http://localhost:3001/api/tactical/matches';
+const BASE_URL = MATCH_API_BASE;
 
 const wikiPhotoCache = new Map<string, string | null>();
 const wikiPhotoPromiseCache = new Map<string, Promise<string | null>>();

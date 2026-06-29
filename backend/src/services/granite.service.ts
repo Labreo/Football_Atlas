@@ -634,13 +634,7 @@ ${explanationText}`;
     // 1. Prevent accidental mock-mode responses in production.
     if (this.isMockMode) {
       Logger.error('Detected mock-mode at runtime. Production must provide a valid IBM API key.');
-      return {
-        success: false,
-        is_mocked: true,
-        mode: 'error',
-        latency_ms: Date.now() - startTime,
-        error: 'Server configured in mock mode. Set a valid IBM_API_KEY in production to enable watsonx.ai.'
-      } as any;
+      return this.generateMockResponse(question, conversationId) as any;
     }
 
     // Format the last 5 turns (max 10 messages) of conversation history

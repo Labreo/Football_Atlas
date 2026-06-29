@@ -2,11 +2,11 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy backend package files and shared bundle.
-COPY package.json package-lock.json shared.tgz ./
-RUN npm ci
+COPY backend/package.json backend/shared.tgz ./
+RUN npm install
 
 # Copy source
-COPY . .
+COPY backend/. .
 
 RUN npm run build
 RUN npm prune --production

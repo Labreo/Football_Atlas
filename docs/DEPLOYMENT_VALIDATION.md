@@ -105,7 +105,7 @@ Note: For each journey below I include the Granite explanation (first/top `expla
 
 ## Blocking issues before public deployment
 1. Resolve `watsonx` connectivity (valid IBM/Watsonx credentials, correct `IBM_BASE_URL` / IAM endpoints). Without working watsonx, authoritative AI outputs cannot be guaranteed.
-2. Ensure Docker build and container runtime validation on CI/CD systems (start Docker Desktop / enable daemon) and verify container image health (`node dist/server.js` inside container).
+2. Ensure Docker build and container runtime validation on a machine with Docker available (start Docker Desktop / enable daemon) and verify container image health (`node dist/server.js` inside container).
 3. Confirm no sensitive keys are present in repository `.env` files before publishing. Rotate any keys if necessary.
 
 ## Non-blocking / Recommend before deployment

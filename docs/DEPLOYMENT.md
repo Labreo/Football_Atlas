@@ -43,7 +43,7 @@ Frontend-specific env (Vercel)
 
 Security
 --------
-- Do NOT commit secrets. Use platform secret management (Vercel environment variables, Render/Railway secrets, GitHub Actions secrets).
+- Do NOT commit secrets. Use platform secret management (Vercel environment variables, Render/Railway secrets).
 
 Health checks
 -------------
@@ -56,16 +56,16 @@ Monitoring and Observability
 - Export `/api/metrics` for application metrics (Learning metrics already implemented).
 - Recommend connecting platform logs to an aggregator (Datadog / LogDNA / Render logs).
 
-CI/CD
------
-- GitHub Actions provided: builds frontend and deploys to Vercel, builds backend Docker image and pushes to GHCR.
-- Configure Vercel project with `VERCEL_TOKEN`, `VERCEL_PROJECT_ID`, `VERCEL_ORG_ID` as GitHub secrets.
-- Configure Render (or Railway) to deploy the backend from the `backend/Dockerfile` or the pushed GHCR image.
+Deployment Automation
+---------------------
+- Automated deployment workflows have been removed from this repository.
+- Deploy the frontend and backend through your hosting providers directly.
+- Configure Vercel, Render, or Railway using their native deployment settings and secrets management.
 
 Rollback plan
 -------------
 1. If a deployment causes critical failures, use the hosting provider to roll back to the previous release (Vercel → revert to previous deployment; Render → rollback service #).  
-2. Use GH Actions to re-deploy the previous tagged release (re-run workflow for tag).  
+2. Re-deploy the previous stable release using your hosting provider's release controls or a known-good build artifact.
 3. If database migration required, provide a migration rollback script and prevent automatic migrations on deploy.
 
 Production validation checklist
@@ -80,5 +80,5 @@ Next steps
 ----------
 1. Provision production secrets in Vercel and Render/Railway.  
 2. Create Render service (or Railway) using `backend/Dockerfile` or the GHCR image.  
-3. Deploy frontend to Vercel using the provided GitHub Actions.  
+3. Deploy frontend and backend through your hosting providers' native deployment flows.
 4. Run the Production validation checklist and iterate.

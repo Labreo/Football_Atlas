@@ -159,9 +159,10 @@ export class LearningOrchestrator {
         });
       }
 
-      // 2. Call Granite AI Tutoring API (with audience mode)
+      // 2. Call Granite AI Tutoring API (with audience mode and language)
       const currentAudienceMode = useAudienceStore.getState().audienceMode;
-      const response = await tacticalApi.askTutor(question, globalStore.conversation, currentAudienceMode);
+      const currentLang = useTacticalStore.getState().lang || 'en';
+      const response = await tacticalApi.askTutor(question, globalStore.conversation, currentAudienceMode, currentLang);
       const endTime = performance.now();
       const latency = Math.round(endTime - startTime);
 

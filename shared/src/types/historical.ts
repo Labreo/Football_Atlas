@@ -34,6 +34,22 @@ export interface HistoricalScenarioDefinition {
   }>;
 }
 
+export interface WhatIfOption {
+  option_id: string;
+  label: string;
+  kind: 'pass' | 'carry' | 'shot';
+  from_x: number;
+  from_z: number;
+  to_x: number;
+  to_z: number;
+  receiver_name?: string;
+  viable: boolean;
+  value: number;
+  value_kind: 'xT' | 'xG';
+  chosen?: boolean;
+  best?: boolean;
+}
+
 export interface BreakdownMoment {
   moment_id: string;
   timestamp: number;
@@ -47,6 +63,7 @@ export interface BreakdownMoment {
     target: string;
     color?: string;
   }>;
+  what_if_options?: WhatIfOption[];
 }
 
 export interface HistoricalBreakdown {

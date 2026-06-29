@@ -713,6 +713,860 @@ export const compactnessPressingLinesSeed: TacticalConcept = {
   updated_at: '2026-06-04T00:00:00Z'
 };
 
+export const gegenpressingSeed: TacticalConcept = {
+  concept_id: 'gegenpressing',
+  concept_name: 'Gegenpressing',
+  category: TacticalCategory.PRESSING,
+  complexity: ComplexityLevel.ADVANCED,
+  core_explanation: 'A counter-pressing tactic where a team immediately attempts to win back possession of the ball within seconds of losing it, exploiting the opponent\'s temporary transition instability before they can form a clean buildup shape.',
+  key_principles: [
+    {
+      title: 'Five-Second Rule',
+      description: 'Applying maximum intensity pressure on the ball carrier within five seconds of losing possession.'
+    },
+    {
+      title: 'Zonal Suffocation',
+      description: 'Surrounding the immediate area around the lost ball to shut down short and intermediate passing outlets.'
+    },
+    {
+      title: 'Anticipatory Shifting',
+      description: 'Behind the press, the rest of the defensive line shifts forward to keep vertical space compressed.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'first_touch_release',
+    title: 'First-Touch Release Switch',
+    description: 'Playing a rapid, pre-planned diagonal first-touch pass out of the high-pressure zone to the weak-side fullback.',
+    effectiveness_rating: 80,
+    advantages: [
+      'Bypasses the counter-pressing swarm completely',
+      'Exposes massive space on the underloaded flank'
+    ],
+    risks: [
+      'Extremely high turnover danger in the defensive third if the pass is slightly off'
+    ]
+  },
+  animation_module: {
+    module_id: 'highPress',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.PRESSING_ZONES, RequiredOverlay.MOVEMENT_ARROWS]
+  },
+  historical_examples: [
+    {
+      match_id: 'rma_barca_2011',
+      title: 'Guardiola\'s Barca Counter-Pressing Dominance',
+      competition: 'La Liga',
+      season: '2011-12',
+      teams: 'Real Madrid vs. Barcelona',
+      tactical_context: 'Barcelona used Gegenpressing to neutralize Real Madrid\'s rapid transition threats at the Bernabéu.',
+      summary: 'Messi and Busquets pressed Alonso immediately after turnovers, preventing Madrid from releasing Ronaldo, leading to a 3-1 Barcelona victory.',
+      relevance_score: 95,
+      video_url: 'https://video.footballatlas.com/barca-counter-press-2011.mp4',
+      event_timestamps: [
+        { name: 'Busquets recovery & assist', timestamp: '53:10' }
+      ]
+    }
+  ],
+  related_concepts: ['high_press', 'pressing_trap'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const restDefenseSeed: TacticalConcept = {
+  concept_id: 'rest_defense',
+  concept_name: 'Rest Defense',
+  category: TacticalCategory.DEFENSIVE_SHAPE,
+  complexity: ComplexityLevel.ADVANCED,
+  core_explanation: 'The structure and positioning of a team\'s defensive players while they are still in possession of the ball, preparing them to block counter-attacks and secure defensive compactness the moment the ball is turned over.',
+  key_principles: [
+    {
+      title: 'Counter-Attack Prevention',
+      description: 'Defenders keeping a strict distance to the opponent\'s forwards, preparing to jump or drop on turnovers.'
+    },
+    {
+      title: 'Rest Structure Formations',
+      description: 'Forming horizontal lines in front of the center-backs to cover half-spaces and lock down central avenues.'
+    },
+    {
+      title: 'Zonal Screening Support',
+      description: 'Rest defense midfielders screening passes to dropping strikers, cutting the supply line early.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'wide_winger_isolation',
+    title: 'Wide Winger Isolation Release',
+    description: 'Bypassing the rest defense screen by playing immediate diagonal high passes to isolated wide wingers on the touchline.',
+    effectiveness_rating: 75,
+    advantages: [
+      'Exploits the narrow structure of the rest defense pivot',
+      'Forces center-backs into 1v1 wide duels'
+    ],
+    risks: [
+      'Wingers can get doubled up quickly if the wingback recovers'
+    ]
+  },
+  animation_module: {
+    module_id: 'defensiveBlock',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.DEFENSIVE_LINES, RequiredOverlay.SPACE_CONTROL]
+  },
+  historical_examples: [
+    {
+      match_id: 'mci_ars_2024',
+      title: 'Arteta\'s Rest-Defense Wall at the Etihad',
+      competition: 'Premier League',
+      season: '2023-24',
+      teams: 'Manchester City vs. Arsenal',
+      tactical_context: 'Arsenal deployed a strict rest defense layout to shut down City\'s counter-attacking speed.',
+      summary: 'Gabriel and Saliba remained deep, supported by Rice, completely neutralizing Haaland and De Bruyne in transition, securing a 0-0 draw.',
+      relevance_score: 93,
+      video_url: 'https://video.footballatlas.com/arsenal-rest-defense-2024.mp4',
+      event_timestamps: [
+        { name: 'Saliba transition intercept', timestamp: '34:15' }
+      ]
+    }
+  ],
+  related_concepts: ['defensive_block', 'compactness_pressing_lines'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const positionalPlaySeed: TacticalConcept = {
+  concept_id: 'positional_play',
+  concept_name: 'Positional Play',
+  category: TacticalCategory.ATTACKING_SHAPE,
+  complexity: ComplexityLevel.ADVANCED,
+  core_explanation: 'A tactical framework (Juego de Posición) where the pitch is divided into zones, and players occupy specific spaces to create passing lanes, maintain positional superiority, and dynamically adjust to team movements.',
+  key_principles: [
+    {
+      title: 'Positional Superiority Shape',
+      description: 'Players occupying different vertical and horizontal lines to always offer passing options and triangles.'
+    },
+    {
+      title: 'Free Man Creation',
+      description: 'Circulating the ball side-to-side to draw opponents out, finding a free teammate between the lines.'
+    },
+    {
+      title: 'Dynamic Zone Occupation',
+      description: 'No more than three players occupying the same horizontal line, and no more than two in the same vertical channel.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'zonal_shifting_block',
+    title: 'Ultra-Compact Zonal Shifting',
+    description: 'Defending in a narrow, horizontal block that slides in unison to deny spaces between lines, ignoring the far-side outlets.',
+    effectiveness_rating: 80,
+    advantages: [
+      'Closes down all high-value spaces in the central channels',
+      'Minimizes the danger of penetrative passes'
+    ],
+    risks: [
+      'Leaves the opposite flank completely open to quick diagonal switch balls'
+    ]
+  },
+  animation_module: {
+    module_id: 'midfieldOverload',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.PASSING_LANES, RequiredOverlay.MOVEMENT_ARROWS]
+  },
+  historical_examples: [
+    {
+      match_id: 'bar_bay_2009',
+      title: 'Guardiola\'s Positional Play Masterclass',
+      competition: 'UEFA Champions League',
+      season: '2008-09',
+      teams: 'Barcelona vs. Bayern Munich',
+      tactical_context: 'Barcelona deployed strict positional play guidelines to pull Bayern\'s defense out of shape.',
+      summary: 'Henry and Eto\'o held maximum width, opening up passing channels for Messi and Iniesta to exploit the central spaces, resulting in a 4-0 first-half lead.',
+      relevance_score: 96,
+      video_url: 'https://video.footballatlas.com/barcelona-bayern-2009.mp4',
+      event_timestamps: [
+        { name: 'Messi central overload goal', timestamp: '08:42' }
+      ]
+    }
+  ],
+  related_concepts: ['midfield_overload', 'false_9'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const boxMidfieldSeed: TacticalConcept = {
+  concept_id: 'box_midfield',
+  concept_name: 'Box Midfield',
+  category: TacticalCategory.ATTACKING_SHAPE,
+  complexity: ComplexityLevel.ADVANCED,
+  core_explanation: 'An attacking shape where four midfielders form a square or rectangular box (e.g. 3-2-2-3 WM formation), creating numerical advantages, progressive pass options, and counter-pressing structural security.',
+  key_principles: [
+    {
+      title: 'Four-Midfielder Box Structure',
+      description: 'Using two deep pivots and two attacking midfielders to form a box, overloading opposing midfield blocks.'
+    },
+    {
+      title: 'Vertical Passing Diamonds',
+      description: 'Creating passing combinations and triangles that bypass opposing midfielders and access half-spaces.'
+    },
+    {
+      title: 'Inverted Fullback Centralization',
+      description: 'Utilizing fullbacks stepping inside to construct the base of the box, freeing attacking midfielders to play higher.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'box_mirroring_def',
+    title: 'Box Mirroring Central Press',
+    description: 'Mirroring the opponent\'s structure by deploying two defensive midfielders and two advanced screeners to lock down the box.',
+    effectiveness_rating: 85,
+    advantages: [
+      'Ensures direct 1v1 defensive assignments centrally',
+      'Prevents the free man from turning in Zone 14'
+    ],
+    risks: [
+      'Leaves defensive wings completely exposed to overlapping fullbacks'
+    ]
+  },
+  animation_module: {
+    module_id: 'midfieldOverload',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.PASSING_LANES, RequiredOverlay.MOVEMENT_ARROWS]
+  },
+  historical_examples: [
+    {
+      match_id: 'mci_rma_2023_box',
+      title: 'Stones Box Midfield Supremacy vs. Real Madrid',
+      competition: 'UEFA Champions League',
+      season: '2022-23',
+      teams: 'Manchester City vs. Real Madrid',
+      tactical_context: 'John Stones pushed forward to form a central box with Rodri, Gundogan, and De Bruyne.',
+      summary: 'The box midfield created a 4v3 overload against Madrid\'s trio of Kroos, Modric, and Valverde, allowing City to dominate possession and win 4-0.',
+      relevance_score: 97,
+      video_url: 'https://video.footballatlas.com/city-madrid-box-2023.mp4',
+      event_timestamps: [
+        { name: 'Stones central transition pivot', timestamp: '14:35' }
+      ]
+    }
+  ],
+  related_concepts: ['midfield_overload', 'inverted_fullbacks'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const overlappingRunsSeed: TacticalConcept = {
+  concept_id: 'overlapping_runs',
+  concept_name: 'Overlapping Runs',
+  category: TacticalCategory.ATTACKING_SHAPE,
+  complexity: ComplexityLevel.BEGINNER,
+  core_explanation: 'An attacking combination where an off-the-ball player (typically a fullback) sprints around the outside of a teammate with the ball (typically a winger), stretching the defense wide and creating crossing opportunities.',
+  key_principles: [
+    {
+      title: 'Outside Flank Expansion',
+      description: 'Sprinting outside the ball carrier to offer wide crossing avenues and create 2v1 overloads against fullbacks.'
+    },
+    {
+      title: 'Decoy Running Timing',
+      description: 'Using the outside sprint to draw defensive cover, allowing the winger to cut inside and shoot.'
+    },
+    {
+      title: 'Overlap Release Delivery',
+      description: 'Precisely timed pass into the running path of the overlapping player to cross from the touchline.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'winger_tracking_run',
+    title: 'Winger Track-Back Double-Up',
+    description: 'The defending team\'s winger sprints back to track the overlapping run, maintaining numerical parity.',
+    effectiveness_rating: 85,
+    advantages: [
+      'Neutralizes the 2v1 overlap attempt before the cross',
+      'Keeps defenders inside their standard zonal slots'
+    ],
+    risks: [
+      'Exposes spaces in midfield if midfielders fail to shift across'
+    ]
+  },
+  animation_module: {
+    module_id: 'third_man_run',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.MOVEMENT_ARROWS, RequiredOverlay.PASSING_LANES]
+  },
+  historical_examples: [
+    {
+      match_id: 'bra_ita_1970',
+      title: 'Carlos Alberto\'s Legendary World Cup Overlap',
+      competition: 'FIFA World Cup',
+      season: '1970',
+      teams: 'Brazil vs. Italy',
+      tactical_context: 'Pele held the ball centrally, drawing the Italian defense, waiting for the fullback overlap.',
+      summary: 'Carlos Alberto sprinted down the right flank completely unmarked. Pele played a blindside pass into his path, leading to the legendary fourth goal.',
+      relevance_score: 98,
+      video_url: 'https://video.footballatlas.com/brazil-italy-1970.mp4',
+      event_timestamps: [
+        { name: 'Pele blind pass & Alberto finish', timestamp: '86:12' }
+      ]
+    }
+  ],
+  related_concepts: ['third_man_run', 'inverted_winger'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const overloadingToIsolateSeed: TacticalConcept = {
+  concept_id: 'overloading_to_isolate',
+  concept_name: 'Overload to Isolate',
+  category: TacticalCategory.ATTACKING_SHAPE,
+  complexity: ComplexityLevel.ADVANCED,
+  core_explanation: 'An attacking strategy where a team clusters multiple players on one side of the pitch to draw the opponent\'s defensive structure, then rapidly switches play to an isolated, high-quality winger on the opposite flank in a 1v1 scenario.',
+  key_principles: [
+    {
+      title: 'Asymmetric Clustered Build-up',
+      description: 'Positioning 4-5 players close together on one flank to invite defensive pressure and compacting.'
+    },
+    {
+      title: 'Rapid Weak-side Switch',
+      description: 'Using long diagonal switch passes to quickly bypass the congested side and find the isolated player.'
+    },
+    {
+      title: 'Direct 1v1 Winger Exploitation',
+      description: 'Giving the isolated winger immediate license to drive at the fullback before defensive support shifts over.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'prevent_diagonal_switch',
+    title: 'Diagonal Switch Interception Line',
+    description: 'Defensive midfielders position themselves higher up the pitch to block passing lanes for diagonal switches.',
+    effectiveness_rating: 80,
+    advantages: [
+      'Intercepts the release pass before it can travel to the weak side',
+      'Locks the attacking team in the congested flank'
+    ],
+    risks: [
+      'Opens central spaces if midfielders step too far forward'
+    ]
+  },
+  animation_module: {
+    module_id: 'midfieldOverload',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.PASSING_LANES, RequiredOverlay.MOVEMENT_ARROWS]
+  },
+  historical_examples: [
+    {
+      match_id: 'rma_bay_2014_isolate',
+      title: 'Ancelotti\'s Overload to Isolate Ronaldo',
+      competition: 'UEFA Champions League',
+      season: '2013-14',
+      teams: 'Real Madrid vs. Bayern Munich',
+      tactical_context: 'Real Madrid overloaded the right flank with Modric and Carvajal, isolating Cristiano Ronaldo on the left.',
+      summary: 'Madrid drew Bayern\'s block completely to the right, then Alonso executed a diagonal switch to Ronaldo, who drove past Lahm to score.',
+      relevance_score: 95,
+      video_url: 'https://video.footballatlas.com/realmadrid-bayern-isolate.mp4',
+      event_timestamps: [
+        { name: 'Alonso diagonal switch to Ronaldo', timestamp: '19:15' }
+      ]
+    }
+  ],
+  related_concepts: ['midfield_overload', 'inverted_winger'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const halfSpaceExploitationSeed: TacticalConcept = {
+  concept_id: 'half_space_exploitation',
+  concept_name: 'Half-Space Exploitation',
+  category: TacticalCategory.ATTACKING_SHAPE,
+  complexity: ComplexityLevel.INTERMEDIATE,
+  core_explanation: 'Attacking the spaces on the pitch located between the central corridor and the wide flanks. These corridors offer optimal angles for passing, shooting, and cutting inside to bypass defensive lines.',
+  key_principles: [
+    {
+      title: 'Diagonal Half-space Channeling',
+      description: 'Receiving the ball in the half-space facing forward, opening up diagonal passes to both wide and central options.'
+    },
+    {
+      title: 'Defensive Line Distortions',
+      description: 'Positioning midfielders in half-spaces to draw fullbacks inside, creating space for wide wingers.'
+    },
+    {
+      title: 'Early Cross Delivery Angles',
+      description: 'Delivering diagonal early crosses behind the defensive line from deep half-space zones.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'half_space_squeezing',
+    title: 'Half-Space Squeezing Cover',
+    description: 'Central defenders and fullbacks narrow their distance to close the half-spaces, with midfielders dropping to screen.',
+    effectiveness_rating: 82,
+    advantages: [
+      'Closes the critical channel to prevent simple vertical entries',
+      'Maintains double coverage on inside forwards'
+    ],
+    risks: [
+      'Surrenders wide crossing channels to overlapping fullbacks'
+    ]
+  },
+  animation_module: {
+    module_id: 'invertedWinger',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.MOVEMENT_ARROWS, RequiredOverlay.PASSING_LANES]
+  },
+  historical_examples: [
+    {
+      match_id: 'mci_tot_2019',
+      title: 'De Bruyne\'s Masterclass from the Right Half-Space',
+      competition: 'Premier League',
+      season: '2019-20',
+      teams: 'Manchester City vs. Tottenham',
+      tactical_context: 'Kevin De Bruyne repeatedly occupied the right half-space to pick out diagonal crosses.',
+      summary: 'De Bruyne received in the half-space and delivered early diagonal crosses behind Tottenham\'s backline, assisting Sterling and Aguero.',
+      relevance_score: 96,
+      video_url: 'https://video.footballatlas.com/debruyne-halfspace-2019.mp4',
+      event_timestamps: [
+        { name: 'De Bruyne diagonal cross assist', timestamp: '20:10' }
+      ]
+    }
+  ],
+  related_concepts: ['inverted_winger', 'midfield_overload'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const verticalTikiTakaSeed: TacticalConcept = {
+  concept_id: 'vertical_tiki_taka',
+  concept_name: 'Vertical Tiki-Taka',
+  category: TacticalCategory.ATTACKING_SHAPE,
+  complexity: ComplexityLevel.INTERMEDIATE,
+  core_explanation: 'A direct possession style that combines short passing triangles with rapid vertical breakthroughs, moving the ball quickly through lines to exploit structural disorganization.',
+  key_principles: [
+    {
+      title: 'Vertical Passing Outlets',
+      description: 'Using rapid, forward passes to break lines, rather than side-to-side lateral possession recycling.'
+    },
+    {
+      title: 'Dynamic Shifting Triangles',
+      description: 'Midfielders constantly shifting to form passing options around the ball carrier to support vertical options.'
+    },
+    {
+      title: 'First-touch Vertical Release',
+      description: 'One-touch forward lay-offs to players running from deep, catching defensive blocks mid-shift.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'vertical_denial_mid',
+    title: 'Midfield Passing Lane Denial',
+    description: 'Midfielders defend in a compact screen, stepping into vertical channels to intercept forward balls.',
+    effectiveness_rating: 80,
+    advantages: [
+      'Intercepts the critical penetrative pass before the final third',
+      'Triggers immediate transitions through interceptions'
+    ],
+    risks: [
+      'Exposes space behind the midfield line if screen is bypassed'
+    ]
+  },
+  animation_module: {
+    module_id: 'third_man_run',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.PASSING_LANES, RequiredOverlay.MOVEMENT_ARROWS]
+  },
+  historical_examples: [
+    {
+      match_id: 'ita_esp_2021',
+      title: 'Mancini\'s Vertical Tiki-Taka vs. Spain',
+      competition: 'UEFA Euro',
+      season: '2020',
+      teams: 'Italy vs. Spain',
+      tactical_context: 'Italy combined possession patterns with quick forward switches to break Spain\'s high counterpress.',
+      summary: 'Jorginho and Verratti drew Spanish midfielders close, then played vertical line-breaking passes to Insigne and Chiesa to create goals.',
+      relevance_score: 94,
+      video_url: 'https://video.footballatlas.com/italy-euro-2021.mp4',
+      event_timestamps: [
+        { name: 'Jorginho vertical build-up play', timestamp: '59:45' }
+      ]
+    }
+  ],
+  related_concepts: ['third_man_run', 'midfield_overload'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const shadowStrikerSeed: TacticalConcept = {
+  concept_id: 'shadow_striker',
+  concept_name: 'Shadow Striker',
+  category: TacticalCategory.ATTACKING_SHAPE,
+  complexity: ComplexityLevel.INTERMEDIATE,
+  core_explanation: 'An attacking role (like Thomas Müller\'s Raumdeuter) where a player starts in a deeper or wide position but makes late, vertical runs into the box behind a focal center-forward to score.',
+  key_principles: [
+    {
+      title: 'Late Runs into the Box',
+      description: 'Timing forward sprints to enter the box exactly as a teammate crosses, bypassing static markers.'
+    },
+    {
+      title: 'Target Man Screen Decoy',
+      description: 'Using the center-forward to occupy center-backs, opening space behind them for the shadow striker.'
+    },
+    {
+      title: 'Space Interpretation',
+      description: 'Constantly scanning for gaps left between defensive lines and shifting horizontally into open zones.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'zonal_handover_def',
+    title: 'Midfielder Zonal Tracking Handover',
+    description: 'Midfielders track the shadow striker\'s runs deep into the defensive line, handing them over to defenders.',
+    effectiveness_rating: 84,
+    advantages: [
+      'Ensures the shadow striker is never left unmarked in the box',
+      'Keeps central defenders focused on the target forward'
+    ],
+    risks: [
+      'Midfielders can drop too deep, leaving spaces at the edge of the box'
+    ]
+  },
+  animation_module: {
+    module_id: 'false9',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.PASSING_LANES, RequiredOverlay.SPACE_CONTROL]
+  },
+  historical_examples: [
+    {
+      match_id: 'bay_barca_2013',
+      title: 'Thomas Müller\'s Space Interpretation Masterclass',
+      competition: 'UEFA Champions League',
+      season: '2012-13',
+      teams: 'Bayern Munich vs. Barcelona',
+      tactical_context: 'Müller played behind Gomez, scanning and exploiting space in Barcelona\'s backline.',
+      summary: 'Müller made late runs into the box, using Gomez\'s physical presence to escape Pique, scoring twice to secure a historic 4-0 win.',
+      relevance_score: 96,
+      video_url: 'https://video.footballatlas.com/muller-raumdeuter-2013.mp4',
+      event_timestamps: [
+        { name: 'Müller diagonal sprint goal', timestamp: '48:30' }
+      ]
+    }
+  ],
+  related_concepts: ['false_9', 'third_man_run'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const pressingTriggersSeed: TacticalConcept = {
+  concept_id: 'pressing_triggers',
+  concept_name: 'Pressing Triggers',
+  category: TacticalCategory.PRESSING,
+  complexity: ComplexityLevel.INTERMEDIATE,
+  core_explanation: 'Specific contextual cues (such as a slow pass, a player receiving with their back to goal, or control on a weak foot) that signal a team to immediately transition from zonal containment to high-intensity pressing.',
+  key_principles: [
+    {
+      title: 'Contextual Cue Scanning',
+      description: 'Players scanning opponent body language and pass quality to identify moments of vulnerability.'
+    },
+    {
+      title: 'Immediate Pressing Acceleration',
+      description: 'Sprinting aggressively to close down the ball carrier the moment a trigger event occurs.'
+    },
+    {
+      title: 'Cover Shadow Squeezing',
+      description: 'Supporting players stepping up behind the presser to close simple passing options.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'first_touch_layoff',
+    title: 'First-Touch Lay-off Escape',
+    description: 'Using precise, first-touch backpasses or lay-offs to escape the press before the opponent can close down.',
+    effectiveness_rating: 85,
+    advantages: [
+      'Bypasses the high-intensity presser at the moment of entry',
+      'Leaves the presser out of position, exposing space behind'
+    ],
+    risks: [
+      'A minor touch error leads to an immediate high-turnover shot'
+    ]
+  },
+  animation_module: {
+    module_id: 'highPress',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.PRESSING_ZONES, RequiredOverlay.DEFENSIVE_LINES]
+  },
+  historical_examples: [
+    {
+      match_id: 'liv_barca_2019',
+      title: 'Liverpool\'s Pressing Triggers Shock Barcelona',
+      competition: 'UEFA Champions League',
+      season: '2018-19',
+      teams: 'Liverpool vs. Barcelona',
+      tactical_context: 'Liverpool pressed Barcelona at Anfield, reacting instantly to slow passes to Alba and Busquets.',
+      summary: 'Henderson pressed Busquets on a weak backpass, recovering the ball high up the pitch, triggering rapid attacks to secure a 4-0 comeback win.',
+      relevance_score: 97,
+      video_url: 'https://video.footballatlas.com/liverpool-barca-triggers-2019.mp4',
+      event_timestamps: [
+        { name: 'Alba turnover & Wijnaldum goal', timestamp: '53:40' }
+      ]
+    }
+  ],
+  related_concepts: ['high_press', 'pressing_trap'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const midfieldRotationSeed: TacticalConcept = {
+  concept_id: 'midfield_rotation',
+  concept_name: 'Midfield Rotation',
+  category: TacticalCategory.ATTACKING_SHAPE,
+  complexity: ComplexityLevel.ADVANCED,
+  core_explanation: 'A positional rotation tactic where central midfielders exchange positions dynamically to shake off man-marking, create passing lines, and progress the ball through the middle third.',
+  key_principles: [
+    {
+      title: 'Positional Rotation Patterns',
+      description: 'Midfielders switching horizontal and vertical roles (e.g. 6 drops, 8 steps high, 10 rotates wide).'
+    },
+    {
+      title: 'Man-Marking Disruption',
+      description: 'Dragging defenders out of position through continuous off-the-ball movements and swaps.'
+    },
+    {
+      title: 'Progressive Pass Creation',
+      description: 'Opening passing lines to central forwards by pulling defensive midfielders wide.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'zonal_mid_handover',
+    title: 'Strict Zonal Midfield Handover',
+    description: 'Midfielders maintain zonal slots, handing off rotating players to teammates instead of following them.',
+    effectiveness_rating: 85,
+    advantages: [
+      'Preserves the defensive shape centrally',
+      'Avoids getting dragged out of position'
+    ],
+    risks: [
+      'Gives the opponent time to receive if handover is late'
+    ]
+  },
+  animation_module: {
+    module_id: 'midfieldOverload',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.PASSING_LANES, RequiredOverlay.MOVEMENT_ARROWS]
+  },
+  historical_examples: [
+    {
+      match_id: 'rma_juv_2017',
+      title: 'Real Madrid\'s Midfield Rotation vs. Juventus',
+      competition: 'UEFA Champions League',
+      season: '2016-17',
+      teams: 'Real Madrid vs. Juventus',
+      tactical_context: 'Kroos, Modric, and Isco rotated roles to break down Juve\'s compact block.',
+      summary: 'Continuous swaps between Kroos dropping deep and Isco pushing wide disrupted Juventus\' midfield, leading to a 4-1 Champions League final win.',
+      relevance_score: 95,
+      video_url: 'https://video.footballatlas.com/realmadrid-rotation-2017.mp4',
+      event_timestamps: [
+        { name: 'Kroos drop & Casemiro goal', timestamp: '60:15' }
+      ]
+    }
+  ],
+  related_concepts: ['midfield_overload', 'positional_play'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const sweeperKeeperSeed: TacticalConcept = {
+  concept_id: 'sweeper_keeper',
+  concept_name: 'Sweeper-Keeper',
+  category: TacticalCategory.DEFENSIVE_SHAPE,
+  complexity: ComplexityLevel.BEGINNER,
+  core_explanation: 'A goalkeeper who plays high up the pitch, actively sweeping up balls played behind a high defensive line, and contributing to build-up play as an extra passing option.',
+  key_principles: [
+    {
+      title: 'High Clearance Sweep',
+      description: 'Positioning high outside the box to clear long balls played behind the defensive line.'
+    },
+    {
+      title: 'Build-up Passing Outlet',
+      description: 'Functioning as an extra center-back in possession, creating numerical advantages.'
+    },
+    {
+      title: 'Vertical Line Support',
+      description: 'Allowing the defensive line to push high up the pitch, narrowing the space in midfield.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'early_long_shot',
+    title: 'First-Time Long range Shot',
+    description: 'Exploiting the goalkeeper\'s high position by attempting long-range shots from the midfield line upon turnovers.',
+    effectiveness_rating: 70,
+    advantages: [
+      'Catches the sweeper-keeper out of position, far from goal',
+      'Forces keepers to play more conservatively'
+    ],
+    risks: [
+      'Speculative and often yields easy recoveries if inaccurate'
+    ]
+  },
+  animation_module: {
+    module_id: 'highPress',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.DEFENSIVE_LINES, RequiredOverlay.MOVEMENT_ARROWS]
+  },
+  historical_examples: [
+    {
+      match_id: 'ger_alg_2014',
+      title: 'Neuer\'s Sweeper-Keeper Masterclass vs. Algeria',
+      competition: 'FIFA World Cup',
+      season: '2014',
+      teams: 'Germany vs. Algeria',
+      tactical_context: 'Neuer played far outside his box to sweep behind Germany\'s high line.',
+      summary: 'Neuer cleared five long Algerian transition passes outside the box, protecting Germany\'s backline to secure a 2-1 victory.',
+      relevance_score: 98,
+      video_url: 'https://video.footballatlas.com/neuer-sweeper-2014.mp4',
+      event_timestamps: [
+        { name: 'Neuer slide tackle outside box', timestamp: '08:50' }
+      ]
+    }
+  ],
+  related_concepts: ['high_press', 'defensive_block'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const defensiveTransitionsSeed: TacticalConcept = {
+  concept_id: 'defensive_transitions',
+  concept_name: 'Defensive Transitions',
+  category: TacticalCategory.TRANSITION,
+  complexity: ComplexityLevel.INTERMEDIATE,
+  core_explanation: 'The critical phase immediately following a turnover, where the team focuses on delaying the opponent\'s counter-attack and rapidly recovering their defensive shape.',
+  key_principles: [
+    {
+      title: 'Immediate Ball Delay',
+      description: 'Closest defender applying pressure to delay the vertical outlet pass, rather than winning the ball.'
+    },
+    {
+      title: 'Rapid Recovery Sprints',
+      description: 'Midfielders and full-backs executing sprints to recover positions behind the ball.'
+    },
+    {
+      title: 'Horizontal Compactness Shifting',
+      description: 'Shifting central defenders inside to protect the box against direct runners.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'tactical_foul_stall',
+    title: 'Tactical Interruption Delay',
+    description: 'Using small, tactical fouls in midfield to break the transition momentum and allow the team to regroup.',
+    effectiveness_rating: 88,
+    advantages: [
+      'Stops the transition instantly in a low-risk zone',
+      'Provides crucial seconds to organize the block'
+    ],
+    risks: [
+      'Leads to cards and set-piece opportunities if overused'
+    ]
+  },
+  animation_module: {
+    module_id: 'defensiveBlock',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.DEFENSIVE_LINES, RequiredOverlay.SPACE_CONTROL]
+  },
+  historical_examples: [
+    {
+      match_id: 'rma_mci_2022',
+      title: 'Ancelotti\'s Transition Stall vs. Manchester City',
+      competition: 'UEFA Champions League',
+      season: '2021-22',
+      teams: 'Real Madrid vs. Manchester City',
+      tactical_context: 'Madrid used quick transition recovery lines to absorb City\'s vertical counter-attacks.',
+      summary: 'Casemiro delayed De Bruyne\'s transitions, giving Carvajal and Nacho time to sprint back, neutralizing City\'s breakaway threat.',
+      relevance_score: 93,
+      video_url: 'https://video.footballatlas.com/realmadrid-transitions-2022.mp4',
+      event_timestamps: [
+        { name: 'Casemiro transition block', timestamp: '24:10' }
+      ]
+    }
+  ],
+  related_concepts: ['defensive_block', 'counter_attack_trigger'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
+export const invertedFullbacksSeed: TacticalConcept = {
+  concept_id: 'inverted_fullbacks',
+  concept_name: 'Inverted Fullbacks',
+  category: TacticalCategory.ATTACKING_SHAPE,
+  complexity: ComplexityLevel.INTERMEDIATE,
+  core_explanation: 'Fullbacks who step inside into central midfield during the build-up phase, forming a double pivot to control possession and cover transition spaces.',
+  key_principles: [
+    {
+      title: 'Double Pivot Formation',
+      description: 'Fullbacks stepping inside to sit alongside the defensive midfielder, creating a 3-2 structure.'
+    },
+    {
+      title: 'Central Passing Superiority',
+      description: 'Creating overloads centrally to draw out opposing midfielders, freeing up wingers wide.'
+    },
+    {
+      title: 'Central Transition Security',
+      description: 'Positioning fullbacks centrally to intercept central transitions and lock down counter-attacks.'
+    }
+  ],
+  defensive_response: {
+    response_id: 'wide_wing_press_inf',
+    title: 'Wide Flank Containment Press',
+    description: 'Opponent wingers block inside passing angles, forcing fullbacks to play long diagonal passes wide.',
+    effectiveness_rating: 80,
+    advantages: [
+      'Prevents fullbacks from stepping inside centrally',
+      'Isolates build-up play to low-risk wide channels'
+    ],
+    risks: [
+      'Exposes spaces behind pressing wingers to overlapping midfielders'
+    ]
+  },
+  animation_module: {
+    module_id: 'midfieldOverload',
+    version: '1.0.0',
+    required_overlays: [RequiredOverlay.PASSING_LANES, RequiredOverlay.MOVEMENT_ARROWS]
+  },
+  historical_examples: [
+    {
+      match_id: 'ars_mci_2023',
+      title: 'Zinchenko\'s Inverted Fullback Masterclass vs. City',
+      competition: 'Premier League',
+      season: '2022-23',
+      teams: 'Arsenal vs. Manchester City',
+      tactical_context: 'Arteta deployed Zinchenko as an inverted left-back to form a double pivot during build-up.',
+      summary: 'Zinchenko repeatedly stepped centrally alongside Jorginho, overloading City\'s midfield line and helping Arsenal control the build-up phase.',
+      relevance_score: 95,
+      video_url: 'https://video.footballatlas.com/zinchenko-inverted-2023.mp4',
+      event_timestamps: [
+        { name: 'Zinchenko central transition entry', timestamp: '12:20' }
+      ]
+    }
+  ],
+  related_concepts: ['midfield_overload', 'box_midfield'],
+  docling_chunks: [],
+  schema_version: '1.0.0',
+  created_at: '2026-06-20T00:00:00Z',
+  updated_at: '2026-06-20T00:00:00Z'
+};
+
 export const allSeeds: TacticalConcept[] = [
   false9Seed, 
   highPressSeed, 
@@ -724,6 +1578,20 @@ export const allSeeds: TacticalConcept[] = [
   thirdManRunSeed,
   counterAttackTriggerSeed,
   backThreeWingBackSeed,
-  compactnessPressingLinesSeed
+  compactnessPressingLinesSeed,
+  gegenpressingSeed,
+  restDefenseSeed,
+  positionalPlaySeed,
+  boxMidfieldSeed,
+  overlappingRunsSeed,
+  overloadingToIsolateSeed,
+  halfSpaceExploitationSeed,
+  verticalTikiTakaSeed,
+  shadowStrikerSeed,
+  pressingTriggersSeed,
+  midfieldRotationSeed,
+  sweeperKeeperSeed,
+  defensiveTransitionsSeed,
+  invertedFullbacksSeed
 ];
 

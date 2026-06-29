@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { HistoricalExample, HistoricalBreakdown } from '@football-atlas/shared';
+import { HistoricalExample, HistoricalBreakdown, WhatIfOption } from '@football-atlas/shared';
 import { tacticalApi } from '../apiClients/tacticalApi';
 import { learningOrchestrator } from '../tacticalOrchestrator/orchestrator';
 import { useTacticalStore } from './useTacticalStore';
@@ -17,6 +17,8 @@ interface BreakdownState {
   selectedConcept: string | null;
   isLoading: boolean;
   error: string | null;
+  selectedWhatIfOption: WhatIfOption | null;
+  activeAnalyst: 'nathan' | 'valeria' | 'claire' | 'lukas';
 
   startBreakdown: (example: HistoricalExample) => Promise<void>;
   setMoment: (index: number) => void;
@@ -27,6 +29,9 @@ interface BreakdownState {
   stopBreakdown: (shouldReload?: boolean) => void;
   applyCameraPreset: (view: string) => void;
   syncWithEngine: () => void;
+  setSelectedWhatIfOption: (option: WhatIfOption | null) => void;
+  setActiveAnalyst: (analyst: 'nathan' | 'valeria' | 'claire' | 'lukas') => Promise<void>;
+  translateBreakdown: (targetLang: string) => Promise<void>;
 }
 
 export const useBreakdownStore = create<BreakdownState>((set, get) => {
@@ -50,6 +55,8 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
     selectedConcept: null,
     isLoading: false,
     error: null,
+    selectedWhatIfOption: null,
+    activeAnalyst: 'nathan',
 
     startBreakdown: async (example: HistoricalExample) => {
       cleanupSubscription();
@@ -100,7 +107,14 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
           playbackState: 'paused',
           timelineProgress: 0.0,
           isLoading: false,
+          selectedWhatIfOption: null,
         });
+
+        // Translate the breakdown if the current language is not English
+        const currentLang = useTacticalStore.getState().lang;
+        if (currentLang !== 'en') {
+          await get().translateBreakdown(currentLang);
+        }
 
         // Set visual mode to historical
         useTacticalStore.getState().setVisualMode('historical');
@@ -186,7 +200,7 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
       const moment = breakdown.key_moments[index];
       if (!moment) return;
 
-      set({ currentMomentIndex: index, timelineProgress: moment.timestamp });
+      set({ currentMomentIndex: index, timelineProgress: moment.timestamp, selectedWhatIfOption: null });
 
       const engine = (learningOrchestrator as any).engine;
       if (engine) {
@@ -251,6 +265,7 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
         currentMomentIndex: 0,
         playbackState: 'stopped',
         timelineProgress: 0.0,
+        selectedWhatIfOption: null,
       });
       // Restore standard concept settings
       useTacticalStore.getState().setVisualMode('concept');
@@ -262,46 +277,122 @@ export const useBreakdownStore = create<BreakdownState>((set, get) => {
       }
     },
 
-    applyCameraPreset: (view: string) => {
+    applyCameraPreset: (_view: string) => {
       const engine = (learningOrchestrator as any).engine;
       if (!engine || !engine.camera || !engine.controls) return;
 
       const camera = engine.camera as THREE.PerspectiveCamera;
       const controls = engine.controls;
-      const exampleId = get().currentExample?.example_id || '';
 
-      // Set target and coordinates based on camera preset views
-      if (view === 'overview') {
-        controls.target.set(0, 0, 0);
-        camera.position.set(0, 135, 0.1);
-        camera.zoom = 1.0;
-      } else if (view === 'player_focus') {
-        const playerManager = engine.getPlayerManager();
-        let targetPos = { x: 0, z: 0 };
-        const keyPlayerId = exampleId.includes('hp') ? 'blue_cf' : 'att_false9';
-        const pos = playerManager.getPlayerPosition(keyPlayerId);
-        if (pos) {
-          targetPos = pos;
-        }
-        controls.target.set(targetPos.x, 0, targetPos.z);
-        camera.position.set(targetPos.x, 30, targetPos.z + 25);
-        camera.zoom = 1.25;
-      } else if (view === 'tactical_shape') {
-        controls.target.set(10, 0, 0);
-        camera.position.set(10, 60, 50);
-        camera.zoom = 1.1;
-      } else if (view === 'passing_lane') {
-        controls.target.set(-5, 0, 0);
-        camera.position.set(-5, 45, 40);
-        camera.zoom = 1.15;
-      } else if (view === 'space_creation') {
-        controls.target.set(15, 0, -5);
-        camera.position.set(15, 55, 35);
-        camera.zoom = 1.2;
-      }
+      // Always set target and coordinates to overhead view as requested by user
+      controls.target.set(0, 0, 0);
+      camera.position.set(0, 135, 0.1);
+      camera.zoom = 1.0;
 
       camera.updateProjectionMatrix();
       controls.update();
+    },
+    setSelectedWhatIfOption: (option) => set({ selectedWhatIfOption: option }),
+    setActiveAnalyst: async (analyst) => {
+      set({ activeAnalyst: analyst });
+      
+      const langMap: Record<'nathan' | 'valeria' | 'claire' | 'lukas', string> = {
+        nathan: 'en',
+        valeria: 'es',
+        claire: 'fr',
+        lukas: 'de'
+      };
+      const targetLang = langMap[analyst] || 'en';
+      if (useTacticalStore.getState().lang !== targetLang) {
+        await useTacticalStore.getState().setLang(targetLang);
+      }
+    },
+
+    translateBreakdown: async (targetLang: string) => {
+      const { currentBreakdown, currentExample } = get();
+      if (!currentBreakdown) return;
+
+      try {
+        set({ isLoading: true });
+        const cleanBreakdown = await tacticalApi.getHistoricalBreakdown(currentBreakdown.example_id);
+        
+        const texts: string[] = [];
+        texts.push(cleanBreakdown.title);
+        texts.push(cleanBreakdown.description);
+        
+        cleanBreakdown.key_moments.forEach(m => {
+          texts.push(m.title);
+          texts.push(m.description);
+          texts.push(m.granite_context);
+          if (m.what_if_options) {
+            m.what_if_options.forEach(opt => {
+              texts.push(opt.label);
+            });
+          }
+        });
+
+        cleanBreakdown.commentary.forEach(c => {
+          texts.push(c);
+        });
+
+        cleanBreakdown.learning_goals.forEach(g => {
+          texts.push(g);
+        });
+
+        if (currentExample) {
+          texts.push(currentExample.description);
+          texts.push(currentExample.tactical_summary);
+        }
+
+        const { translatedTexts } = await tacticalApi.translateTexts(texts, targetLang);
+        
+        let idx = 0;
+        const translatedBreakdown = { ...cleanBreakdown };
+        translatedBreakdown.title = translatedTexts[idx++] || cleanBreakdown.title;
+        translatedBreakdown.description = translatedTexts[idx++] || cleanBreakdown.description;
+        
+        translatedBreakdown.key_moments = cleanBreakdown.key_moments.map(m => {
+          const newMoment = { ...m };
+          newMoment.title = translatedTexts[idx++] || m.title;
+          newMoment.description = translatedTexts[idx++] || m.description;
+          newMoment.granite_context = translatedTexts[idx++] || m.granite_context;
+          if (m.what_if_options) {
+            newMoment.what_if_options = m.what_if_options.map(opt => {
+              return {
+                ...opt,
+                label: translatedTexts[idx++] || opt.label
+              };
+            });
+          }
+          return newMoment;
+        });
+
+        translatedBreakdown.commentary = cleanBreakdown.commentary.map(() => {
+          return translatedTexts[idx++] || '';
+        });
+
+        translatedBreakdown.learning_goals = cleanBreakdown.learning_goals.map(() => {
+          return translatedTexts[idx++] || '';
+        });
+
+        let translatedExample = currentExample;
+        if (currentExample) {
+          translatedExample = {
+            ...currentExample,
+            description: translatedTexts[idx++] || currentExample.description,
+            tactical_summary: translatedTexts[idx++] || currentExample.tactical_summary
+          };
+        }
+
+        set({
+          currentBreakdown: translatedBreakdown,
+          currentExample: translatedExample,
+          isLoading: false
+        });
+      } catch (err) {
+        console.error('Failed to translate breakdown:', err);
+        set({ isLoading: false });
+      }
     },
   };
 });

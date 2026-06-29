@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ComplexityLevel, tacticalRegistry, TacticalConcept } from '@football-atlas/shared';
+import { ComplexityLevel, tacticalRegistry, TacticalConcept, getXTAt, getXGEstimate } from '@football-atlas/shared';
 import { historicalExampleService } from './historicalExample.service';
 import { historicalExampleRepository } from '../repositories/historicalExample.repository';
 import { historicalBreakdownService } from './historicalBreakdown.service';
@@ -294,6 +294,65 @@ export class FootballAtlasMCPServer {
           recommended_concept_name: recommended?.concept_name || 'False 9',
           rationale: `Builds on completed concepts by introducing related spatial structures.`
         };
+      }
+    });
+
+    // 9. value_tactical_option
+    this.registerTool({
+      name: 'value_tactical_option',
+      description: 'Calculates Expected Threat (xT) or Expected Goals (xG) for a hypothetical action vector on the pitch.',
+      inputSchema: z.object({
+        from_x: z.number().describe('Starting X coordinate of the player with the ball (-52.5 to 52.5)'),
+        from_z: z.number().describe('Starting Z coordinate of the player with the ball (-34 to 34)'),
+        to_x: z.number().describe('Target X coordinate of the pass/carry/shot (-52.5 to 52.5)'),
+        to_z: z.number().describe('Target Z coordinate of the pass/carry/shot (-34 to 34)'),
+        action_type: z.enum(['pass', 'carry', 'shot']).describe('Type of tactical action'),
+        opponents: z.array(z.object({
+          x: z.number(),
+          z: z.number()
+        })).optional().describe('List of opposing player coordinates for cover shadow and shot block calculations')
+      }),
+      handler: async (args) => {
+        const { from_x, from_z, to_x, to_z, action_type, opponents = [] } = args;
+        const startXT = getXTAt(from_x, from_z);
+
+        if (action_type === 'shot') {
+          const xg = getXGEstimate(from_x, from_z, opponents);
+          return {
+            action_type,
+            value: xg,
+            value_kind: 'xG',
+            threat_added: xg - startXT,
+            viable: true,
+            reason: `Direct shot attempt from (${from_x.toFixed(1)}, ${from_z.toFixed(1)}) valued at geometric xG.`
+          };
+        } else {
+          const targetXT = getXTAt(to_x, to_z);
+          const threatAdded = targetXT - startXT;
+
+          // Simple cover shadow lane viability test: check if any opponent is close to the line segment
+          const blocked = opponents.some((opp: any) => {
+            const dx = to_x - from_x;
+            const dz = to_z - from_z;
+            const l2 = dx * dx + dz * dz;
+            if (l2 === 0) return false;
+            let t = ((opp.x - from_x) * dx + (opp.z - from_z) * dz) / l2;
+            t = Math.max(0, Math.min(1, t));
+            const dist = Math.sqrt((opp.x - (from_x + t * dx)) ** 2 + (opp.z - (from_z + t * dz)) ** 2);
+            return dist < 1.8; // Lane block radius threshold
+          });
+
+          return {
+            action_type,
+            value: targetXT,
+            value_kind: 'xT',
+            threat_added: threatAdded,
+            viable: !blocked,
+            reason: blocked 
+              ? `Alternative option blocked by cover shadow of defending players.`
+              : `Viable open lane progressing the ball into a higher Expected Threat zone.`
+          };
+        }
       }
     });
   }

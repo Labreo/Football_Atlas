@@ -16,7 +16,8 @@ const PitchControls: React.FC = () => {
     setPlaySpeed, 
     toggleOverlay,
     cameraZoom,
-    setCameraZoom
+    setCameraZoom,
+    lang
   } = useTacticalStore();
 
   const { current_phase_index } = useLearningUIStore();
@@ -30,7 +31,7 @@ const PitchControls: React.FC = () => {
     stopBreakdown,
   } = useBreakdownStore();
 
-  const { enabled: audioEnabled, isPlaying: audioPlaying } = useAudioCommentaryStore();
+  const { enabled: audioEnabled } = useAudioCommentaryStore();
 
   const isBreakdownActive = !!currentBreakdown;
   const isLoaded = isBreakdownActive ? true : !!currentConcept;
@@ -58,7 +59,7 @@ const PitchControls: React.FC = () => {
       {isBreakdownActive && currentBreakdown?.key_moments && (
         <div className="flex items-center gap-2 border-b border-[#1E293B]/45 pb-3">
           <span className="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-widest shrink-0">
-            Breakdown Moments:
+            {lang === 'es' ? 'Momentos del análisis:' : lang === 'fr' ? "Moments d'analyse:" : lang === 'de' ? 'Analyse-Momente:' : 'Breakdown Moments:'}
           </span>
           <div className="flex flex-wrap gap-1.5 items-center">
             {currentBreakdown.key_moments.map((moment: any, idx: number) => (
@@ -70,19 +71,19 @@ const PitchControls: React.FC = () => {
                 }}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wide uppercase transition-all border ${
                   currentMomentIndex === idx
-                    ? 'bg-[#10B981]/25 border-[#10B981] text-[#10B981] shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                    ? 'bg-[#38FE5E]/25 border-[#38FE5E] text-[#38FE5E] shadow-[0_0_12px_rgba(16,185,129,0.2)]'
                     : 'bg-[#111622] border-[#222E45]/60 text-slate-400 hover:text-slate-200 hover:border-slate-500'
                 }`}
                 title={moment.description}
               >
-                Moment {idx + 1}: {moment.title}
+                {lang === 'es' ? 'Momento' : lang === 'fr' ? 'Moment' : lang === 'de' ? 'Moment' : 'Moment'} {idx + 1}: {moment.title}
               </button>
             ))}
             <button
               onClick={() => stopBreakdown()}
               className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all ml-auto"
             >
-              ✕ Exit Breakdown
+              {lang === 'es' ? '✕ Salir del análisis' : lang === 'fr' ? "✕ Quitter l'analyse" : lang === 'de' ? '✕ Analyse verlassen' : '✕ Exit Breakdown'}
             </button>
           </div>
         </div>
@@ -91,7 +92,7 @@ const PitchControls: React.FC = () => {
       {!isBreakdownActive && isLoaded && phases.length > 0 && (
         <div className="flex items-center gap-2 border-b border-[#1E293B]/45 pb-3">
           <span className="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-widest shrink-0">
-            Timeline Steps:
+            {lang === 'es' ? 'Pasos de la línea de tiempo:' : lang === 'fr' ? "Étapes du fil d'actualité:" : lang === 'de' ? 'Schritte der Zeitachse:' : 'Timeline Steps:'}
           </span>
           <div className="flex flex-wrap gap-1.5">
             {phases.map((p: any) => (
@@ -103,12 +104,12 @@ const PitchControls: React.FC = () => {
                 }}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wide uppercase transition-all border ${
                   current_phase_index === p.index
-                    ? 'bg-[#10B981]/25 border-[#10B981] text-[#10B981] shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                    ? 'bg-[#38FE5E]/25 border-[#38FE5E] text-[#38FE5E] shadow-[0_0_12px_rgba(16,185,129,0.2)]'
                     : 'bg-[#111622] border-[#222E45]/60 text-slate-400 hover:text-slate-200 hover:border-slate-500'
                 }`}
                 title={p.description}
               >
-                Phase {p.index}: {p.name}
+                {lang === 'es' ? 'Fase' : lang === 'fr' ? 'Phase' : lang === 'de' ? 'Phase' : 'Phase'} {p.index}: {p.name}
               </button>
             ))}
           </div>
@@ -134,7 +135,9 @@ const PitchControls: React.FC = () => {
                 : 'bg-[#182235] text-slate-200 hover:bg-[#222E45]'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
           >
-            {(isBreakdownActive ? breakdownPlayState : playState) === 'playing' ? '⏸ Pause' : '▶ Play'}
+            {(isBreakdownActive ? breakdownPlayState : playState) === 'playing'
+              ? (lang === 'es' ? '⏸ Pausar' : lang === 'fr' ? '⏸ Pause' : lang === 'de' ? '⏸ Pause' : '⏸ Pause')
+              : (lang === 'es' ? '▶ Reproducir' : lang === 'fr' ? '▶ Lecture' : lang === 'de' ? '▶ Abspielen' : '▶ Play')}
           </button>
 
           <button
@@ -177,17 +180,21 @@ const PitchControls: React.FC = () => {
             disabled={!isLoaded}
             className={`h-8 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${
               audioEnabled
-                ? 'bg-[#10B981]/15 border border-[#10B981] text-[#10B981]'
+                ? 'bg-[#38FE5E]/15 border border-[#38FE5E] text-[#38FE5E]'
                 : 'bg-[#182235] border border-transparent text-slate-400 hover:text-slate-200'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
           >
-            {audioEnabled ? (audioPlaying ? 'Audio On' : 'Audio On') : 'Audio Off'}
+            {audioEnabled
+              ? (lang === 'es' ? 'Audio Activo' : lang === 'fr' ? 'Audio Activé' : lang === 'de' ? 'Audio Ein' : 'Audio On')
+              : (lang === 'es' ? 'Audio Desactivo' : lang === 'fr' ? 'Audio Désactivé' : lang === 'de' ? 'Audio Aus' : 'Audio Off')}
           </button>
         </div>
 
         {/* Camera Zoom Control Slider (Always active/accessible) */}
         <div className="flex items-center gap-2.5 bg-[#111622]/85 border border-[#222E45]/40 rounded-xl h-11 px-3.5 shrink-0">
-          <span className="text-[9px] text-slate-500 font-mono font-bold uppercase tracking-widest">Zoom</span>
+          <span className="text-[9px] text-slate-500 font-mono font-bold uppercase tracking-widest">
+            {lang === 'es' ? 'Zoom' : lang === 'fr' ? 'Zoom' : lang === 'de' ? 'Zoom' : 'Zoom'}
+          </span>
           <input
             type="range"
             min="0.5"
@@ -197,7 +204,7 @@ const PitchControls: React.FC = () => {
             onChange={(e) => setCameraZoom(parseFloat(e.target.value))}
             className="horizontal-zoom-slider"
           />
-          <span className="text-[10px] text-[#10B981] font-mono w-8 text-right font-extrabold">
+          <span className="text-[10px] text-[#38FE5E] font-mono w-8 text-right font-extrabold">
             {cameraZoom.toFixed(2)}x
           </span>
         </div>
@@ -213,7 +220,7 @@ const PitchControls: React.FC = () => {
                 : 'bg-[#182235] border-transparent text-slate-400 hover:text-slate-200'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
           >
-            Passing Lanes
+            {lang === 'es' ? 'Líneas de pase' : lang === 'fr' ? 'Lignes de passe' : lang === 'de' ? 'Passwege' : 'Passing Lanes'}
           </button>
 
           <button
@@ -225,7 +232,7 @@ const PitchControls: React.FC = () => {
                 : 'bg-[#182235] border-transparent text-slate-400 hover:text-slate-200'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
           >
-            Movement Paths
+            {lang === 'es' ? 'Rutas de movimiento' : lang === 'fr' ? 'Trajectoires' : lang === 'de' ? 'Bewegungspfade' : 'Movement Paths'}
           </button>
 
           <button
@@ -237,7 +244,7 @@ const PitchControls: React.FC = () => {
                 : 'bg-[#182235] border-transparent text-slate-400 hover:text-slate-200'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
           >
-            Tactical Zones
+            {lang === 'es' ? 'Zonas tácticas' : lang === 'fr' ? 'Zones tactiques' : lang === 'de' ? 'Taktik-Zonen' : 'Tactical Zones'}
           </button>
         </div>
       </div>

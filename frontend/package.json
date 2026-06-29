@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@football-atlas/shared": "file:../shared",
+    "axios": "^1.18.0",
+    "framer-motion": "^12.40.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.1",

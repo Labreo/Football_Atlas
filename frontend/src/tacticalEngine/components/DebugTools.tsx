@@ -80,7 +80,7 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
   };
 
   return (
-    <div className="absolute top-4 right-40 z-50 flex flex-col items-end font-mono select-none">
+    <div className="absolute top-4 right-72 z-50 flex flex-col items-end font-mono select-none">
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -339,7 +339,7 @@ export const DebugTools: React.FC<DebugToolsProps> = ({ engine, moduleInstance }
                 <div className="p-2 rounded bg-slate-900 border border-slate-800 text-[10px] space-y-1">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400">MCP Gateway:</span>
-                    <span className="text-[#10B981] font-bold">Context Forge</span>
+                    <span className="text-[#38FE5E] font-bold">Context Forge</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400">MCP Server:</span>

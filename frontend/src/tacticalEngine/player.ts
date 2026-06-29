@@ -1,6 +1,33 @@
 import * as THREE from 'three';
 import { PlayerState, TacticalPosition, AnimationFrame } from './types';
 
+const photoCache = new Map<string, string | null>();
+const imgCache = new Map<string, HTMLImageElement>();
+const fetchPromiseCache = new Map<string, Promise<string | null>>();
+
+function fetchWikiPhotoSrc(name: string): Promise<string | null> {
+  const formattedName = name.replace(/_/g, ' ');
+  if (photoCache.has(formattedName)) {
+    return Promise.resolve(photoCache.get(formattedName)!);
+  }
+  if (fetchPromiseCache.has(formattedName)) {
+    return fetchPromiseCache.get(formattedName)!;
+  }
+  const promise = fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedName.replace(/ /g, '_'))}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      const src = d?.thumbnail?.source || null;
+      photoCache.set(formattedName, src);
+      return src;
+    })
+    .catch(() => {
+      photoCache.set(formattedName, null);
+      return null;
+    });
+  fetchPromiseCache.set(formattedName, promise);
+  return promise;
+}
+
 export class PlayerManager {
   private scene: THREE.Scene;
   private playersGroup: THREE.Group;
@@ -85,35 +112,175 @@ export class PlayerManager {
   }
 
   /**
-   * Creates a canvas texture for the shirt number on the cylinder top face
+   * Draws the detailed player disc onto 2D canvas context
    */
-  private createPlayerDiscTexture(number: number, team: 'attack' | 'defense' | 'defend'): THREE.CanvasTexture {
+  private drawPlayerDisc(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    number: number,
+    team: 'attack' | 'defense' | 'defend',
+    name?: string,
+    image?: HTMLImageElement
+  ) {
+    ctx.save();
+    ctx.clearRect(0, 0, width, height);
+
+    const cx = width / 2;
+    const cy = height / 2;
+    const radius = width / 2 - 8; // leave space for border
+
+    // 1. Draw circular clip for photo or fallback
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+
+    // 2. Draw image if present, else draw fallback color
+    const teamColor = team === 'attack' ? '#1D4ED8' : '#DC2626'; // Blue / Red
+    const accentColor = team === 'attack' ? '#3B82F6' : '#EF4444';
+
+    if (image) {
+      try {
+        const imgAspect = image.width / image.height;
+        let drawWidth = width;
+        let drawHeight = height;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (imgAspect > 1) {
+          drawWidth = height * imgAspect;
+          offsetX = (width - drawWidth) / 2;
+        } else {
+          drawHeight = width / imgAspect;
+          offsetY = (height - drawHeight) / 2;
+        }
+
+        ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+      } catch (err) {
+        console.error("Failed to draw player photo, using fallback", err);
+        ctx.fillStyle = teamColor;
+        ctx.fillRect(0, 0, width, height);
+      }
+    } else {
+      const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, radius);
+      grad.addColorStop(0, accentColor);
+      grad.addColorStop(1, teamColor);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      if (name) {
+        const initials = name
+          .split(' ')
+          .filter(Boolean)
+          .map(n => n[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase();
+        
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 36px "Inter", "Arial", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(initials, cx, cy - 5);
+      }
+    }
+
+    ctx.restore();
+
+    // 3. Draw thick team color outer ring
+    ctx.strokeStyle = teamColor;
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 4. Inner white border ring for premium details
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius - 4, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 5. Draw a small team-color jersey badge at the bottom center
+    const badgeX = cx;
+    const badgeY = cy + radius - 15;
+    const badgeRadius = 18;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 2;
+
+    ctx.fillStyle = teamColor;
+    ctx.beginPath();
+    ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(badgeX, badgeY, badgeRadius - 1.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 20px "Inter", "Arial", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(number.toString(), badgeX, badgeY);
+  }
+
+  /**
+   * Creates a canvas texture for the shirt number and optional photo on the cylinder top face
+   */
+  private createPlayerDiscTexture(
+    number: number,
+    team: 'attack' | 'defense' | 'defend',
+    name?: string
+  ): THREE.CanvasTexture {
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
-    if (ctx) {
-      // Clear background with royal blue or tactical red
-      ctx.fillStyle = team === 'attack' ? '#1D4ED8' : '#DC2626'; // Blue / Red
-      ctx.beginPath();
-      ctx.arc(64, 64, 64, 0, Math.PI * 2);
-      ctx.fill();
-
-      // White border circle
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.arc(64, 64, 55, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Number text
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 50px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(number.toString(), 64, 64);
-    }
+    
     const texture = new THREE.CanvasTexture(canvas);
+    if ('colorSpace' in texture) {
+      (texture as any).colorSpace = (THREE as any).SRGBColorSpace || 'srgb';
+    } else if ('encoding' in texture) {
+      (texture as any).encoding = (THREE as any).sRGBEncoding || 3001;
+    }
+
+    if (!ctx) return texture;
+
+    // Draw initial fallback state
+    this.drawPlayerDisc(ctx, 128, 128, number, team, name);
+    texture.needsUpdate = true;
+
+    if (!name) return texture;
+
+    // Check if image object is already cached
+    if (imgCache.has(name)) {
+      const img = imgCache.get(name)!;
+      this.drawPlayerDisc(ctx, 128, 128, number, team, name, img);
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    // Fetch and load image
+    fetchWikiPhotoSrc(name).then((src) => {
+      if (src) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          imgCache.set(name, img);
+          this.drawPlayerDisc(ctx, 128, 128, number, team, name, img);
+          texture.needsUpdate = true;
+        };
+        img.src = src;
+      }
+    });
+
     return texture;
   }
 
@@ -142,7 +309,7 @@ export class PlayerManager {
       metalness: 0.35
     });
 
-    const topTexture = this.createPlayerDiscTexture(p.number, p.team);
+    const topTexture = this.createPlayerDiscTexture(p.number, p.team, p.name);
     const topMat = new THREE.MeshStandardMaterial({
       map: topTexture,
       roughness: 0.1
@@ -160,6 +327,22 @@ export class PlayerManager {
     playerToken.position.set(p.startPos.x, 0, p.startPos.z);
     playerToken.visible = p.visible;
 
+    if (p.actor) {
+      const pulseGeo = new THREE.RingGeometry(discRadius * 1.15, discRadius * 1.45, 32);
+      const pulseMat = new THREE.MeshBasicMaterial({
+        color: '#38FE5E',
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const pulseMesh = new THREE.Mesh(pulseGeo, pulseMat);
+      pulseMesh.rotation.x = -Math.PI / 2;
+      pulseMesh.position.y = 0.05;
+      pulseMesh.name = 'actor-pulse';
+      playerToken.add(pulseMesh);
+    }
+
     this.playersGroup.add(playerToken);
     this.meshes.set(p.id, playerToken);
   }
@@ -168,16 +351,78 @@ export class PlayerManager {
    * Updates player position by interpolating along keyframes
    */
   public update(time: number, teamAVisible: boolean = true, teamBVisible: boolean = true): void {
+    // 1. Interpolate base positions and set visibility
+    const activePlayers: { id: string; x: number; z: number; team: 'attack' | 'defense' | 'defend' }[] = [];
+
     this.players.forEach((p, id) => {
       const mesh = this.meshes.get(id);
       if (!mesh) return;
 
       const pos = this.interpolatePosition(p.keyFrames, p.startPos, time);
       p.currentPos = pos;
-      mesh.position.set(pos.x, 0, pos.z);
-
+      
       const teamVisible = p.team === 'attack' ? teamAVisible : teamBVisible;
       mesh.visible = p.visible && teamVisible;
+
+      if (mesh.visible) {
+        activePlayers.push({
+          id,
+          x: pos.x,
+          z: pos.z,
+          team: p.team
+        });
+      }
+    });
+
+    // 2. Resolve player icon overlaps using relaxation passes (prevent clumping)
+    const minDistance = 2.4; // Prevents heavy intersection while keeping players close
+    for (let iter = 0; iter < 4; iter++) {
+      for (let i = 0; i < activePlayers.length; i++) {
+        for (let j = i + 1; j < activePlayers.length; j++) {
+          const p1 = activePlayers[i];
+          const p2 = activePlayers[j];
+          const dx = p2.x - p1.x;
+          const dz = p2.z - p1.z;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+          if (dist < minDistance) {
+            const overlap = minDistance - dist;
+            const ux = dist > 0.001 ? dx / dist : Math.random() > 0.5 ? 1 : -1;
+            const uz = dist > 0.001 ? dz / dist : 0;
+            
+            const pushX = ux * overlap * 0.5;
+            const pushZ = uz * overlap * 0.5;
+            
+            p1.x -= pushX;
+            p1.z -= pushZ;
+            p2.x += pushX;
+            p2.z += pushZ;
+          }
+        }
+      }
+    }
+
+    // 3. Set final relaxed positions on meshes with tiny Y height stacking to eliminate Z-fighting
+    activePlayers.forEach((ap, idx) => {
+      const p = this.players.get(ap.id);
+      const mesh = this.meshes.get(ap.id);
+      if (p && mesh) {
+        p.currentPos = { x: ap.x, z: ap.z };
+        
+        // Attacking team has slightly different base height from defending team,
+        // and each player has a tiny fraction added to guarantee no coplanar faces.
+        const teamBaseY = ap.team === 'attack' ? 0.005 : 0.0;
+        const stackingY = teamBaseY + idx * 0.001;
+        mesh.position.set(ap.x, stackingY, ap.z);
+
+        const pulse = mesh.getObjectByName('actor-pulse');
+        if (pulse && pulse instanceof THREE.Mesh) {
+          const t = performance.now() * 0.008;
+          const scale = 1.0 + Math.sin(t) * 0.15;
+          pulse.scale.set(scale, scale, 1.0);
+          const mat = pulse.material as THREE.MeshBasicMaterial;
+          mat.opacity = 0.8 - (scale - 1.0) * 2.0;
+        }
+      }
     });
   }
 

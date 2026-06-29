@@ -15,7 +15,8 @@
         "camera_view": "overview",
         "animation_sequence": "initial_state",
         "granite_context": "Messi occupies a standard center-forward position initially, pinning United's defense.",
-        "annotations": []
+        "annotations": [],
+        "what_if_options": []
       },
       {
         "moment_id": "barca_2009_m2",
@@ -36,7 +37,8 @@
             "target": "att_false9",
             "color": "#39FF14"
           }
-        ]
+        ],
+        "what_if_options": []
       },
       {
         "moment_id": "barca_2009_m3",
@@ -57,7 +59,8 @@
             "target": "overlay_defensive_gap",
             "color": "#FF0055"
           }
-        ]
+        ],
+        "what_if_options": []
       },
       {
         "moment_id": "barca_2009_m4",
@@ -78,7 +81,8 @@
             "target": "arrow_winger_run",
             "color": "#39FF14"
           }
-        ]
+        ],
+        "what_if_options": []
       },
       {
         "moment_id": "barca_2009_m5",
@@ -93,6 +97,61 @@
             "type": "passing_lane",
             "target": "pass_lane_2",
             "color": "#00F3FF"
+          }
+        ],
+        "what_if_options": [
+          {
+            "option_id": "b09_o1",
+            "label": "Pass inside to Samuel Eto'o",
+            "kind": "pass",
+            "from_x": 3,
+            "from_z": 1,
+            "to_x": 34,
+            "to_z": -6,
+            "receiver_name": "Samuel Eto'o",
+            "viable": true,
+            "value": 0.0549,
+            "value_kind": "xT",
+            "chosen": true
+          },
+          {
+            "option_id": "b09_o2",
+            "label": "Pass wide left to Thierry Henry",
+            "kind": "pass",
+            "from_x": 3,
+            "from_z": 1,
+            "to_x": 18,
+            "to_z": -20,
+            "receiver_name": "Thierry Henry",
+            "viable": true,
+            "value": 0.0406,
+            "value_kind": "xT"
+          },
+          {
+            "option_id": "b09_o3",
+            "label": "Shoot from distance",
+            "kind": "shot",
+            "from_x": 3,
+            "from_z": 1,
+            "to_x": 52.5,
+            "to_z": 0,
+            "viable": true,
+            "value": 0.0300,
+            "value_kind": "xG"
+          },
+          {
+            "option_id": "b09_o4",
+            "label": "Cut-back to Xavi centrally",
+            "kind": "pass",
+            "from_x": 3,
+            "from_z": 1,
+            "to_x": 8,
+            "to_z": 12,
+            "receiver_name": "Xavi Hernandez",
+            "viable": false,
+            "value": 0.0880,
+            "value_kind": "xT",
+            "best": true
           }
         ]
       }
@@ -132,7 +191,8 @@
             "target": "att_false9",
             "color": "#39FF14"
           }
-        ]
+        ],
+        "what_if_options": []
       },
       {
         "moment_id": "spain_2012_m2",
@@ -148,7 +208,8 @@
             "target": "overlay_between_lines",
             "color": "#39FF14"
           }
-        ]
+        ],
+        "what_if_options": []
       },
       {
         "moment_id": "spain_2012_m3",
@@ -163,6 +224,60 @@
             "type": "passing_lane",
             "target": "pass_lane_2",
             "color": "#00F3FF"
+          }
+        ],
+        "what_if_options": [
+          {
+            "option_id": "s12_o1",
+            "label": "Pass to David Silva wide right",
+            "kind": "pass",
+            "from_x": 12,
+            "from_z": 0,
+            "to_x": 32,
+            "to_z": 12,
+            "receiver_name": "David Silva",
+            "viable": true,
+            "value": 0.0644,
+            "value_kind": "xT",
+            "chosen": true
+          },
+          {
+            "option_id": "s12_o2",
+            "label": "Pass wide left to Iniesta",
+            "kind": "pass",
+            "from_x": 12,
+            "from_z": 0,
+            "to_x": 28,
+            "to_z": -20,
+            "receiver_name": "Andrés Iniesta",
+            "viable": true,
+            "value": 0.0549,
+            "value_kind": "xT"
+          },
+          {
+            "option_id": "s12_o3",
+            "label": "Shoot from distance",
+            "kind": "shot",
+            "from_x": 12,
+            "from_z": 0,
+            "to_x": 52.5,
+            "to_z": 0,
+            "viable": true,
+            "value": 0.0150,
+            "value_kind": "xG"
+          },
+          {
+            "option_id": "s12_o4",
+            "label": "Carry forward centrally",
+            "kind": "carry",
+            "from_x": 12,
+            "from_z": 0,
+            "to_x": 24,
+            "to_z": 0,
+            "viable": false,
+            "value": 0.1080,
+            "value_kind": "xT",
+            "best": true
           }
         ]
       }
@@ -205,7 +320,8 @@
             "target": "overlay_trigger_area",
             "color": "#EAB308"
           }
-        ]
+        ],
+        "what_if_options": []
       },
       {
         "moment_id": "lfc_2018_m2",
@@ -225,6 +341,61 @@
             "type": "passing_lane",
             "target": "arrow_blocked_lane_rcb",
             "color": "#EF4444"
+          }
+        ],
+        "what_if_options": [
+          {
+            "option_id": "l18_o1",
+            "label": "Lateral pass to John Stones",
+            "kind": "pass",
+            "from_x": 8,
+            "from_z": -3,
+            "to_x": 12,
+            "to_z": 10,
+            "receiver_name": "John Stones",
+            "viable": true,
+            "value": 0.0088,
+            "value_kind": "xT",
+            "chosen": true
+          },
+          {
+            "option_id": "l18_o2",
+            "label": "Line-breaking pass to Fernandinho",
+            "kind": "pass",
+            "from_x": 8,
+            "from_z": -3,
+            "to_x": 22,
+            "to_z": 0,
+            "receiver_name": "Fernandinho",
+            "viable": false,
+            "value": 0.0168,
+            "value_kind": "xT",
+            "best": true
+          },
+          {
+            "option_id": "l18_o3",
+            "label": "Clear ball wide down the flank",
+            "kind": "carry",
+            "from_x": 8,
+            "from_z": -3,
+            "to_x": 18,
+            "to_z": -25,
+            "viable": true,
+            "value": 0.0075,
+            "value_kind": "xT"
+          },
+          {
+            "option_id": "l18_o4",
+            "label": "Vertical pass to Left-Back",
+            "kind": "pass",
+            "from_x": 8,
+            "from_z": -3,
+            "to_x": 18,
+            "to_z": -18,
+            "receiver_name": "Benjamin Mendy",
+            "viable": false,
+            "value": 0.0100,
+            "value_kind": "xT"
           }
         ]
       },
@@ -247,7 +418,8 @@
             "target": "arrow_shot_vector",
             "color": "#EAB308"
           }
-        ]
+        ],
+        "what_if_options": []
       }
     ],
     "commentary": [
@@ -277,7 +449,8 @@
         "camera_view": "overview",
         "animation_sequence": "argentina_stable",
         "granite_context": "France wins possession. Argentina starts in a stable, compact shape, but fatigue begins to stretch their horizontal and vertical lines.",
-        "annotations": []
+        "annotations": [],
+        "what_if_options": []
       },
       {
         "moment_id": "arg_fra_22_m2",
@@ -292,6 +465,49 @@
             "type": "passing_lane",
             "target": "pass_rabiot_to_mbappe",
             "color": "#00F3FF"
+          }
+        ],
+        "what_if_options": [
+          {
+            "option_id": "f22_o1_1",
+            "label": "Pass wide to Kylian Mbappé",
+            "kind": "pass",
+            "from_x": -8,
+            "from_z": 7,
+            "to_x": 14,
+            "to_z": -20,
+            "receiver_name": "Kylian Mbappé",
+            "viable": true,
+            "value": 0.0406,
+            "value_kind": "xT",
+            "chosen": true
+          },
+          {
+            "option_id": "f22_o1_2",
+            "label": "Pass inside to Griezmann centrally",
+            "kind": "pass",
+            "from_x": -8,
+            "from_z": 7,
+            "to_x": 32,
+            "to_z": 8,
+            "receiver_name": "Antoine Griezmann",
+            "viable": true,
+            "value": 0.0549,
+            "value_kind": "xT"
+          },
+          {
+            "option_id": "f22_o1_3",
+            "label": "Pass to Coman wide right",
+            "kind": "pass",
+            "from_x": -8,
+            "from_z": 7,
+            "to_x": 15,
+            "to_z": 20,
+            "receiver_name": "Kingsley Coman",
+            "viable": false,
+            "value": 0.0295,
+            "value_kind": "xT",
+            "best": false
           }
         ]
       },
@@ -314,6 +530,61 @@
             "target": "midfield_disconnection_poly",
             "color": "#EF4444"
           }
+        ],
+        "what_if_options": [
+          {
+            "option_id": "f22_o2_1",
+            "label": "Pass inside to Thuram (No. 9)",
+            "kind": "pass",
+            "from_x": 20,
+            "from_z": -15,
+            "to_x": 24,
+            "to_z": -2,
+            "receiver_name": "Marcus Thuram",
+            "viable": true,
+            "value": 0.1080,
+            "value_kind": "xT",
+            "chosen": true
+          },
+          {
+            "option_id": "f22_o2_2",
+            "label": "Through ball to Griezmann centrally",
+            "kind": "pass",
+            "from_x": 20,
+            "from_z": -15,
+            "to_x": 32,
+            "to_z": 8,
+            "receiver_name": "Antoine Griezmann",
+            "viable": false,
+            "value": 0.1380,
+            "value_kind": "xT",
+            "best": true
+          },
+          {
+            "option_id": "f22_o2_3",
+            "label": "Shoot from outside the box",
+            "kind": "shot",
+            "from_x": 20,
+            "from_z": -15,
+            "to_x": 52.5,
+            "to_z": 0,
+            "viable": true,
+            "value": 0.0350,
+            "value_kind": "xG"
+          },
+          {
+            "option_id": "f22_o2_4",
+            "label": "Play backwards to Adrien Rabiot",
+            "kind": "pass",
+            "from_x": 20,
+            "from_z": -15,
+            "to_x": -8,
+            "to_z": 7,
+            "receiver_name": "Adrien Rabiot",
+            "viable": true,
+            "value": 0.0121,
+            "value_kind": "xT"
+          }
         ]
       },
       {
@@ -335,6 +606,47 @@
             "target": "overlay_exposed_box",
             "color": "#FF0055"
           }
+        ],
+        "what_if_options": [
+          {
+            "option_id": "f22_o3_1",
+            "label": "First-time layoff back to Mbappé",
+            "kind": "pass",
+            "from_x": 24,
+            "from_z": -2,
+            "to_x": 30,
+            "to_z": -8,
+            "receiver_name": "Kylian Mbappé",
+            "viable": true,
+            "value": 0.2574,
+            "value_kind": "xT",
+            "chosen": true
+          },
+          {
+            "option_id": "f22_o3_2",
+            "label": "Shoot immediately from distance",
+            "kind": "shot",
+            "from_x": 24,
+            "from_z": -2,
+            "to_x": 52.5,
+            "to_z": 0,
+            "viable": true,
+            "value": 0.0800,
+            "value_kind": "xG"
+          },
+          {
+            "option_id": "f22_o3_3",
+            "label": "Pass inside to Griezmann",
+            "kind": "pass",
+            "from_x": 24,
+            "from_z": -2,
+            "to_x": 32,
+            "to_z": 8,
+            "receiver_name": "Antoine Griezmann",
+            "viable": true,
+            "value": 0.0549,
+            "value_kind": "xT"
+          }
         ]
       },
       {
@@ -351,7 +663,8 @@
             "target": "arrow_volley_shot",
             "color": "#EAB308"
           }
-        ]
+        ],
+        "what_if_options": []
       }
     ],
     "commentary": [

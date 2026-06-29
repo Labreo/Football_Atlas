@@ -83,9 +83,9 @@ export class OverlayManager {
         const shape = new THREE.Shape();
         overlay.points.forEach((p, idx) => {
           if (idx === 0) {
-            shape.moveTo(p.x, p.z);
+            shape.moveTo(p.x, -p.z);
           } else {
-            shape.lineTo(p.x, p.z);
+            shape.lineTo(p.x, -p.z);
           }
         });
         shape.closePath();
@@ -450,7 +450,7 @@ export class OverlayManager {
         const halfWidth = 27.5; // half pitch width
         const halfLength = 20;
         const colorA = overlayColor;
-        const colorB = this.resolveColor(overlay.colorSecondary ?? '#10B981');
+        const colorB = this.resolveColor(overlay.colorSecondary ?? '#38FE5E');
 
         // Left half — "from" color
         const leftGeo = new THREE.PlaneGeometry(halfLength, halfWidth);

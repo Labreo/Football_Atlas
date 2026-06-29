@@ -122,7 +122,7 @@ const PrimitiveExplorer: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h3 className="font-display text-base font-semibold text-white tracking-wide">
-            🧩 Primitive Library Explorer
+            Primitive Library Explorer
           </h3>
           <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-cyan-400 font-mono uppercase tracking-widest">
             Primitives
@@ -132,7 +132,7 @@ const PrimitiveExplorer: React.FC = () => {
           onClick={runValidations}
           className="text-[10px] px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono transition-all"
         >
-          🔄 Re-validate
+          Re-validate
         </button>
       </div>
 

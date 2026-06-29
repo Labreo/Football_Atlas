@@ -216,7 +216,7 @@ export class HighPressModule extends ComposedTacticalModule {
         new PassingArrow('arrow_turnover_pass', { x: -22, z: -12 }, { x: -30, z: 2 }, 0.75, 0.85, { color: '#39FF14', width: 2.5 }),
         new MovementArrow('arrow_blue_cf_run', { x: -23, z: -1 }, { x: -30, z: 2 }, 0.75, 0.85, { color: '#39FF14', width: 3, dashSpeed: 1.5 }, true),
         new MovementArrow('arrow_shot_vector', { x: -40, z: 0 }, { x: -49, z: 0 }, 0.90, 0.95, { color: '#EAB308', width: 3.5 }),
-        new MovementArrow('arrow_transition_space_indicator', { x: -22, z: -12 }, { x: -42, z: -5 }, 0.75, 0.90, { color: '#10B981', width: 2, dashSize: 2.0 }, true),
+        new MovementArrow('arrow_transition_space_indicator', { x: -22, z: -12 }, { x: -42, z: -5 }, 0.75, 0.90, { color: '#38FE5E', width: 2, dashSize: 2.0 }, true),
 
         // Overlays
         new HighlightZone('overlay_pressing_structure', OverlayType.RECTANGLE, { center: { x: 0, z: 0 }, bounds: { width: 32, length: 55, rotation: 0 } }, 0.0, 0.20, '#1D4ED8', 0.12),
@@ -231,7 +231,7 @@ export class HighPressModule extends ComposedTacticalModule {
             { x: -24, z: -16 }
           ]
         }, 0.25, 0.48, '#EF4444', 0.18),
-        new HighlightZone('overlay_midfield_compactness', OverlayType.RECTANGLE, { center: { x: -10, z: 0 }, bounds: { width: 15, length: 30, rotation: 0 } }, 0.20, 0.50, '#10B981', 0.12),
+        new HighlightZone('overlay_midfield_compactness', OverlayType.RECTANGLE, { center: { x: -10, z: 0 }, bounds: { width: 15, length: 30, rotation: 0 } }, 0.20, 0.50, '#38FE5E', 0.12),
         new HighlightZone('overlay_compact_defense', OverlayType.POLYGON, {
           points: [
             { x: 8, z: -22 },
@@ -239,7 +239,7 @@ export class HighPressModule extends ComposedTacticalModule {
             { x: 16, z: 6 },
             { x: 16, z: -6 }
           ]
-        }, 0.20, 0.55, '#10B981', 0.1),
+        }, 0.20, 0.55, '#38FE5E', 0.1),
         new HighlightZone('overlay_pressure_funnel', OverlayType.POLYGON, {
           points: [
             { x: -24, z: 0 },
@@ -249,7 +249,7 @@ export class HighPressModule extends ComposedTacticalModule {
           ]
         }, 0.30, 0.50, '#F97316', 0.15),
         new HighlightZone('overlay_trap_zone', OverlayType.CIRCLE, { center: { x: -28, z: -26 }, radius: 8.5 }, 0.45, 0.68, '#EF4444', 0.26),
-        new HighlightZone('overlay_turnover_zone', OverlayType.CIRCLE, { center: { x: -22, z: -12 }, radius: 6.5 }, 0.65, 0.80, '#10B981', 0.22),
+        new HighlightZone('overlay_turnover_zone', OverlayType.CIRCLE, { center: { x: -22, z: -12 }, radius: 6.5 }, 0.65, 0.80, '#38FE5E', 0.22),
         new HighlightZone('overlay_transition_space', OverlayType.POLYGON, {
           points: [
             { x: -28, z: -14 },
@@ -257,9 +257,9 @@ export class HighPressModule extends ComposedTacticalModule {
             { x: -46, z: 0 },
             { x: -38, z: -18 }
           ]
-        }, 0.75, 0.95, '#10B981', 0.16),
+        }, 0.75, 0.95, '#38FE5E', 0.16),
         new HighlightZone('overlay_shot_opportunity', OverlayType.CIRCLE, { center: { x: -42, z: 0 }, radius: 6.0 }, 0.85, 1.0, '#EAB308', 0.2),
-        new HighlightZone('overlay_final_block', OverlayType.RECTANGLE, { center: { x: -25, z: -8 }, bounds: { width: 38, length: 48, rotation: 0 } }, 0.90, 1.0, '#10B981', 0.08),
+        new HighlightZone('overlay_final_block', OverlayType.RECTANGLE, { center: { x: -25, z: -8 }, bounds: { width: 38, length: 48, rotation: 0 } }, 0.90, 1.0, '#38FE5E', 0.08),
         new HighlightZone('overlay_compactness_summary', OverlayType.CIRCLE, { center: { x: -18, z: -8 }, radius: 16.0 }, 0.90, 1.0, '#06B6D4', 0.14),
         new HighlightZone('overlay_opposition_disorganization', OverlayType.POLYGON, {
           points: [

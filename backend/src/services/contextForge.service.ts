@@ -26,7 +26,8 @@ export class ContextForgeGateway {
     conversationId: string = 'default-session',
     traceId: string = 'system-request',
     history?: ConversationTurn[],
-    audienceMode: AudienceMode = AudienceMode.CASUAL_FAN
+    audienceMode: AudienceMode = AudienceMode.CASUAL_FAN,
+    lang: string = 'en'
   ): Promise<TutorResponse> {
     const startTime = Date.now();
     const session = contextManager.getOrCreateSessionContext(conversationId);
@@ -143,17 +144,17 @@ export class ContextForgeGateway {
     if (!isMock) {
       try {
         // Run Granite Live Synthesis with audience-aware system prompt
-        finalExplanation = await this.synthesizeGraniteLive(question, toolOutputs, detectedLevel, traceId, audienceMode);
+        finalExplanation = await this.synthesizeGraniteLive(question, toolOutputs, detectedLevel, traceId, audienceMode, lang);
       } catch (err: any) {
         Logger.warn(`Granite live synthesis failed, falling back to local template compiler. Error: ${err.message}`);
         finalExplanation = narrationAdapterService.adaptExplanation(
-          this.synthesizeLocalTemplates(question, toolOutputs, detectedLevel),
+          this.synthesizeLocalTemplates(question, toolOutputs, detectedLevel, lang),
           audienceMode
         );
       }
     } else {
       // Run Local Template Compiler + apply audience adaptation
-      const rawExplanation = this.synthesizeLocalTemplates(question, toolOutputs, detectedLevel);
+      const rawExplanation = this.synthesizeLocalTemplates(question, toolOutputs, detectedLevel, lang);
       finalExplanation = narrationAdapterService.adaptExplanation(rawExplanation, audienceMode);
     }
 
@@ -239,13 +240,22 @@ export class ContextForgeGateway {
     toolOutputs: any[],
     level: ComplexityLevel,
     traceId: string,
-    audienceMode: AudienceMode = AudienceMode.CASUAL_FAN
+    audienceMode: AudienceMode = AudienceMode.CASUAL_FAN,
+    lang: string = 'en'
   ): Promise<string> {
     const formattedOutputs = toolOutputs.map(t => {
       return `[Tool: ${t.tool}]\nResponse Data: ${JSON.stringify(t.response, null, 2)}`;
     }).join('\n\n');
 
     const audienceAddition = narrationAdapterService.buildSystemPromptAddition(audienceMode);
+
+    const langNames: Record<string, string> = {
+      en: 'English',
+      es: 'Spanish',
+      fr: 'French',
+      de: 'German',
+    };
+    const targetLang = langNames[lang] || 'English';
 
     const systemPrompt = `You are the Football Atlas AI Tactical Tutor, an elite UEFA Pro License analyst.
 Your job is to synthesize a natural, engaging, and structured educational explanation for the user's question, based strictly on the MCP tool outputs provided below.
@@ -255,6 +265,7 @@ INSTRUCTIONS:
 2. Adapt your tone to the knowledge level: ${level}.
 3. Cite the sources or tools naturally if they contain historical data or coaching excerpts.
 4. Respond with the plain-text final explanation ONLY. Do not wrap in JSON blocks.
+5. You MUST write your entire response in the ${targetLang} language.
 ${audienceAddition}
 
 MCP TOOL OUTPUTS DATA:
@@ -329,7 +340,7 @@ ${formattedOutputs}`;
   /**
    * Fast, reliable local compiler compiling explanations when running offline/mock mode.
    */
-  private synthesizeLocalTemplates(question: string, toolOutputs: any[], level: ComplexityLevel): string {
+  private synthesizeLocalTemplates(question: string, toolOutputs: any[], level: ComplexityLevel, lang: string = 'en'): string {
     const getExplanationOutput = toolOutputs.find(o => o.tool === 'get_concept_explanation')?.response;
     const composeOutput = toolOutputs.find(o => o.tool === 'compose_concepts')?.response;
     const fetchExOutput = toolOutputs.find(o => o.tool === 'fetch_historical_example')?.response;

@@ -88,7 +88,7 @@ function runTests() {
   assert('Performance: Resolving 13,000 styles is fast (latency < 60ms)', duration < 60, `Took ${duration.toFixed(2)}ms`);
 
   console.log('\n==================================================');
-  console.log(`📊 SUMMARY: ${passed} passed, ${failed} failed`);
+  console.log(`SUMMARY: ${passed} passed, ${failed} failed`);
   console.log('==================================================');
 
   if (failed > 0) {

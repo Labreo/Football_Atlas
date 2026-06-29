@@ -4,7 +4,7 @@ import { Logger } from './utils/logger';
 import * as Sentry from '@sentry/node';
 import { verifyAndRegisterTools } from './services/mcpRegistration.service';
 
-// Fail fast at startup if critical variables are entirely missing
+// Fail fast at startup if critical variables are entirely missing (triggered reload)
 validateEnv();
 
 // Initialize Sentry if DSN provided

@@ -21,7 +21,7 @@ import type { TransitionType } from '../../tacticalOrchestrator/TransitionEngine
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TYPE_LABELS: Record<TransitionType, { label: string; color: string }> = {
-  CONCEPT_TO_CONCEPT:       { label: 'C → C',        color: '#10B981' },
+  CONCEPT_TO_CONCEPT:       { label: 'C → C',        color: '#38FE5E' },
   CONCEPT_TO_BREAKDOWN:     { label: 'C → Brkdwn',   color: '#F59E0B' },
   BREAKDOWN_TO_CONCEPT:     { label: 'Brkdwn → C',   color: '#60A5FA' },
   CLASSROOM_TO_ANIMATION:   { label: 'Chat → Anim',  color: '#A78BFA' },
@@ -95,7 +95,7 @@ const TransitionInspector: React.FC = () => {
         isTransitioning
           ? 'bg-amber-900/60 border-amber-600/50 text-amber-300 animate-pulse'
           : inspectorOpen
-          ? 'bg-[#10B981]/20 border-[#10B981]/40 text-[#10B981]'
+          ? 'bg-[#38FE5E]/20 border-[#38FE5E]/40 text-[#38FE5E]'
           : 'bg-slate-900/60 border-slate-700/40 text-slate-400 hover:text-slate-200'
       }`}
     >
@@ -120,7 +120,7 @@ const TransitionInspector: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/40 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-[#10B981] text-[9px] uppercase tracking-widest">⟳ Transition Inspector</span>
+            <span className="text-[#38FE5E] text-[9px] uppercase tracking-widest">⟳ Transition Inspector</span>
           </div>
           <div className="flex items-center gap-3 text-slate-500">
             <span>Total: <span className="text-slate-300">{totalTransitions}</span></span>
@@ -164,7 +164,7 @@ const TransitionInspector: React.FC = () => {
               {/* Animated progress bar */}
               <div className="h-0.5 bg-slate-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#10B981] rounded-full animate-pulse"
+                  className="h-full bg-[#38FE5E] rounded-full animate-pulse"
                   style={{ width: '60%' }}
                 />
               </div>

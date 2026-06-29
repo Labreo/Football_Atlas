@@ -10,6 +10,20 @@ import { backThreeWingBackPackage } from './backThreeWingBack.package';
 import { thirdManRunPackage } from './thirdManRun.package';
 import { compactnessPressingLinesPackage } from './compactnessPressingLines.package';
 import { argentinaFrance2022Package } from './argentinaFrance2022.package';
+import { gegenpressingPackage } from './gegenpressing.package';
+import { restDefensePackage } from './restDefense.package';
+import { positionalPlayPackage } from './positionalPlay.package';
+import { boxMidfieldPackage } from './boxMidfield.package';
+import { overlappingRunsPackage } from './overlappingRuns.package';
+import { overloadingToIsolatePackage } from './overloadingToIsolate.package';
+import { halfSpaceExploitationPackage } from './halfSpaceExploitation.package';
+import { verticalTikiTakaPackage } from './verticalTikiTaka.package';
+import { shadowStrikerPackage } from './shadowStriker.package';
+import { pressingTriggersPackage } from './pressingTriggers.package';
+import { midfieldRotationPackage } from './midfieldRotation.package';
+import { sweeperKeeperPackage } from './sweeperKeeper.package';
+import { defensiveTransitionsPackage } from './defensiveTransitions.package';
+import { invertedFullbacksPackage } from './invertedFullbacks.package';
 
 // ────────────────────────────────────────────────────────────
 // ALL CONCEPT PACKAGES
@@ -34,6 +48,20 @@ export const allConceptPackages: ConceptPackage[] = [
   thirdManRunPackage,
   compactnessPressingLinesPackage,
   argentinaFrance2022Package,
+  gegenpressingPackage,
+  restDefensePackage,
+  positionalPlayPackage,
+  boxMidfieldPackage,
+  overlappingRunsPackage,
+  overloadingToIsolatePackage,
+  halfSpaceExploitationPackage,
+  verticalTikiTakaPackage,
+  shadowStrikerPackage,
+  pressingTriggersPackage,
+  midfieldRotationPackage,
+  sweeperKeeperPackage,
+  defensiveTransitionsPackage,
+  invertedFullbacksPackage,
 ];
 
 // Re-export individual packages for direct access
@@ -48,3 +76,17 @@ export { backThreeWingBackPackage } from './backThreeWingBack.package';
 export { thirdManRunPackage } from './thirdManRun.package';
 export { compactnessPressingLinesPackage } from './compactnessPressingLines.package';
 export { argentinaFrance2022Package } from './argentinaFrance2022.package';
+export { gegenpressingPackage } from './gegenpressing.package';
+export { restDefensePackage } from './restDefense.package';
+export { positionalPlayPackage } from './positionalPlay.package';
+export { boxMidfieldPackage } from './boxMidfield.package';
+export { overlappingRunsPackage } from './overlappingRuns.package';
+export { overloadingToIsolatePackage } from './overloadingToIsolate.package';
+export { halfSpaceExploitationPackage } from './halfSpaceExploitation.package';
+export { verticalTikiTakaPackage } from './verticalTikiTaka.package';
+export { shadowStrikerPackage } from './shadowStriker.package';
+export { pressingTriggersPackage } from './pressingTriggers.package';
+export { midfieldRotationPackage } from './midfieldRotation.package';
+export { sweeperKeeperPackage } from './sweeperKeeper.package';
+export { defensiveTransitionsPackage } from './defensiveTransitions.package';
+export { invertedFullbacksPackage } from './invertedFullbacks.package';

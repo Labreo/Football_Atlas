@@ -90,53 +90,53 @@ export interface ConceptCameraPreset {
 const CAMERA_PRESETS: Record<string, ConceptCameraPreset> = {
     // Overhead tactical view — default
     default: {
-        position: new THREE.Vector3(0, 110, 5),
+        position: new THREE.Vector3(0, 135, 0.1),
         target: new THREE.Vector3(0, 0, 0),
     },
-    // Slight angle to show depth — attacking concepts
+    // Slight angle to show depth — attacking concepts (override to overhead view as requested)
     false_9: {
-        position: new THREE.Vector3(25, 90, 12),
-        target: new THREE.Vector3(10, 0, 0),
+        position: new THREE.Vector3(0, 135, 0.1),
+        target: new THREE.Vector3(0, 0, 0),
     },
     midfield_overload: {
-        position: new THREE.Vector3(0, 100, 8),
+        position: new THREE.Vector3(0, 135, 0.1),
         target: new THREE.Vector3(0, 0, 0),
     },
     third_man_run: {
-        position: new THREE.Vector3(-10, 85, 15),
-        target: new THREE.Vector3(5, 0, 0),
+        position: new THREE.Vector3(0, 135, 0.1),
+        target: new THREE.Vector3(0, 0, 0),
     },
     high_press: {
-        position: new THREE.Vector3(30, 95, 10),
-        target: new THREE.Vector3(20, 0, 0),
+        position: new THREE.Vector3(0, 135, 0.1),
+        target: new THREE.Vector3(0, 0, 0),
     },
     pressing_trap: {
-        position: new THREE.Vector3(20, 90, 10),
-        target: new THREE.Vector3(10, 0, 0),
+        position: new THREE.Vector3(0, 135, 0.1),
+        target: new THREE.Vector3(0, 0, 0),
     },
     compactness_pressing_lines: {
-        position: new THREE.Vector3(0, 105, 5),
+        position: new THREE.Vector3(0, 135, 0.1),
         target: new THREE.Vector3(0, 0, 0),
     },
     defensive_block: {
-        position: new THREE.Vector3(-15, 95, 8),
-        target: new THREE.Vector3(-5, 0, 0),
+        position: new THREE.Vector3(0, 135, 0.1),
+        target: new THREE.Vector3(0, 0, 0),
     },
     counter_attack_trigger: {
-        position: new THREE.Vector3(0, 90, 12),
-        target: new THREE.Vector3(5, 0, 0),
+        position: new THREE.Vector3(0, 135, 0.1),
+        target: new THREE.Vector3(0, 0, 0),
     },
     back_three_wing_back: {
-        position: new THREE.Vector3(-20, 95, 10),
-        target: new THREE.Vector3(-10, 0, 0),
+        position: new THREE.Vector3(0, 135, 0.1),
+        target: new THREE.Vector3(0, 0, 0),
     },
     inverted_winger: {
-        position: new THREE.Vector3(10, 88, 12),
-        target: new THREE.Vector3(15, 0, 3),
+        position: new THREE.Vector3(0, 135, 0.1),
+        target: new THREE.Vector3(0, 0, 0),
     },
-    // Historical breakdown mode: low-angle cinematic
+    // Historical breakdown mode: low-angle cinematic (override to overhead view as requested)
     breakdown: {
-        position: new THREE.Vector3(0, 80, 20),
+        position: new THREE.Vector3(0, 135, 0.1),
         target: new THREE.Vector3(0, 0, 0),
     },
 };

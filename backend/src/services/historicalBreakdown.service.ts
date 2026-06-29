@@ -83,6 +83,118 @@ const CONCEPT_MAPPINGS: Record<string, { player: string; arrow: string; space: s
     view1: 'overview',
     view2: 'tactical_shape',
     view3: 'passing_lane'
+  },
+  gegenpressing: {
+    player: 'blue_cf',
+    arrow: 'arrow_blue_rw_press',
+    space: 'overlay_trigger_area',
+    view1: 'overview',
+    view2: 'player_focus',
+    view3: 'passing_lane'
+  },
+  rest_defense: {
+    player: 'blue_r_st',
+    arrow: 'red_rcb',
+    space: 'overlay_compact_defense',
+    view1: 'overview',
+    view2: 'tactical_shape',
+    view3: 'space_creation'
+  },
+  positional_play: {
+    player: 'att_mid_left',
+    arrow: 'arrow_mid_overload',
+    space: 'overlay_midfield_space',
+    view1: 'overview',
+    view2: 'tactical_shape',
+    view3: 'passing_lane'
+  },
+  box_midfield: {
+    player: 'att_mid_left',
+    arrow: 'arrow_mid_overload',
+    space: 'overlay_midfield_space',
+    view1: 'overview',
+    view2: 'tactical_shape',
+    view3: 'passing_lane'
+  },
+  overlapping_runs: {
+    player: 'att_wingback_l',
+    arrow: 'arrow_wb_overlap',
+    space: 'overlay_flank_space',
+    view1: 'overview',
+    view2: 'player_focus',
+    view3: 'space_creation'
+  },
+  overloading_to_isolate: {
+    player: 'att_winger_r',
+    arrow: 'arrow_cut_inside',
+    space: 'overlay_half_space',
+    view1: 'overview',
+    view2: 'tactical_shape',
+    view3: 'space_creation'
+  },
+  half_space_exploitation: {
+    player: 'att_winger_r',
+    arrow: 'arrow_cut_inside',
+    space: 'overlay_half_space',
+    view1: 'overview',
+    view2: 'player_focus',
+    view3: 'tactical_shape'
+  },
+  vertical_tiki_taka: {
+    player: 'att_third_man',
+    arrow: 'arrow_third_run',
+    space: 'overlay_run_zone',
+    view1: 'overview',
+    view2: 'passing_lane',
+    view3: 'space_creation'
+  },
+  shadow_striker: {
+    player: 'att_false9',
+    arrow: 'arrow_f9_drop',
+    space: 'overlay_vacated_space',
+    view1: 'overview',
+    view2: 'player_focus',
+    view3: 'space_creation'
+  },
+  pressing_triggers: {
+    player: 'blue_cf',
+    arrow: 'arrow_blue_rw_press',
+    space: 'overlay_trigger_area',
+    view1: 'overview',
+    view2: 'player_focus',
+    view3: 'passing_lane'
+  },
+  midfield_rotation: {
+    player: 'att_mid_left',
+    arrow: 'arrow_mid_overload',
+    space: 'overlay_midfield_space',
+    view1: 'overview',
+    view2: 'tactical_shape',
+    view3: 'passing_lane'
+  },
+  sweeper_keeper: {
+    player: 'blue_cf',
+    arrow: 'arrow_blue_rw_press',
+    space: 'overlay_trigger_area',
+    view1: 'overview',
+    view2: 'player_focus',
+    view3: 'tactical_shape'
+  },
+  defensive_transitions: {
+    player: 'blue_r_st',
+    arrow: 'red_rcb',
+    space: 'overlay_compact_defense',
+    view1: 'overview',
+    view2: 'tactical_shape',
+    view3: 'space_creation'
+  },
+  inverted_fullbacks: {
+    player: 'att_mid_left',
+    arrow: 'arrow_mid_overload',
+    space: 'overlay_midfield_space',
+    view1: 'overview',
+    view2: 'tactical_shape',
+    view3: 'passing_lane'
   }
 };
 

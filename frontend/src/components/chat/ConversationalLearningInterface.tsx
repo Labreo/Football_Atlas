@@ -110,6 +110,116 @@ function parseMarkdown(text: string): string {
   return out.join('');
 }
 
+const wikiPhotoCache = new Map<string, string | null>();
+const wikiPhotoPromiseCache = new Map<string, Promise<string | null>>();
+
+function fetchWikiPhotoSrc(name: string): Promise<string | null> {
+  const formattedName = name.replace(/_/g, ' ');
+  if (wikiPhotoCache.has(formattedName)) {
+    return Promise.resolve(wikiPhotoCache.get(formattedName)!);
+  }
+  if (wikiPhotoPromiseCache.has(formattedName)) {
+    return wikiPhotoPromiseCache.get(formattedName)!;
+  }
+  const promise = fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(formattedName.replace(/ /g, '_'))}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      const src = d?.thumbnail?.source || null;
+      wikiPhotoCache.set(formattedName, src);
+      return src;
+    })
+    .catch(() => {
+      wikiPhotoCache.set(formattedName, null);
+      return null;
+    });
+  wikiPhotoPromiseCache.set(formattedName, promise);
+  return promise;
+}
+
+const usePlayerPhoto = (playerName: string | null) => {
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!playerName) {
+      setPhotoUrl(null);
+      return;
+    }
+
+    const cached = wikiPhotoCache.get(playerName);
+    if (cached !== undefined) {
+      setPhotoUrl(cached);
+      return;
+    }
+
+    let active = true;
+    setLoading(true);
+    fetchWikiPhotoSrc(playerName)
+      .then((src) => {
+        if (!active) return;
+        setPhotoUrl(src);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [playerName]);
+
+  return { photoUrl, loading };
+};
+
+const PlayerPhoto: React.FC<{ playerName: string | null; className?: string }> = ({ playerName, className = "w-12 h-12" }) => {
+  const { photoUrl, loading } = usePlayerPhoto(playerName);
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [photoUrl]);
+
+  if (!playerName) {
+    return (
+      <div className={`${className} rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center`}>
+        <span className="text-[10px] text-slate-500 font-mono">?</span>
+      </div>
+    );
+  }
+
+  const initials = playerName
+    .split(' ')
+    .filter(Boolean)
+    .map(n => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  if (loading) {
+    return (
+      <div className={`${className} rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center`}>
+        <div className="w-3.5 h-3.5 rounded-full border border-purple-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (photoUrl && !imgError) {
+    return (
+      <img
+        src={photoUrl}
+        alt={playerName}
+        onError={() => setImgError(true)}
+        className={`${className} rounded-full object-cover border border-purple-500/30`}
+      />
+    );
+  }
+
+  return (
+    <div className={`${className} rounded-full bg-purple-950/45 border border-purple-900/35 flex items-center justify-center`}>
+      <span className="text-[10px] font-bold text-purple-400 font-mono">{initials}</span>
+    </div>
+  );
+};
 
 const ConversationalLearningInterface: React.FC = () => {
   const {
@@ -127,6 +237,8 @@ const ConversationalLearningInterface: React.FC = () => {
     triggerCameraReset,
     tacticalThread,
     visualMode,
+    lang,
+    setLang,
   } = useTacticalStore();
 
   const orchestratorStore = learningStateStore((state) => state.telemetry);
@@ -136,6 +248,48 @@ const ConversationalLearningInterface: React.FC = () => {
 
   const [input, setInput] = useState('');
   const [showDebug, setShowDebug] = useState(false);
+  const [activeSpeechIdx, setActiveSpeechIdx] = useState<number | null>(null);
+
+  // Clear running speech when component unmounts
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const handleToggleSpeech = (text: string, index: number) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    if (activeSpeechIdx === index) {
+      window.speechSynthesis.cancel();
+      setActiveSpeechIdx(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_`#-]/g, '');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    const voiceLangMap: Record<string, string> = {
+      en: 'en-GB',
+      es: 'es-ES',
+      fr: 'fr-FR',
+      de: 'de-DE'
+    };
+    utterance.lang = voiceLangMap[lang] || 'en-US';
+    
+    utterance.onend = () => {
+      setActiveSpeechIdx(null);
+    };
+    utterance.onerror = () => {
+      setActiveSpeechIdx(null);
+    };
+
+    setActiveSpeechIdx(index);
+    window.speechSynthesis.speak(utterance);
+  };
 
   // Submit new user prompt to the orchestrator loop
   const handleQuerySubmit = (e?: React.FormEvent) => {
@@ -248,7 +402,7 @@ const ConversationalLearningInterface: React.FC = () => {
     <div className={`h-full w-full flex bg-[#0A0D14] text-slate-100 overflow-hidden font-sans relative ${visualMode === 'historical' ? 'historical-mode' : ''}`}>
       {visualMode === 'historical' && (
         <div className="historical-mode-watermark select-none pointer-events-none">
-          🏛️ Grounded Historical Intel
+          Grounded Historical Intel
         </div>
       )}
       
@@ -260,20 +414,20 @@ const ConversationalLearningInterface: React.FC = () => {
         {/* Top Floating Branding & Status */}
         <div className="absolute top-4 left-6 z-10 pointer-events-none flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#38FE5E] animate-pulse" />
             <h1 className="font-display font-extrabold text-sm tracking-wider text-slate-200 uppercase">
-              Football Atlas Classroom
+              {lang === 'es' ? 'Aula Football Atlas' : lang === 'fr' ? 'Classe Football Atlas' : lang === 'de' ? 'Football Atlas Unterricht' : 'Football Atlas Classroom'}
             </h1>
           </div>
           <span className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">
-            Interactive Tactical Board
+            {lang === 'es' ? 'Pizarra Táctica Interactiva' : lang === 'fr' ? 'Tableau Tactique Interactif' : lang === 'de' ? 'Interaktive Taktiktafel' : 'Interactive Tactical Board'}
           </span>
         </div>
 
         {/* Sleek Glassmorphism Tactical Thread Flow Tracker */}
         {tacticalThread && tacticalThread.length > 0 && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-[#121826]/80 backdrop-blur-md border border-[#23324C]/60 px-4 py-2 rounded-full shadow-2xl max-w-[80%] overflow-x-auto scrollbar-thin">
-            <span className="text-[9px] uppercase font-extrabold text-[#10B981] tracking-widest font-mono border-r border-[#23324C]/60 pr-2">
+            <span className="text-[9px] uppercase font-extrabold text-[#38FE5E] tracking-widest font-mono border-r border-[#23324C]/60 pr-2">
               Thread
             </span>
             <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap">
@@ -325,7 +479,7 @@ const ConversationalLearningInterface: React.FC = () => {
 
         {/* Interactive 3D Pitch Canvas */}
         <div className="flex-1 w-full relative z-0 min-h-[300px]">
-          <Pitch3D />
+          <Pitch3D enableCinematicRotation={false} cameraTrackingEnabled={false} />
         </div>
 
         {/* Collapsible Debug HUD */}
@@ -339,7 +493,7 @@ const ConversationalLearningInterface: React.FC = () => {
               <div className="flex justify-between"><span className="text-slate-500">Active Concept:</span><span className="font-bold text-emerald-400">{current_concept?.concept_id || 'none'}</span></div>
               <div className="flex justify-between"><span className="text-slate-500">Confidence Score:</span><span className="font-bold text-slate-200">{orchestratorStore.confidenceScore ? `${Math.round(orchestratorStore.confidenceScore * 100)}%` : 'N/A'}</span></div>
               <div className="flex justify-between"><span className="text-slate-500">Loaded Module:</span><span className="font-bold text-slate-200">{orchestratorStore.loadedModuleId}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Granite Latency:</span><span className="font-bold text-[#10B981]">{orchestratorStore.graniteLatencyMs} ms</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Granite Latency:</span><span className="font-bold text-[#38FE5E]">{orchestratorStore.graniteLatencyMs} ms</span></div>
               <div className="flex justify-between"><span className="text-slate-500">Animation Phase:</span><span className="font-bold text-amber-500">#{current_phase_index} {current_phase_name}</span></div>
               <div className="flex justify-between"><span className="text-slate-500">User Level:</span><span className="font-bold text-slate-200 uppercase">{detectedLevel}</span></div>
             </div>
@@ -360,7 +514,7 @@ const ConversationalLearningInterface: React.FC = () => {
           <div className="px-5 pt-3 pb-2 min-h-[44px] flex items-center">
             {current_phase_annotation ? (
               <div className="flex flex-col gap-0.5">
-                <span className="text-[9px] uppercase font-bold tracking-widest text-[#10B981] font-mono">
+                <span className="text-[9px] uppercase font-bold tracking-widest text-[#38FE5E] font-mono">
                   Phase {current_phase_index} : {current_phase_name}
                 </span>
                 <p className="text-xs text-slate-300 leading-relaxed font-sans">
@@ -369,7 +523,7 @@ const ConversationalLearningInterface: React.FC = () => {
               </div>
             ) : (
               <span className="text-xs text-slate-500 font-mono italic">
-                Timeline inactive. Ask a question to load a tactical animation.
+                {lang === 'es' ? 'Línea de tiempo inactiva. Haz una pregunta para cargar una animación táctica.' : lang === 'fr' ? 'Fil d\'actualité inactif. Posez une question pour charger une animation tactique.' : lang === 'de' ? 'Timeline inaktiv. Stellen Sie eine Frage, um eine Taktikanimation zu laden.' : 'Timeline inactive. Ask a question to load a tactical animation.'}
               </span>
             )}
           </div>
@@ -387,54 +541,85 @@ const ConversationalLearningInterface: React.FC = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask a football tactics question... (e.g. 'Why is a False 9 hard to defend?')"
+              placeholder={
+                lang === 'es' ? "Haz una pregunta sobre táctica... (ej. '¿Por qué es difícil defender a un Falso 9?')" :
+                lang === 'fr' ? "Posez une question sur la tactique... (ex: 'Pourquoi un Faux 9 est-il difficile à défendre ?')" :
+                lang === 'de' ? "Stellen Sie eine Taktikfrage... (z. B. 'Warum ist eine Falsche 9 schwer zu verteidigen?')" :
+                "Ask a football tactics question... (e.g. 'Why is a False 9 hard to defend?')"
+              }
               disabled={loading}
-              className="flex-1 h-11 pl-4 pr-12 rounded-xl text-xs font-sans bg-[#131926] border border-[#222E45] text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/30 transition-all disabled:opacity-50"
+              className="flex-1 h-11 pl-4 pr-12 rounded-xl text-xs font-sans bg-[#131926] border border-[#222E45] text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#38FE5E] focus:ring-1 focus:ring-[#38FE5E]/30 transition-all disabled:opacity-50"
             />
             
             {/* Thinking / Processing indicator */}
             {loading && (
               <div className="absolute right-14 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="w-1.5 h-1.5 bg-[#38FE5E] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 bg-[#38FE5E] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 bg-[#38FE5E] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="h-11 px-4 rounded-xl bg-[#10B981] hover:bg-[#0EA271] text-white font-display font-semibold text-xs transition-colors disabled:opacity-40 disabled:hover:bg-[#10B981]"
+              className="h-11 px-4 rounded-xl bg-[#38FE5E] hover:bg-[#0EA271] text-white font-display font-semibold text-xs transition-colors disabled:opacity-40 disabled:hover:bg-[#38FE5E]"
             >
-              Analyze
+              {lang === 'es' ? 'Analizar' : lang === 'fr' ? 'Analyser' : lang === 'de' ? 'Analysieren' : 'Analyze'}
             </button>
           </form>
 
           {/* Quick Help Prompts (For discovery) */}
           <div className="max-w-3xl mx-auto mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-mono">
-            <span className="uppercase font-bold tracking-wider text-slate-600">Examples:</span>
+            <span className="uppercase font-bold tracking-wider text-slate-600">
+              {lang === 'es' ? 'Ejemplos:' : lang === 'fr' ? 'Exemples:' : lang === 'de' ? 'Beispiele:' : 'Examples:'}
+            </span>
             <button
               type="button"
-              onClick={() => handleSuggestionClick("Why is a False 9 hard to defend?")}
+              onClick={() => handleSuggestionClick(
+                lang === 'es' ? "¿Por qué es difícil defender a un Falso 9?" :
+                lang === 'fr' ? "Pourquoi un Faux 9 est-il difficile à défendre ?" :
+                lang === 'de' ? "Warum ist eine Falsche 9 schwer zu verteidigen?" :
+                "Why is a False 9 hard to defend?"
+              )}
               className="hover:text-slate-300 transition-colors"
             >
-              "Why is a False 9 hard to defend?"
+              {lang === 'es' ? '"¿Por qué es difícil defender a un Falso 9?"' :
+               lang === 'fr' ? '"Pourquoi un Faux 9 est-il difficile à défendre ?"' :
+               lang === 'de' ? '"Warum ist eine Falsche 9 schwer zu verteidigen?"' :
+               '"Why is a False 9 hard to defend?"'}
             </button>
             <span>•</span>
             <button
               type="button"
-              onClick={() => handleSuggestionClick("How does a high press create chances?")}
+              onClick={() => handleSuggestionClick(
+                lang === 'es' ? "¿Cómo crea oportunidades una presión alta?" :
+                lang === 'fr' ? "Comment un pressing haut crée-t-il des occasions ?" :
+                lang === 'de' ? "Wie schafft ein hohes Pressing Torchancen?" :
+                "How does a high press create chances?"
+              )}
               className="hover:text-slate-300 transition-colors"
             >
-              "How does a high press create chances?"
+              {lang === 'es' ? '"¿Cómo crea oportunidades una presión alta?"' :
+               lang === 'fr' ? '"Comment un pressing haut crée-t-il des occasions ?"' :
+               lang === 'de' ? '"Wie schafft ein hohes Pressing Torchancen?"' :
+               '"How does a high press create chances?"'}
             </button>
             <span>•</span>
             <button
               type="button"
-              onClick={() => handleSuggestionClick("How does a defensive block work?")}
+              onClick={() => handleSuggestionClick(
+                lang === 'es' ? "¿Cómo funciona un bloque defensivo?" :
+                lang === 'fr' ? "Comment fonctionne un bloc défensif ?" :
+                lang === 'de' ? "Wie funktioniert ein Abwehrblock?" :
+                "How does a defensive block work?"
+              )}
               className="hover:text-slate-300 transition-colors"
             >
-              "How does a defensive block work?"
+              {lang === 'es' ? '"¿Cómo funciona un bloque defensivo?"' :
+               lang === 'fr' ? '"Comment fonctionne un bloc défensif ?"' :
+               lang === 'de' ? '"Wie funktioniert ein Abwehrblock?"' :
+               '"How does a defensive block work?"'}
             </button>
           </div>
         </div>
@@ -454,9 +639,32 @@ const ConversationalLearningInterface: React.FC = () => {
             {/* Panel Header */}
             <div className="p-5 border-b border-[#1E293B]/70 bg-[#0E1320] flex items-center justify-between shrink-0">
               <h2 className="font-display font-bold text-xs tracking-wider text-slate-300 uppercase">
-                Classroom Chat
+                {lang === 'es' ? 'Chat del Aula' : lang === 'fr' ? 'Chat de la Classe' : lang === 'de' ? 'Klassenzimmer-Chat' : 'Classroom Chat'}
               </h2>
               <div className="flex items-center gap-2">
+                {/* Language Picker */}
+                <div className="flex items-center bg-[#13192B]/80 rounded-full border border-slate-800/80 p-0.5 gap-0.5">
+                  {[
+                    { key: 'en', flag: '🇬🇧', title: 'English' },
+                    { key: 'es', flag: '🇪🇸', title: 'Español' },
+                    { key: 'fr', flag: '🇫🇷', title: 'Français' },
+                    { key: 'de', flag: '🇩🇪', title: 'Deutsch' },
+                  ].map((l) => (
+                    <button
+                      key={l.key}
+                      onClick={() => setLang(l.key)}
+                      title={l.title}
+                      className={`w-6 h-6 flex items-center justify-center rounded-full text-xs transition-all ${
+                        lang === l.key
+                          ? 'bg-[#38FE5E]/20 border border-[#38FE5E]/40 text-[#38FE5E] scale-105 shadow-sm'
+                          : 'opacity-55 hover:opacity-85 hover:scale-105'
+                      }`}
+                    >
+                      {l.flag}
+                    </button>
+                  ))}
+                </div>
+
                 {current_concept && (
                   <span className="text-[9px] bg-[#1B253B] text-slate-400 font-bold px-2 py-0.5 rounded border border-[#2B3B5E]/30 uppercase tracking-wider font-mono">
                     {current_concept.complexity}
@@ -479,7 +687,7 @@ const ConversationalLearningInterface: React.FC = () => {
                       : 'bg-sky-500/10 border-sky-400/30 text-sky-400 hover:bg-sky-500/20'
                   }`}
                 >
-                  <span>{isCasual ? '🏟' : '📐'}</span>
+                  <span>{isCasual ? 'FAN' : 'PRO'}</span>
                   <span>{isCasual ? 'Fan' : 'Tactical'}</span>
                   {autoDetected && (
                     <span className="text-[7px] opacity-60 ml-0.5">✦auto</span>
@@ -491,89 +699,145 @@ const ConversationalLearningInterface: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
               {conversation.map((turn, turnIdx) => {
                 const isUser = turn.role === 'user';
+                const analystName = lang === 'es' ? 'Guillem Balagué' :
+                                    lang === 'fr' ? 'Laure Boulleau' :
+                                    lang === 'de' ? 'Lothar Matthäus' :
+                                    'Gary Neville';
                 return (
                   <div
                     key={turnIdx}
-                    className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} space-y-1`}
+                    className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'} w-full`}
                   >
-                    {/* Header (Sender Name + audience badge) */}
-                    <div className="flex items-center gap-1.5 px-1">
-                      <span className="text-[9px] font-mono text-slate-500 uppercase">
-                        {isUser ? 'You' : 'Granite AI Analyst'}
-                      </span>
-                      {!isUser && turn.audience_mode && (
-                        <span className={`text-[7px] font-bold font-mono uppercase px-1.5 py-0.5 rounded-full border ${
-                          turn.audience_mode === AudienceMode.CASUAL_FAN
-                            ? 'bg-amber-500/10 border-amber-400/25 text-amber-400'
-                            : 'bg-sky-500/10 border-sky-400/25 text-sky-400'
-                        }`}>
-                          {turn.audience_mode === AudienceMode.CASUAL_FAN ? '🏟 Fan' : '📐 Tactical'}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Message Bubble */}
-                    <div
-                      className={`max-w-[90%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed font-sans ${
-                        isUser
-                          ? 'bg-[#1E293B]/50 border border-[#334155]/45 text-slate-200 rounded-tr-none'
-                          : 'bg-[#0E1624] border border-[#23324C]/50 text-slate-300 rounded-tl-none shadow-md'
-                      }`}
-                    >
-                      <span
-                        className="leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: parseMarkdown(turn.content) }}
-                      />
-
-                      {/* MCP Tool Execution Trace Timeline */}
-                      {!isUser && turn.mcp_tool_chain && turn.mcp_tool_chain.length > 0 && (
-                        <div className="mt-3 pt-2.5 border-t border-[#23324C]/40 space-y-1.5 font-mono text-[9px] select-text">
-                          <div className="flex justify-between items-center text-slate-500 uppercase tracking-widest text-[8px] font-bold">
-                            <span>🛠️ MCP Gateway: Context Forge</span>
-                            <span className="text-emerald-500 text-[7px] bg-emerald-950/40 px-1 border border-emerald-500/20 rounded">agent-mode</span>
-                          </div>
-                          <div className="space-y-1 pl-1 border-l border-slate-800">
-                            {turn.mcp_tool_chain.map((tool, idx) => (
-                              <div key={idx} className="flex flex-wrap items-center gap-1 leading-relaxed">
-                                <span className="text-slate-600">├─</span>
-                                <span className="text-sky-400 font-bold">{tool.tool_name}</span>
-                                <span className="text-slate-500 truncate max-w-[140px]" title={JSON.stringify(tool.arguments)}>args: {JSON.stringify(tool.arguments)}</span>
-                                <span className={`px-1 text-[7px] font-bold rounded ${
-                                  tool.status === 'success' ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/20' :
-                                  tool.status === 'failure' ? 'bg-red-950 text-red-400 border border-red-500/20' :
-                                  'bg-blue-950 text-blue-400 border border-blue-500/20 animate-pulse'
-                                }`}>
-                                  {tool.status.toUpperCase()} ({tool.latency_ms}ms)
-                                </span>
-                              </div>
-                            ))}
-                          </div>
+                    {!isUser && (
+                      <div className="shrink-0 mt-6 select-none">
+                        <PlayerPhoto 
+                          playerName={analystName}
+                          className="w-7 h-7 border border-purple-500/30 rounded-full shadow-[0_0_6px_rgba(147,51,234,0.15)]"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} space-y-1 max-w-[85%]`}>
+                      {/* Header (Sender Name + audience badge + Audio Speak) */}
+                      <div className="flex items-center gap-1.5 px-1 justify-between w-full">
+                        <div className="flex items-center gap-1.5">
+                          {!isUser ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-bold text-slate-200">
+                                {analystName}
+                              </span>
+                              <span className="text-[8px] font-mono text-slate-500 uppercase">
+                                ({lang === 'es' ? 'Analista Táctica' :
+                                  lang === 'fr' ? 'Analyste Tactique' :
+                                  lang === 'de' ? 'Taktikanalyst' :
+                                  'Tactical Analyst'})
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[9px] font-mono text-slate-500 uppercase">
+                              You
+                            </span>
+                          )}
+                          
+                          {!isUser && turn.audience_mode && (
+                            <span className={`text-[7px] font-bold font-mono uppercase px-1.5 py-0.5 rounded-full border ${
+                              turn.audience_mode === AudienceMode.CASUAL_FAN
+                                ? 'bg-amber-500/10 border-amber-400/25 text-amber-400'
+                                : 'bg-sky-500/10 border-sky-400/25 text-sky-400'
+                            }`}>
+                              {turn.audience_mode === AudienceMode.CASUAL_FAN ? 'Fan' : 'Tactical'}
+                            </span>
+                          )}
                         </div>
-                      )}
 
-                      {/* Contextual Action Cards */}
-                      {!isUser && turn.actions && turn.actions.length > 0 && (
-                        <div className="mt-3.5 space-y-2.5">
-                          {turn.actions.map((action, actionIdx) => {
-                            if (action.type === 'LAUNCH_MATCH') {
+                        {/* Read Aloud Button */}
+                        {!isUser && (
+                          <button
+                            onClick={() => handleToggleSpeech(turn.content, turnIdx)}
+                            type="button"
+                            className={`p-1 rounded hover:bg-slate-800 text-[10px] flex items-center gap-1 transition-all ${
+                              activeSpeechIdx === turnIdx ? 'text-[#38FE5E] bg-emerald-950/20 border border-emerald-500/30' : 'text-slate-500 hover:text-slate-350'
+                            }`}
+                            title={activeSpeechIdx === turnIdx ? "Stop Reading Aloud" : "Read Aloud"}
+                          >
+                            {activeSpeechIdx === turnIdx ? (
+                              <>
+                                <span className="text-[7px] font-mono font-extrabold uppercase">Stop</span>
+                                <span>🔇</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-[7px] font-mono font-extrabold uppercase">Voice</span>
+                                <span>🔊</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Message Bubble */}
+                      <div
+                        className={`max-w-[90%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed font-sans ${
+                          isUser
+                            ? 'bg-[#1E293B]/50 border border-[#334155]/45 text-slate-200 rounded-tr-none'
+                            : 'bg-[#0E1624] border border-[#23324C]/50 text-slate-300 rounded-tl-none shadow-md'
+                        }`}
+                      >
+                        <span
+                          className="leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: parseMarkdown(turn.content) }}
+                        />
+
+                        {/* MCP Tool Execution Trace Timeline */}
+                        {!isUser && turn.mcp_tool_chain && turn.mcp_tool_chain.length > 0 && (
+                          <div className="mt-3 pt-2.5 border-t border-[#23324C]/40 space-y-1.5 font-mono text-[9px] select-text">
+                            <div className="flex justify-between items-center text-slate-500 uppercase tracking-widest text-[8px] font-bold">
+                              <span>🛠️ MCP Gateway: Context Forge</span>
+                              <span className="text-emerald-500 text-[7px] bg-emerald-950/40 px-1 border border-emerald-500/20 rounded">agent-mode</span>
+                            </div>
+                            <div className="space-y-1 pl-1 border-l border-slate-800">
+                              {turn.mcp_tool_chain.map((tool, idx) => (
+                                <div key={idx} className="flex flex-wrap items-center gap-1 leading-relaxed">
+                                  <span className="text-slate-600">├─</span>
+                                  <span className="text-sky-400 font-bold">{tool.tool_name}</span>
+                                  <span className="text-slate-500 truncate max-w-[140px]" title={JSON.stringify(tool.arguments)}>args: {JSON.stringify(tool.arguments)}</span>
+                                  <span className={`px-1 text-[7px] font-bold rounded ${
+                                    tool.status === 'success' ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/20' :
+                                    tool.status === 'failure' ? 'bg-red-950 text-red-400 border border-red-500/20' :
+                                    'bg-blue-950 text-blue-400 border border-blue-500/20 animate-pulse'
+                                  }`}>
+                                    {tool.status.toUpperCase()} ({tool.latency_ms}ms)
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Contextual Action Cards */}
+                        {!isUser && turn.actions && turn.actions.length > 0 && (
+                          <div className="mt-3.5 space-y-2.5">
+                            {turn.actions.map((action, actionIdx) => {
+                              if (action.type === 'LAUNCH_MATCH') {
+                                return (
+                                  <MatchCard
+                                    key={actionIdx}
+                                    action={action}
+                                    onLaunchBreakdown={handleLaunchHistoricalBreakdown}
+                                  />
+                                );
+                              }
                               return (
-                                <MatchCard
+                                <ActionButton
                                   key={actionIdx}
                                   action={action}
-                                  onLaunchBreakdown={handleLaunchHistoricalBreakdown}
+                                  onActionClick={handleActionClick}
                                 />
                               );
-                            }
-                            return (
-                              <ActionButton
-                                key={actionIdx}
-                                action={action}
-                                onActionClick={handleActionClick}
-                              />
-                            );
-                          })}
-                        </div>
-                      )}
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -586,9 +850,9 @@ const ConversationalLearningInterface: React.FC = () => {
                     Granite AI Analyst
                   </span>
                   <div className="bg-[#0E1624] border border-[#23324C]/50 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-1.5 h-1.5 bg-[#38FE5E] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-[#38FE5E] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-[#38FE5E] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               )}
@@ -601,16 +865,16 @@ const ConversationalLearningInterface: React.FC = () => {
             {followUpSuggestions.length > 0 && (
               <div className="p-4 border-t border-[#1E293B]/70 bg-[#0A0D15] space-y-2 shrink-0">
                 <span className="text-[9px] text-slate-500 font-mono font-bold uppercase tracking-wider block">
-                  Suggested Follow-ups
+                  {lang === 'es' ? 'Seguimientos sugeridos' : lang === 'fr' ? 'Suggestions de suivi' : lang === 'de' ? 'Empfohlene Folgefragen' : 'Suggested Follow-ups'}
                 </span>
                 <div className="flex flex-col gap-1.5 max-h-[100px] overflow-y-auto scrollbar-thin">
                   {followUpSuggestions.map((suggestion, i) => (
                     <button
                       key={i}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left py-1.5 px-3 rounded-lg bg-[#121826]/40 border border-[#222E45]/60 hover:border-[#10B981]/50 text-[11px] font-semibold text-slate-300 hover:text-[#10B981] transition-all truncate"
+                      className="w-full text-left py-1.5 px-3 rounded-lg bg-[#121826]/40 border border-[#222E45]/60 hover:border-[#38FE5E]/50 text-[11px] font-semibold text-slate-300 hover:text-[#38FE5E] transition-all truncate"
                     >
-                      💡 {suggestion}
+                      {suggestion}
                     </button>
                   ))}
                 </div>
@@ -730,7 +994,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ action, onLaunchBreakdown }) => {
   }
 
   return (
-    <div className="w-full rounded-xl border border-[#23324C]/60 bg-[#121826]/75 backdrop-blur-md overflow-hidden shadow-2xl transition-all hover:border-[#10B981]/40 duration-300">
+    <div className="w-full rounded-xl border border-[#23324C]/60 bg-[#121826]/75 backdrop-blur-md overflow-hidden shadow-2xl transition-all hover:border-[#38FE5E]/40 duration-300">
       <div className="px-4 py-3 bg-[#162032]/45 border-b border-[#23324C]/40 flex items-center justify-between">
         <span className="text-[10px] text-emerald-400 font-mono font-bold uppercase tracking-wider">
           {matchDetails.concept_id.replace(/_/g, ' ')} Match
@@ -768,7 +1032,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ action, onLaunchBreakdown }) => {
         <button
           onClick={() => onLaunchBreakdown(matchDetails.example_id, matchDetails.concept_id)}
           type="button"
-          className="w-full mt-2 py-2 bg-gradient-to-r from-[#10B981] to-[#059669] hover:from-[#11C489] hover:to-[#05A372] text-slate-950 font-display font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] shadow-lg flex items-center justify-center gap-1.5"
+          className="w-full mt-2 py-2 bg-gradient-to-r from-[#38FE5E] to-[#059669] hover:from-[#11C489] hover:to-[#05A372] text-slate-950 font-display font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] shadow-lg flex items-center justify-center gap-1.5"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />

@@ -19,6 +19,8 @@ export interface PlayerState {
   currentPos: TacticalPosition;
   keyFrames: AnimationFrame[];
   visible: boolean;
+  name?: string;
+  actor?: boolean;
 }
 
 export interface ArrowStyle {

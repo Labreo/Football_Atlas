@@ -367,11 +367,11 @@ export class CompactnessPressingLinesModule extends ComposedTacticalModule {
               { x: 18, z: -15 },
               { x: -8, z: -5 }
             ]
-          }, 0.50, 0.78, '#10B981', 0.12),
+          }, 0.50, 0.78, '#38FE5E', 0.12),
           new HighlightZone('compactness_grid_a', OverlayType.RECTANGLE, {
             center: { x: 10, z: 0 },
             bounds: { width: 15, length: 28, rotation: 0 }
-          }, 0.90, 1.0, '#10B981', 0.12),
+          }, 0.90, 1.0, '#38FE5E', 0.12),
 
           // Analytics
           new AnalyticsTrigger('vertical_compactness_maintained', 0.58, { branch: 'A' }),

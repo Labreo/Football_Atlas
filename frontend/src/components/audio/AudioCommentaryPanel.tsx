@@ -81,7 +81,7 @@ export const AudioCommentaryPanel: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={toggleAudio}
-              className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase transition-all ${enabled ? 'bg-[#10B981] text-slate-950' : 'bg-[#182235] text-slate-300 hover:bg-[#222E45]'}`}
+              className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase transition-all ${enabled ? 'bg-[#38FE5E] text-slate-950' : 'bg-[#182235] text-slate-300 hover:bg-[#222E45]'}`}
             >
               {enabled ? 'On' : 'Off'}
             </button>
@@ -118,7 +118,7 @@ export const AudioCommentaryPanel: React.FC = () => {
           </button>
           <button
             onClick={toggleAudio}
-            className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition-all ${enabled ? 'bg-[#10B981] text-slate-950' : 'bg-[#182235] text-slate-300 hover:bg-[#222E45]'}`}
+            className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition-all ${enabled ? 'bg-[#38FE5E] text-slate-950' : 'bg-[#182235] text-slate-300 hover:bg-[#222E45]'}`}
             aria-pressed={enabled}
           >
             {enabled ? 'Enabled' : 'Enable'}
@@ -148,7 +148,7 @@ export const AudioCommentaryPanel: React.FC = () => {
           <button
             key={speed}
             onClick={() => handleSpeed(speed)}
-            className={`rounded-full px-2 py-1 transition-colors ${playbackSpeed === speed ? 'bg-[#10B981] text-slate-950' : 'bg-[#111A2C] text-slate-400 hover:bg-[#182235]'}`}
+            className={`rounded-full px-2 py-1 transition-colors ${playbackSpeed === speed ? 'bg-[#38FE5E] text-slate-950' : 'bg-[#111A2C] text-slate-400 hover:bg-[#182235]'}`}
           >
             {speed}x
           </button>
@@ -184,7 +184,7 @@ export const AudioCommentaryPanel: React.FC = () => {
           <span>{progressLabel}</span>
         </div>
         <div className="h-2 rounded-full bg-[#111A2C] overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-[#10B981] to-[#00F3FF] transition-all" style={{ width: `${duration > 0 ? Math.min(100, Math.round((currentTime / duration) * 100)) : 0}%` }} />
+          <div className="h-full bg-gradient-to-r from-[#38FE5E] to-[#00F3FF] transition-all" style={{ width: `${duration > 0 ? Math.min(100, Math.round((currentTime / duration) * 100)) : 0}%` }} />
         </div>
       </div>
 

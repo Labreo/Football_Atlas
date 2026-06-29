@@ -1,6 +1,8 @@
 import { VoiceProvider } from './types';
 import { NarrationTimeline, NarrationSegment } from './types';
 import { SynchronizationEngine } from './SynchronizationEngine';
+import { useTacticalStore } from '../stores/useTacticalStore';
+import { useBreakdownStore } from '../stores/useBreakdownStore';
 
 export interface AudioPlaybackControllerDependencies {
   voiceProvider: VoiceProvider;
@@ -152,10 +154,33 @@ export class AudioPlaybackController {
     });
 
     try {
+      let langCode = 'en-US';
+      const breakdown = useBreakdownStore.getState().currentBreakdown;
+      if (breakdown) {
+        const analyst = useBreakdownStore.getState().activeAnalyst;
+        const analystLangs: Record<string, string> = {
+          nathan: 'en-US',
+          valeria: 'es-ES',
+          claire: 'fr-FR',
+          lukas: 'de-DE'
+        };
+        langCode = analystLangs[analyst] || 'en-US';
+      } else {
+        const globalLang = useTacticalStore.getState().lang || 'en';
+        const langCodes: Record<string, string> = {
+          en: 'en-US',
+          es: 'es-ES',
+          fr: 'fr-FR',
+          de: 'de-DE',
+        };
+        langCode = langCodes[globalLang] || 'en-US';
+      }
+
       this.syncEngine.syncToSegment(segment, this.playbackSpeed);
       await this.voiceProvider.speak(segment.text, {
         rate: this.playbackSpeed,
         volume: this.isMuted ? 0 : this.volume,
+        lang: langCode,
       });
       if (this.segmentAbortRequested) {
         return;

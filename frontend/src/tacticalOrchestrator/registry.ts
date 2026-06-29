@@ -41,7 +41,7 @@ export class AnimationModuleRegistry {
     }
 
     const instance = new ModuleClass();
-    instance.init(engine);
+    instance.init(engine, conceptId);
     this.activeInstances.set(conceptId, instance);
     return instance;
   }

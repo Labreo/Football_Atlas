@@ -7,6 +7,7 @@ import graniteRoutes from './routes/granite.routes';
 import documentRoutes from './routes/document.routes';
 import tacticalRoutes from './routes/tactical.routes';
 import metricsRoutes from './routes/metrics.routes';
+import matchRoutes from './routes/match.routes';
 
 const app = express();
 
@@ -22,9 +23,12 @@ app.use('/api/granite', graniteRoutes);
 app.use('/api/tactical', tacticalRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/tactical', documentRoutes);
+app.use('/api/tactical/matches', matchRoutes);
 
 // Global exception catcher boundary
 app.use(errorHandler);
 
 export default app;
+// Trigger server reload to ingest new tactical seeds - touched now
+
 

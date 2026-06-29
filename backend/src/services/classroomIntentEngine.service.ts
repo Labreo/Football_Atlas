@@ -153,10 +153,17 @@ export class ClassroomIntentEngine {
     },
     defensive_block: {
       conceptId: 'defensive_block',
-      historicalMatches: ['atletico_2014_db', 'chelsea_2012_db', 'inter_2010_db', 'celtic_2012_db', 'atletico_2020_db'],
-      historicalBreakdowns: ['atletico_2014_db', 'chelsea_2012_db', 'inter_2010_db', 'celtic_2012_db', 'atletico_2020_db'],
-      keyPlayers: ['Diego Godín', 'Javier Zanetti', 'John Terry', 'Victor Wanyama'],
-      keyCoaches: ['Diego Simeone', 'Roberto Di Matteo', 'José Mourinho', 'Neil Lennon']
+      historicalMatches: ['atletico_2014_db', 'atletico_2020_db'],
+      historicalBreakdowns: ['atletico_2014_db', 'atletico_2020_db'],
+      keyPlayers: ['Diego Godín', 'Koke'],
+      keyCoaches: ['Diego Simeone']
+    },
+    low_block: {
+      conceptId: 'low_block',
+      historicalMatches: ['chelsea_2012_db', 'inter_2010_db', 'celtic_2012_db'],
+      historicalBreakdowns: ['chelsea_2012_db', 'inter_2010_db', 'celtic_2012_db'],
+      keyPlayers: ['John Terry', 'Javier Zanetti', 'Victor Wanyama'],
+      keyCoaches: ['Roberto Di Matteo', 'José Mourinho', 'Neil Lennon']
     },
     midfield_overload: {
       conceptId: 'midfield_overload',

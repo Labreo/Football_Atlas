@@ -45,9 +45,19 @@ export class ArrowManager {
 
       // Calculate progress of expansion (0.0 to 1.0)
       const duration = arrow.endFrame - arrow.startFrame;
-      const progress = duration > 0 
+      let progress = duration > 0 
         ? Math.min(1.0, (time - arrow.startFrame) / duration)
         : 1.0;
+
+      // Force match moment arrows to be fully drawn (visible trajectory immediately)
+      if (
+        arrow.id === 'main-action-arrow' || 
+        arrow.id === 'whatif-ghost-arrow' || 
+        arrow.id === 'movement-run-path' || 
+        arrow.id.startsWith('lane-')
+      ) {
+        progress = 1.0;
+      }
 
       arrow.currentProgress = progress;
       if (progress <= 0) return;
@@ -62,14 +72,15 @@ export class ArrowManager {
 
     // 1. Generate path points
     const points: THREE.Vector3[] = [];
+    const height = 0.4;
     
     if (arrow.points && arrow.points.length > 0) {
       // Use predefined path points
-      arrow.points.forEach(p => points.push(new THREE.Vector3(p.x, 0.12, p.z)));
+      arrow.points.forEach(p => points.push(new THREE.Vector3(p.x, height, p.z)));
     } else if (arrow.style.curved) {
       // Generate a curved arc perpendicular to the straight line direction
-      const start = new THREE.Vector3(arrow.fromPos.x, 0.12, arrow.fromPos.z);
-      const end = new THREE.Vector3(arrow.toPos.x, 0.12, arrow.toPos.z);
+      const start = new THREE.Vector3(arrow.fromPos.x, height, arrow.fromPos.z);
+      const end = new THREE.Vector3(arrow.toPos.x, height, arrow.toPos.z);
       const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
       
       const dir = new THREE.Vector3().subVectors(end, start);
@@ -77,15 +88,16 @@ export class ArrowManager {
       
       // Calculate perpendicular horizontal vector
       const perp = new THREE.Vector3(-dir.z, 0, dir.x).normalize();
-      // Offset midpoint slightly (e.g. 15% of distance)
+      // Offset midpoint horizontally (18%) and vertically (15%) for a beautiful 3D trajectory
       mid.addScaledVector(perp, len * 0.18);
+      mid.y = height + len * 0.12;
 
       points.push(start, mid, end);
     } else {
       // Straight path
       points.push(
-        new THREE.Vector3(arrow.fromPos.x, 0.12, arrow.fromPos.z),
-        new THREE.Vector3(arrow.toPos.x, 0.12, arrow.toPos.z)
+        new THREE.Vector3(arrow.fromPos.x, height, arrow.fromPos.z),
+        new THREE.Vector3(arrow.toPos.x, height, arrow.toPos.z)
       );
     }
 
@@ -119,68 +131,86 @@ export class ArrowManager {
     if (subPoints.length < 2) return;
 
     // 2. Create line mesh
-    const curveGeo = new THREE.BufferGeometry().setFromPoints(subPoints);
-    
-    // Determine dash parameters
     const isDashed = arrow.style.dashSize !== undefined || arrow.style.dashSpeed !== undefined;
-    let lineMat: THREE.Material;
+    let lineObj: THREE.Object3D;
 
-    if (isDashed) {
-      const dashSize = arrow.style.dashSize || 1.5;
-      const gapSize = arrow.style.gapSize || 1.0;
-      const speed = arrow.style.dashSpeed || 1.0;
-      
-      // Dynamic moving dash shader material
-      lineMat = new THREE.ShaderMaterial({
-        uniforms: {
-          color: { value: new THREE.Color(arrow.style.color) },
-          dashSize: { value: dashSize },
-          gapSize: { value: gapSize },
-          dashOffset: { value: this.dashOffset * speed },
-          opacity: { value: arrow.style.opacity !== undefined ? arrow.style.opacity : 0.95 }
-        },
-        vertexShader: `
-          attribute float lineDistance;
-          varying float vLineDistance;
-          void main() {
-            vLineDistance = lineDistance;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform vec3 color;
-          uniform float dashSize;
-          uniform float gapSize;
-          uniform float dashOffset;
-          uniform float opacity;
-          varying float vLineDistance;
-          void main() {
-            float totalSize = dashSize + gapSize;
-            float d = mod(vLineDistance + dashOffset, totalSize);
-            if (d > dashSize) {
-              discard;
-            }
-            gl_FragColor = vec4(color, opacity);
-          }
-        `,
-        transparent: true,
-        depthWrite: false
-      });
-    } else {
-      lineMat = new THREE.LineBasicMaterial({
+    if (arrow.style.curved) {
+      // Create a premium 3D volumetric tube geometry for curved trajectories (e.g. goals/passes)
+      // This overcomes WebGL 1px line limits and creates an incredibly sleek, premium look.
+      const progressCurve = new THREE.CatmullRomCurve3(subPoints, false, 'centripetal');
+      // Thicken based on style.width
+      const tubeRadius = (arrow.style.width || 3.5) * 0.08;
+      const tubeGeo = new THREE.TubeGeometry(progressCurve, 64, tubeRadius, 8, false);
+      const tubeMat = new THREE.MeshBasicMaterial({
         color: arrow.style.color,
-        linewidth: arrow.style.width || 3,
         transparent: true,
         opacity: arrow.style.opacity !== undefined ? arrow.style.opacity : 0.85,
-        depthWrite: false
+        depthWrite: true
       });
+      lineObj = new THREE.Mesh(tubeGeo, tubeMat);
+    } else {
+      const curveGeo = new THREE.BufferGeometry().setFromPoints(subPoints);
+      let lineMat: THREE.Material;
+
+      if (isDashed) {
+        const dashSize = arrow.style.dashSize || 1.5;
+        const gapSize = arrow.style.gapSize || 1.0;
+        const speed = arrow.style.dashSpeed || 1.0;
+        
+        // Dynamic moving dash shader material
+        lineMat = new THREE.ShaderMaterial({
+          uniforms: {
+            color: { value: new THREE.Color(arrow.style.color) },
+            dashSize: { value: dashSize },
+            gapSize: { value: gapSize },
+            dashOffset: { value: this.dashOffset * speed },
+            opacity: { value: arrow.style.opacity !== undefined ? arrow.style.opacity : 0.95 }
+          },
+          vertexShader: `
+            attribute float lineDistance;
+            varying float vLineDistance;
+            void main() {
+              vLineDistance = lineDistance;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform vec3 color;
+            uniform float dashSize;
+            uniform float gapSize;
+            uniform float dashOffset;
+            uniform float opacity;
+            varying float vLineDistance;
+            void main() {
+              float totalSize = dashSize + gapSize;
+              float d = mod(vLineDistance + dashOffset, totalSize);
+              if (d > dashSize) {
+                discard;
+              }
+              gl_FragColor = vec4(color, opacity);
+            }
+          `,
+          transparent: true,
+          depthWrite: false
+        });
+      } else {
+        lineMat = new THREE.LineBasicMaterial({
+          color: arrow.style.color,
+          linewidth: arrow.style.width || 3,
+          transparent: true,
+          opacity: arrow.style.opacity !== undefined ? arrow.style.opacity : 0.85,
+          depthWrite: false
+        });
+      }
+
+      const line = new THREE.Line(curveGeo, lineMat);
+      if (isDashed) {
+        line.computeLineDistances();
+      }
+      lineObj = line;
     }
 
-    const line = new THREE.Line(curveGeo, lineMat);
-    if (isDashed) {
-      line.computeLineDistances();
-    }
-    arrowGroup.add(line);
+    arrowGroup.add(lineObj);
 
     // 3. Render arrowhead cone at the end coordinates pointing along the tangent vector
     const endPoint = subPoints[subPoints.length - 1];
@@ -198,7 +228,7 @@ export class ArrowManager {
       color: arrow.style.color,
       transparent: true,
       opacity: arrow.style.opacity !== undefined ? arrow.style.opacity : 0.9,
-      depthWrite: false
+      depthWrite: true
     });
 
     const arrowHead = new THREE.Mesh(arrowHeadGeo, arrowHeadMat);

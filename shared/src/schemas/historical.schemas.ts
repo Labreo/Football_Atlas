@@ -42,6 +42,22 @@ export const HistoricalScenarioDefinitionSchema = z.object({
   }))
 });
 
+export const WhatIfOptionSchema = z.object({
+  option_id: z.string(),
+  label: z.string(),
+  kind: z.enum(['pass', 'carry', 'shot']),
+  from_x: z.number(),
+  from_z: z.number(),
+  to_x: z.number(),
+  to_z: z.number(),
+  receiver_name: z.string().optional(),
+  viable: z.boolean(),
+  value: z.number(),
+  value_kind: z.enum(['xT', 'xG']),
+  chosen: z.boolean().optional(),
+  best: z.boolean().optional()
+});
+
 export const BreakdownMomentSchema = z.object({
   moment_id: z.string().min(3),
   timestamp: z.number().min(0).max(1),
@@ -54,7 +70,8 @@ export const BreakdownMomentSchema = z.object({
     type: z.enum(['arrow', 'passing_lane', 'player_highlight', 'space_highlight', 'shape_overlay', 'note']),
     target: z.string(),
     color: z.string().optional()
-  }))
+  })),
+  what_if_options: z.array(WhatIfOptionSchema).optional()
 });
 
 export const HistoricalBreakdownSchema = z.object({

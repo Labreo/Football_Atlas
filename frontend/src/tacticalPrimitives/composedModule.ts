@@ -30,6 +30,222 @@ export interface ComposedModuleOptions {
   visualMode?: VisualMode;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Dynamic concept overrides for new concepts that reuse base animation modules
+// Each entry maps a concept_id to custom display name, description, phases,
+// and annotations that replace the base module defaults at init time.
+// ────────────────────────────────────────────────────────────────────────────
+const CONCEPT_OVERRIDES: Record<string, Partial<ComposedModuleOptions>> = {
+  rest_defense: {
+    id: 'rest_defense',
+    name: 'Rest Defense',
+    description: 'A structural screening formation maintained during attacking phases to prevent counter-attacks, with designated players positioned to intercept transition outlet passes.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Attacking Shape Setup', description: 'The team pushes forward in possession — rest defenders hold position behind the ball line.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Screening Formation', description: 'Two to three players form a compact screen between the ball and the opponent\'s counter-attacking outlets.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Transition Interception', description: 'When possession is lost, rest defenders immediately intercept the clearance and recycle possession.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'While teammates attack, designated rest defenders hold central positions behind the halfway line.' },
+      { start: 0.25, end: 0.55, text: 'The compact 2-3 screening block covers the central corridor, blocking direct counter-attack routes to the goal.' },
+      { start: 0.55, end: 0.80, text: 'A clearance is intercepted by the rest defense screen, turning a potential counter into a secondary attacking wave.' },
+      { start: 0.80, end: 1.00, text: 'Effective rest defense ensures the team never gets caught on the break even during high-risk attacking phases.' }
+    ]
+  },
+  positional_play: {
+    id: 'positional_play',
+    name: 'Positional Play',
+    description: 'A possession-based system where players occupy specific grid zones to maintain triangular passing options and create numerical superiority through spatial discipline.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Grid Occupation', description: 'Players spread across vertical and horizontal grid zones, ensuring no two occupy the same channel.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Triangular Circulation', description: 'Short passes circulate through triangles, drawing the opponent\'s shape narrow to open half-spaces.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Line-Breaking Pass', description: 'A vertical pass penetrates the opponent\'s defensive line through the opened half-space channel.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'Players position themselves in a grid formation — each player occupies a unique zone to maximize passing angles.' },
+      { start: 0.25, end: 0.55, text: 'Rapid triangular passing pulls defenders toward the ball, opening up space in the opposite half-space.' },
+      { start: 0.55, end: 0.80, text: 'A line-breaking vertical pass exploits the gap created by the opponent\'s lateral shift, penetrating between the lines.' },
+      { start: 0.80, end: 1.00, text: 'Positional play creates structured superiority — the opponent must react to spacing rather than individual dribbles.' }
+    ]
+  },
+  box_midfield: {
+    id: 'box_midfield',
+    name: 'Box Midfield',
+    description: 'A 2-2 midfield shape (two deep, two advanced) that creates a diamond/box structure to dominate the central corridor and provide constant passing triangles.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Double Pivot Formation', description: 'Two deep midfielders form the base of the box alongside the center-backs during build-up.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Box Shape Activation', description: 'Two advanced midfielders push into half-space pockets, completing the rectangular box shape.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Central Dominance', description: 'The 4v3 central overload bypasses the opponent\'s midfield line, opening vertical passing corridors.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'Two holding midfielders sit alongside center-backs to form a 4-man build-up base — the bottom of the box.' },
+      { start: 0.25, end: 0.55, text: 'Two attacking midfielders occupy the half-space pockets, completing a 2-2 box that creates passing triangles in every direction.' },
+      { start: 0.55, end: 0.80, text: 'The box shape creates a 4v3 numerical overload centrally, bypassing the opponent\'s midfield and opening vertical channels.' },
+      { start: 0.80, end: 1.00, text: 'Box midfield structures guarantee at least two passing options for any central player at all times.' }
+    ]
+  },
+  overlapping_runs: {
+    id: 'overlapping_runs',
+    name: 'Overlapping Runs',
+    description: 'Fullbacks or center-backs making forward runs beyond the winger to create 2v1 situations on the flank and deliver crosses from advanced positions.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Winger Receives Wide', description: 'The winger receives the ball in a wide position, drawing the opposition fullback toward them.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Overlap Trigger', description: 'The fullback sprints past the winger on the outside, creating a 2v1 against the opposing defender.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Cross Delivery', description: 'The overlapping fullback receives the ball in an advanced position and delivers a cross into the box.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'The winger holds the ball wide, engaging the opposing fullback and fixing them in position.' },
+      { start: 0.25, end: 0.55, text: 'The fullback explodes past the winger on the outside — the opposing fullback must choose who to track, creating a 2v1.' },
+      { start: 0.55, end: 0.80, text: 'The overlapping fullback receives in space behind the defense and delivers a cross from an advanced wide position.' },
+      { start: 0.80, end: 1.00, text: 'Overlapping runs stretch the opponent\'s defensive line horizontally and create numerical advantages on the flank.' }
+    ]
+  },
+  overloading_to_isolate: {
+    id: 'overloading_to_isolate',
+    name: 'Overloading to Isolate',
+    description: 'Deliberately overloading one flank to draw defenders narrow, then quickly switching play to isolate a 1v1 attacker on the weak side.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Flank Overload', description: 'Multiple players shift to one side, drawing the opponent\'s defensive block toward the ball.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Switch of Play', description: 'A diagonal pass rapidly switches the ball to the underloaded far side of the pitch.' },
+      { index: 3, start: 0.65, end: 1.00, name: '1v1 Isolation', description: 'The isolated attacker takes on the lone defender in space on the weak side.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'Three to four players shift to the left flank, dragging the opponent\'s defensive shape narrow toward the ball.' },
+      { start: 0.25, end: 0.55, text: 'A rapid diagonal switch bypasses the compressed midfield and finds the isolated attacker on the far side.' },
+      { start: 0.55, end: 0.80, text: 'The attacker receives in a 1v1 situation with vast open space — the defense cannot recover in time.' },
+      { start: 0.80, end: 1.00, text: 'Overloading to isolate manipulates the opponent\'s collective positioning to create individual attacking advantages.' }
+    ]
+  },
+  half_space_exploitation: {
+    id: 'half_space_exploitation',
+    name: 'Half-Space Exploitation',
+    description: 'Attacking through the channels between the center and the wings (half-spaces), which are difficult to defend because they fall between the responsibilities of fullbacks and center-backs.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Width Establishment', description: 'Wingers stretch wide to pin fullbacks, opening up the half-space channels between defense zones.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Half-Space Entry', description: 'A midfielder or inverted winger receives between the lines in the half-space pocket.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Penetrating Action', description: 'From the half-space, the player drives forward or plays a cutback behind the defensive line.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'Wingers stretch to the touchline, pulling opposition fullbacks wide and opening half-space channels inside them.' },
+      { start: 0.25, end: 0.55, text: 'A midfielder receives between the lines in the half-space — this zone is hard to defend because it falls between CB and FB responsibilities.' },
+      { start: 0.55, end: 0.80, text: 'From the half-space, a diagonal cutback or through ball penetrates behind the defense at a dangerous angle.' },
+      { start: 0.80, end: 1.00, text: 'Half-spaces are the most dangerous attacking channels because they offer passing, dribbling, and shooting angles simultaneously.' }
+    ]
+  },
+  vertical_tiki_taka: {
+    id: 'vertical_tiki_taka',
+    name: 'Vertical Tiki-Taka',
+    description: 'An evolution of traditional tiki-taka that prioritizes forward vertical passes over lateral circulation, using rapid one-touch combinations to break defensive lines.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Press Baiting', description: 'Short passes in the defensive third draw the opponent\'s press forward, opening space behind their midfield.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Vertical Penetration', description: 'A sharp vertical pass bypasses the opponent\'s midfield line, reaching an attacker between the lines.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Rapid Combination', description: 'One-touch combinations in the final third create a shooting opportunity before the defense can reorganize.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'Short passes in the defensive third lure the opponent forward — this is deliberate press-baiting to create space behind them.' },
+      { start: 0.25, end: 0.55, text: 'A sharp vertical through ball bypasses the midfield press entirely, finding a runner between the opponent\'s lines.' },
+      { start: 0.55, end: 0.80, text: 'Rapid one-touch combinations in the final third exploit the disorganized defense before they can recover their shape.' },
+      { start: 0.80, end: 1.00, text: 'Vertical tiki-taka combines possession security with direct attacking intent — slow to build, explosive to finish.' }
+    ]
+  },
+  shadow_striker: {
+    id: 'shadow_striker',
+    name: 'Shadow Striker',
+    description: 'A second striker who operates in the space behind the main forward, making late runs into the box from deep positions to arrive unmarked at the point of delivery.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Deep Starting Position', description: 'The shadow striker positions between midfield and attack, hidden from the opponent\'s center-backs.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Target Man Pin', description: 'The main striker pins the center-backs, creating a pocket of space for the shadow striker to exploit.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Late Arrival', description: 'The shadow striker makes a timed run into the box, arriving unmarked at the point of delivery.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'The shadow striker sits between midfield and attack — too deep for center-backs to track, too high for midfielders to mark.' },
+      { start: 0.25, end: 0.55, text: 'The target striker pins both center-backs, creating a pocket of space between the defensive and midfield lines.' },
+      { start: 0.55, end: 0.80, text: 'The shadow striker times a late run into the box — arriving at speed into the vacated space to receive the delivery.' },
+      { start: 0.80, end: 1.00, text: 'Shadow strikers exploit the gap between defensive responsibilities — too deep for CBs, too advanced for CMs.' }
+    ]
+  },
+  pressing_triggers: {
+    id: 'pressing_triggers',
+    name: 'Pressing Triggers',
+    description: 'Specific visual cues (backward passes, heavy touches, closed body shapes) that signal the team to initiate a coordinated high-intensity press.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Passive Monitoring', description: 'The pressing team monitors the opponent\'s build-up, waiting for a trigger moment to initiate the press.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Trigger Recognition', description: 'A pressing trigger is identified — a backward pass, heavy touch, or player receiving with back to goal.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Coordinated Press', description: 'The team presses collectively in response to the trigger, swarming the ball carrier and blocking outlets.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'The pressing team holds a mid-block shape, watching for pressing trigger cues from the opponent\'s build-up play.' },
+      { start: 0.25, end: 0.55, text: 'A trigger is spotted — the defender receives the ball facing their own goal. This cue activates the collective press.' },
+      { start: 0.55, end: 0.80, text: 'Multiple players press simultaneously, cutting off passing lanes and forcing a turnover under pressure.' },
+      { start: 0.80, end: 1.00, text: 'Pressing triggers transform reactive defending into proactive ball-winning by reading the opponent\'s body language.' }
+    ]
+  },
+  midfield_rotation: {
+    id: 'midfield_rotation',
+    name: 'Midfield Rotation',
+    description: 'Continuous positional swapping between midfielders to disrupt man-marking systems and create passing lanes through positional unpredictability.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Initial Midfield Shape', description: 'Three midfielders establish their base positions in a triangle formation.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Rotation Cycle', description: 'Midfielders swap positions — the deepest steps wide, the wide player pushes high, and the high player drops deep.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Marking Confusion', description: 'The rotation breaks the opponent\'s marking assignments, freeing a midfielder to receive in space.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'Three central midfielders set up in a standard triangle — this is the starting point before rotation begins.' },
+      { start: 0.25, end: 0.55, text: 'The midfielders rotate positions continuously — the deep player goes wide, the wide player pushes forward, creating marking confusion.' },
+      { start: 0.55, end: 0.80, text: 'The opponent\'s man-markers lose their assignments — one midfielder receives completely unmarked in a dangerous pocket.' },
+      { start: 0.80, end: 1.00, text: 'Midfield rotation breaks rigid marking systems by making player positions unpredictable and constantly shifting.' }
+    ]
+  },
+  sweeper_keeper: {
+    id: 'sweeper_keeper',
+    name: 'Sweeper Keeper',
+    description: 'A goalkeeper who operates as an extra outfield player, coming far off their line to sweep long balls behind a high defensive line and participating in build-up play.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'High Line Setup', description: 'The defensive line pushes high — the keeper positions well outside the penalty area to cover the space behind.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Sweeping Action', description: 'A long ball is played over the high line — the keeper rushes out to clear or intercept before the attacker arrives.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Build-Up Involvement', description: 'The keeper receives back-passes and distributes accurately with their feet, acting as an extra outfield player.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'The defense pushes up to the halfway line — the keeper positions at the edge of the penalty area to cover the exposed space behind.' },
+      { start: 0.25, end: 0.55, text: 'A long ball is played behind the high line — the sweeper keeper rushes out to intercept, acting as the last line of defense outside the box.' },
+      { start: 0.55, end: 0.80, text: 'The keeper collects a back-pass and plays a precise long-range pass to launch a counter-attack, bypassing the opponent\'s press.' },
+      { start: 0.80, end: 1.00, text: 'The sweeper keeper enables a high defensive line by providing defensive coverage and distributing like an extra outfield player.' }
+    ]
+  },
+  defensive_transitions: {
+    id: 'defensive_transitions',
+    name: 'Defensive Transitions',
+    description: 'The team\'s immediate response upon losing possession — rapidly reorganizing from an attacking shape into a compact defensive block to prevent counter-attacks.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Ball Loss Moment', description: 'Possession is lost during an attacking phase — the team must react within seconds to prevent a counter-attack.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Delay & Recovery', description: 'The nearest player delays the ball carrier while teammates sprint back to reform the defensive shape.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Block Reformation', description: 'The compact defensive block is restored, with all players behind the ball in a narrow, organized shape.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'The ball is lost in the attacking third — the team was in an advanced, spread-out shape and is now exposed.' },
+      { start: 0.25, end: 0.55, text: 'The nearest midfielder commits a strategic foul or delays the ball carrier, buying time for the defense to recover.' },
+      { start: 0.55, end: 0.80, text: 'Center-backs drop narrow and deep, reforming a compact 4-man block while midfielders sprint back to fill gaps.' },
+      { start: 0.80, end: 1.00, text: 'Defensive transitions are about speed of thought — the faster the block reforms, the less dangerous the counter-attack becomes.' }
+    ]
+  },
+  inverted_fullbacks: {
+    id: 'inverted_fullbacks',
+    name: 'Inverted Fullbacks',
+    description: 'Fullbacks who move inside into central midfield during build-up rather than overlapping wide, creating an extra body in midfield and forming a 3-2 or 3-3 build-up structure.',
+    phases: [
+      { index: 1, start: 0.00, end: 0.30, name: 'Wide Starting Position', description: 'The fullback starts in a traditional wide position during the defensive phase.' },
+      { index: 2, start: 0.30, end: 0.65, name: 'Inversion Movement', description: 'Upon gaining possession, the fullback tucks inside alongside the holding midfielder, forming a double pivot.' },
+      { index: 3, start: 0.65, end: 1.00, name: 'Central Overload', description: 'The inverted fullback creates a 3v2 central overload, freeing the winger to have the entire flank.' }
+    ],
+    annotations: [
+      { start: 0.00, end: 0.25, text: 'The fullback begins in a standard wide position — but upon winning possession, the inversion begins.' },
+      { start: 0.25, end: 0.55, text: 'The fullback moves inside to sit next to the holding midfielder, creating a double pivot and transforming the build-up into a 3-2 shape.' },
+      { start: 0.55, end: 0.80, text: 'The central overload draws the opponent\'s midfield press, leaving the winger isolated in a 1v1 on the wing.' },
+      { start: 0.80, end: 1.00, text: 'Inverted fullbacks provide structural balance — securing the midfield while allowing wingers freedom to attack wide.' }
+    ]
+  }
+};
+
 export class ComposedTacticalModule implements TacticalModule {
   protected engine: TacticalAnimationEngine | null = null;
   protected activeBranch: 'A' | 'B' = 'A';
@@ -60,7 +276,17 @@ export class ComposedTacticalModule implements TacticalModule {
     }
   }
 
-  public init(engine: TacticalAnimationEngine): void {
+  public init(engine: TacticalAnimationEngine, conceptId?: string): void {
+    // Apply concept-specific overrides if this module is loaded under a different concept
+    if (conceptId && CONCEPT_OVERRIDES[conceptId]) {
+      const overrides = CONCEPT_OVERRIDES[conceptId];
+      if (overrides.id) this.options.id = overrides.id;
+      if (overrides.name) this.options.name = overrides.name;
+      if (overrides.description) this.options.description = overrides.description;
+      if (overrides.phases) this.options.phases = overrides.phases;
+      if (overrides.annotations) this.options.annotations = overrides.annotations;
+    }
+
     this.engine = engine;
     this.engine.getTimeline().setDuration(this.options.durationSeconds);
     if ((this.engine as any).setVisualMode) {
@@ -263,124 +489,15 @@ export class ComposedTacticalModule implements TacticalModule {
     return active ? active.preset : 'overview';
   }
 
-  protected applyCameraPreset(preset: string): void {
+  protected applyCameraPreset(_preset: string): void {
     if (!this.engine) return;
     const camera = (this.engine as any).camera;
     const controls = (this.engine as any).controls;
     if (!camera || !controls) return;
 
-    const targetPos = new THREE.Vector3();
-    const targetLookAt = new THREE.Vector3();
-
-    switch (preset) {
-      case 'overview':
-        targetPos.set(0, 135, 0.1);
-        targetLookAt.set(0, 0, 0);
-        break;
-      case 'press_trigger':
-        targetPos.set(-10, 85, 45);
-        targetLookAt.set(-10, 0, 0);
-        break;
-      case 'turnover':
-        targetPos.set(5, 80, 40);
-        targetLookAt.set(5, 0, 0);
-        break;
-      case 'central_space':
-        targetPos.set(0, 90, 50);
-        targetLookAt.set(0, 0, 0);
-        break;
-      case 'compactness':
-        targetPos.set(10, 85, 45);
-        targetLookAt.set(10, 0, 0);
-        break;
-      case 'transition':
-        targetPos.set(-15, 85, 45);
-        targetLookAt.set(-15, 0, -5);
-        break;
-      case 'counter_channel':
-        targetPos.set(10, 80, 50);
-        targetLookAt.set(10, 0, 10);
-        break;
-      case 'recovery_race':
-        targetPos.set(25, 85, 55);
-        targetLookAt.set(25, 0, 5);
-        break;
-      case 'summary':
-        targetPos.set(0, 135, 0.1);
-        targetLookAt.set(0, 0, 0);
-        break;
-      case 'defensive_view':
-        targetPos.set(-20, 95, 50);
-        targetLookAt.set(-20, 0, 0);
-        break;
-      case 'wingback_view':
-        targetPos.set(0, 80, 55);
-        targetLookAt.set(5, 0, 15);
-        break;
-      case 'attacking_view':
-        targetPos.set(15, 95, 50);
-        targetLookAt.set(15, 0, 0);
-        break;
-      case 'transformation_view':
-        targetPos.set(0, 110, 45);
-        targetLookAt.set(0, 0, 0);
-        break;
-      case 'summary_view':
-        targetPos.set(0, 135, 0.1);
-        targetLookAt.set(0, 0, 0);
-        break;
-      case 'triangle_view':
-        targetPos.set(-5, 90, 45);
-        targetLookAt.set(-5, 0, 0);
-        break;
-      case 'offball_view':
-        targetPos.set(5, 80, 50);
-        targetLookAt.set(5, 0, 10);
-        break;
-      case 'route_view':
-        targetPos.set(20, 85, 45);
-        targetLookAt.set(20, 0, -5);
-        break;
-      case 'role_view':
-        targetPos.set(12, 85, 48);
-        targetLookAt.set(15, 0, 18);
-        break;
-      case 'halfspace_view':
-        targetPos.set(20, 80, 48);
-        targetLookAt.set(20, 0, 12);
-        break;
-      case 'combination_play':
-        targetPos.set(15, 85, 45);
-        targetLookAt.set(18, 0, 8);
-        break;
-      case 'overlap_view':
-        targetPos.set(25, 80, 55);
-        targetLookAt.set(25, 0, 20);
-        break;
-      case 'attacking_third':
-        targetPos.set(30, 80, 48);
-        targetLookAt.set(30, 0, 8);
-        break;
-      case 'horizontal_compactness_view':
-        targetPos.set(0, 110, 30);
-        targetLookAt.set(0, 0, 0);
-        break;
-      case 'vertical_compactness_view':
-        targetPos.set(20, 100, 40);
-        targetLookAt.set(10, 0, 0);
-        break;
-      case 'pressing_structure_view':
-        targetPos.set(-15, 90, 45);
-        targetLookAt.set(-10, 0, 0);
-        break;
-      case 'gap_analysis_view':
-        targetPos.set(5, 95, 45);
-        targetLookAt.set(5, 0, 0);
-        break;
-      default:
-        targetPos.set(0, 135, 0.1);
-        targetLookAt.set(0, 0, 0);
-    }
+    // Always set target and coordinates to overhead view as requested by user
+    const targetPos = new THREE.Vector3(0, 135, 0.1);
+    const targetLookAt = new THREE.Vector3(0, 0, 0);
 
     transitionManager.transitionCamera(camera, controls, targetPos, targetLookAt, 1200);
   }

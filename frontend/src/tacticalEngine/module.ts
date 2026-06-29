@@ -1,7 +1,7 @@
 import { TacticalAnimationEngine } from './engine';
 
 export interface TacticalModule {
-  init(engine: TacticalAnimationEngine): void;
+  init(engine: TacticalAnimationEngine, conceptId?: string): void;
   play(): void;
   pause(): void;
   reset(): void;

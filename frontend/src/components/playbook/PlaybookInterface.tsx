@@ -56,36 +56,49 @@ const PlaybookInterface: React.FC = () => {
     useLearningUIStore.getState().setError(null);
     
     try {
-      // Query concept details from local API directly
-      const concept = await tacticalApi.getConceptById(conceptId);
-      
       // Reset sub-tab to guide
       setPlaybookSubTab('lecture');
 
-      // Update UI store
-      useLearningUIStore.getState().setCurrentConcept(concept);
-      useLearningUIStore.getState().setCurrentExplanation(concept.core_explanation);
-      useLearningUIStore.getState().setPhaseInfo(1, 'Initial Shape');
-      useLearningUIStore.getState().setPhaseAnnotation('');
-      
       // Clear follow-up history chain since we are starting a fresh manual lesson
       useLearningUIStore.getState().clearFollowUpChain();
-      
-      // Set global store and load animation
-      const resolvedModule = ConceptRouter.resolveAnimationModule(conceptId);
-      useTacticalStore.setState({ 
-        currentConcept: concept, 
-        playState: resolvedModule ? 'playing' : 'stopped' 
-      });
-      learningStateStore.getState().setCurrentConcept(concept);
-      learningStateStore.getState().setCurrentAnimation(resolvedModule);
-      learningStateStore.getState().setAnimationStatus(resolvedModule ? 'playing' : 'stopped');
-      
-      if (resolvedModule) {
-        useLearningUIStore.getState().setAnimationState('playing');
+
+      // Query concept details from local API directly to set the explanation
+      const concept = await tacticalApi.getConceptById(conceptId);
+      useLearningUIStore.getState().setCurrentExplanation(concept.core_explanation);
+
+      // Check if the 3D engine is initialized
+      const hasEngine = !!learningOrchestrator.getEngine();
+
+      if (hasEngine) {
+        // Load concept and animation properly using the learningOrchestrator
+        await learningOrchestrator.loadConceptAnimation(conceptId);
       } else {
-        useLearningUIStore.getState().setAnimationState('stopped');
+        // Fallback: If the engine hasn't mounted/initialized yet, set states manually
+        const resolvedModule = ConceptRouter.resolveAnimationModule(conceptId);
+        
+        useLearningUIStore.getState().setCurrentConcept(concept);
+        useLearningUIStore.getState().setPhaseInfo(1, 'Initial Shape');
+        useLearningUIStore.getState().setPhaseAnnotation('');
+        
+        useTacticalStore.setState({ 
+          currentConcept: concept, 
+          playState: resolvedModule ? 'playing' : 'stopped' 
+        });
+        
+        learningStateStore.getState().setCurrentConcept(concept);
+        learningStateStore.getState().setCurrentAnimation(resolvedModule);
+        learningStateStore.getState().setAnimationStatus(resolvedModule ? 'playing' : 'stopped');
+        
+        if (resolvedModule) {
+          useLearningUIStore.getState().setAnimationState('playing');
+        } else {
+          useLearningUIStore.getState().setAnimationState('stopped');
+        }
       }
+
+      // Reset camera view to overhead position on tactic switch
+      triggerCameraReset();
+
     } catch (err: any) {
       useLearningUIStore.getState().setError(`Failed to load concept: ${err.message}`);
     } finally {
@@ -111,7 +124,7 @@ const PlaybookInterface: React.FC = () => {
     <div className={`w-full p-4 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-4 h-full bg-[#0A0D14] select-none relative ${visualMode === 'historical' ? 'historical-mode' : ''}`}>
       {visualMode === 'historical' && (
         <div className="historical-mode-watermark select-none pointer-events-none">
-          🏛️ Grounded Historical Intel
+          Grounded Historical Intel
         </div>
       )}
       
@@ -143,9 +156,9 @@ const PlaybookInterface: React.FC = () => {
                 <button
                   key={concept.concept_id}
                   onClick={() => handlePlaybookSelect(concept.concept_id)}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
+                  className={`btn-press w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
                     current_concept?.concept_id === concept.concept_id
-                      ? 'border-[#10B981] bg-[#10B981]/10 text-[#10B981] shadow-md shadow-[#10B981]/5'
+                      ? 'border-[#38FE5E] bg-[#38FE5E]/10 text-[#38FE5E] shadow-md shadow-[#38FE5E]/5'
                       : 'border-[#23324C]/40 bg-[#182235]/20 hover:border-slate-700 text-slate-300 hover:text-slate-100'
                   }`}
                 >
@@ -161,7 +174,7 @@ const PlaybookInterface: React.FC = () => {
                     concept.complexity.toLowerCase() === 'beginner'
                       ? 'bg-slate-900 border-slate-700 text-slate-400'
                       : concept.complexity.toLowerCase() === 'intermediate'
-                      ? 'bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]'
+                      ? 'bg-[#38FE5E]/10 border-[#38FE5E]/30 text-[#38FE5E]'
                       : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
                   }`}>
                     {concept.complexity}
@@ -180,7 +193,7 @@ const PlaybookInterface: React.FC = () => {
         {/* Top Floating Branding */}
         <div className="absolute top-4 left-6 z-10 pointer-events-none flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#38FE5E] animate-pulse" />
             <h1 className="font-display font-extrabold text-sm tracking-wider text-slate-200 uppercase">
               Football Atlas Playbook
             </h1>
@@ -206,7 +219,7 @@ const PlaybookInterface: React.FC = () => {
 
         {/* 3D Pitch Player */}
         <div className="flex-1 w-full relative z-0 min-h-[300px]">
-          <Pitch3D />
+          <Pitch3D enableCinematicRotation={false} cameraTrackingEnabled={false} />
         </div>
 
         {/* Playback Controls & Phase Annotation (stacked for clarity) */}
@@ -216,7 +229,7 @@ const PlaybookInterface: React.FC = () => {
             <div className="px-5 pt-3 pb-2 min-h-[44px] flex items-center">
               {current_phase_annotation ? (
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[9px] uppercase font-bold tracking-widest text-[#10B981] font-mono">
+                  <span className="text-[9px] uppercase font-bold tracking-widest text-[#38FE5E] font-mono">
                     Phase {current_phase_index} : {current_phase_name}
                   </span>
                   <p className="text-xs text-slate-300 leading-relaxed font-sans">
@@ -260,7 +273,7 @@ const PlaybookInterface: React.FC = () => {
         <div className="flex-grow overflow-y-auto p-4 space-y-6">
           {loading && !current_concept && (
             <div className="h-full flex flex-col items-center justify-center text-center py-20 space-y-3">
-              <div className="w-8 h-8 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin" />
+              <div className="w-8 h-8 rounded-full border-2 border-[#38FE5E] border-t-transparent animate-spin" />
               <p className="text-xs font-semibold text-slate-300">Loading Concept details...</p>
             </div>
           )}
@@ -288,7 +301,7 @@ const PlaybookInterface: React.FC = () => {
               <div className="space-y-5 animate-fadeIn">
                 {/* Title & Classification */}
                 <div>
-                  <span className="text-[9px] text-[#10B981] font-mono tracking-widest uppercase font-bold block mb-1">
+                  <span className="text-[9px] text-[#38FE5E] font-mono tracking-widest uppercase font-bold block mb-1">
                     {current_concept.category.replace('_', ' ')}
                   </span>
                   <h3 className="font-display font-extrabold text-sm text-slate-100 tracking-tight leading-tight">
@@ -302,7 +315,7 @@ const PlaybookInterface: React.FC = () => {
                     onClick={() => setPlaybookSubTab('lecture')}
                     className={`flex-1 pb-2 font-display font-bold uppercase tracking-wider text-center transition-all ${
                       playbookSubTab === 'lecture'
-                        ? 'border-b-2 border-[#10B981] text-[#10B981]'
+                        ? 'border-b-2 border-[#38FE5E] text-[#38FE5E]'
                         : 'text-slate-500 hover:text-slate-300'
                     }`}
                   >
@@ -312,7 +325,7 @@ const PlaybookInterface: React.FC = () => {
                     onClick={() => setPlaybookSubTab('examples')}
                     className={`flex-1 pb-2 font-display font-bold uppercase tracking-wider text-center transition-all ${
                       playbookSubTab === 'examples'
-                        ? 'border-b-2 border-[#10B981] text-[#10B981]'
+                        ? 'border-b-2 border-[#38FE5E] text-[#38FE5E]'
                         : 'text-slate-500 hover:text-slate-300'
                     }`}
                   >
@@ -327,7 +340,7 @@ const PlaybookInterface: React.FC = () => {
                       <div className="bg-[#131926] border border-[#23324C]/60 p-3 rounded-xl space-y-2">
                         <div className="flex items-center justify-between text-[10px] font-mono uppercase font-bold text-slate-400">
                           <span>Active Scenario:</span>
-                          <span className="text-[#10B981]">Interactive Toggle</span>
+                          <span className="text-[#38FE5E]">Interactive Toggle</span>
                         </div>
                         <div className="grid grid-cols-2 gap-1.5">
                           <button
@@ -344,11 +357,42 @@ const PlaybookInterface: React.FC = () => {
                             onClick={() => handleBranchChange('B')}
                             className={`py-2 rounded-lg text-[10px] font-bold tracking-wide transition-all border ${
                               branch === 'B'
-                                ? 'bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]'
+                                ? 'bg-[#38FE5E]/10 border-[#38FE5E]/30 text-[#38FE5E]'
                                 : 'bg-[#0B0F19] border-transparent text-slate-400 hover:text-slate-200'
                             }`}
                           >
                             CB Holds (Free)
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {current_concept.concept_id === 'gegenpressing' && (
+                      <div className="bg-[#131926] border border-[#23324C]/60 p-3 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between text-[10px] font-mono uppercase font-bold text-slate-400">
+                          <span>Active Scenario:</span>
+                          <span className="text-[#38FE5E]">Interactive Toggle</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <button
+                            onClick={() => handleBranchChange('A')}
+                            className={`py-2 rounded-lg text-[10px] font-bold tracking-wide transition-all border ${
+                              branch === 'A'
+                                ? 'bg-[#FF0055]/10 border-[#FF0055]/30 text-[#FF0055]'
+                                : 'bg-[#0B0F19] border-transparent text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            Swarm Press (Direct)
+                          </button>
+                          <button
+                            onClick={() => handleBranchChange('B')}
+                            className={`py-2 rounded-lg text-[10px] font-bold tracking-wide transition-all border ${
+                              branch === 'B'
+                                ? 'bg-[#38FE5E]/10 border-[#38FE5E]/30 text-[#38FE5E]'
+                                : 'bg-[#0B0F19] border-transparent text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            Lane Screen (Spatial)
                           </button>
                         </div>
                       </div>
@@ -410,7 +454,7 @@ const PlaybookInterface: React.FC = () => {
                       <div className="space-y-2">
                         {current_concept.key_principles.map((principle, index) => (
                           <div key={index} className="flex items-start gap-2 text-xs bg-[#121826]/20 border border-[#222E45]/20 p-3 rounded-xl leading-relaxed">
-                            <span className="text-[#10B981] font-bold select-none pt-0.5">✦</span>
+                            <span className="text-[#38FE5E] font-bold select-none pt-0.5">✦</span>
                             <div className="space-y-0.5">
                               <span className="font-bold text-slate-200 block font-display">{principle.title}</span>
                               <span className="text-slate-400 text-[11px] font-sans font-light leading-normal block">{principle.description}</span>

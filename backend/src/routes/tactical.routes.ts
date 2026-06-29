@@ -42,7 +42,7 @@ router.get('/concepts/:id', (req: Request, res: Response) => {
  */
 router.post('/tutor', async (req: Request, res: Response, next: NextFunction) => {
   const traceId = (req as any).traceId || 'unknown-trace';
-  const { prompt, history, audience_mode } = req.body;
+  const { prompt, history, audience_mode, lang } = req.body;
 
   if (!prompt) {
     return res.status(400).json({
@@ -63,7 +63,8 @@ router.post('/tutor', async (req: Request, res: Response, next: NextFunction) =>
       'default-session',
       traceId,
       history,
-      resolvedAudienceMode
+      resolvedAudienceMode,
+      lang
     );
     res.json(tutorResponse);
   } catch (error) {
@@ -174,4 +175,45 @@ router.get('/mcp/tools', (req: Request, res: Response) => {
   res.json(toolsList);
 });
 
+/**
+ * POST /api/tactical/mcp/execute
+ * Direct execution endpoint for registered MCP tools.
+ */
+router.post('/mcp/execute', async (req: Request, res: Response, next: NextFunction) => {
+  const { name, arguments: args } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'Bad Request', message: 'The "name" field is required.' });
+  }
+  try {
+    const result = await footballAtlasMCPServer.executeTool(name, args || {});
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/tactical/translate
+ * Translates a batch of texts into a target language.
+ */
+router.post('/translate', async (req: Request, res: Response, next: NextFunction) => {
+  const { texts, targetLang } = req.body;
+  if (!Array.isArray(texts) || !targetLang) {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: 'The "texts" (array) and "targetLang" (string) fields are required.'
+    });
+  }
+
+  try {
+    const translatedTexts = await Promise.all(
+      texts.map((text: string) => graniteService.translateText(text, targetLang))
+    );
+    res.json({ translatedTexts });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
+

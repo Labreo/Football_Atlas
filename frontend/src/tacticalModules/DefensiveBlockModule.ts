@@ -208,7 +208,7 @@ export class DefensiveBlockModule extends ComposedTacticalModule {
         new MovementArrow('arrow_blue_lm_double', { x: 16, z: -22 }, { x: 22, z: -26 }, 0.80, 0.88, { color: '#39FF14', width: 2.5 }, true),
         new PassingArrow('arrow_forced_wide_cross', { x: 26, z: -27 }, { x: 26, z: 5 }, 0.88, 0.95, { color: '#EF4444', width: 3 }, true),
         new MovementArrow('arrow_blue_rcb_clearance', { x: 26, z: 5 }, { x: 12, z: 12 }, 0.95, 1.0, { color: '#39FF14', width: 3 }),
-        new MovementArrow('arrow_threat_reduced_flow', { x: 26, z: 5 }, { x: 8, z: 15 }, 0.95, 1.0, { color: '#10B981', width: 2, dashSize: 2.0 }, true),
+        new MovementArrow('arrow_threat_reduced_flow', { x: 26, z: 5 }, { x: 8, z: 15 }, 0.95, 1.0, { color: '#38FE5E', width: 2, dashSize: 2.0 }, true),
         new MovementArrow('arrow_midfield_shift_left', { x: 18, z: 0.5 }, { x: 18, z: -3 }, 0.45, 0.60, { color: '#39FF14', width: 2 }),
         new MovementArrow('arrow_striker_drop_cover', { x: 10, z: -7 }, { x: 12, z: -8 }, 0.30, 0.45, { color: '#39FF14', width: 2 }),
 
@@ -241,7 +241,7 @@ export class DefensiveBlockModule extends ComposedTacticalModule {
             { x: 30, z: -32 },
             { x: 30, z: -20 }
           ]
-        }, 0.45, 0.65, '#10B981', 0.14),
+        }, 0.45, 0.65, '#38FE5E', 0.14),
         new HighlightZone('overlay_central_space_denied', OverlayType.RECTANGLE, { center: { x: 15, z: 0 }, bounds: { width: 15, length: 22, rotation: 0 } }, 0.45, 0.65, '#EF4444', 0.12),
         new HighlightZone('overlay_horizontal_compactness', OverlayType.POLYGON, {
           points: [
@@ -251,7 +251,7 @@ export class DefensiveBlockModule extends ComposedTacticalModule {
             { x: 27, z: 12 }
           ]
         }, 0.60, 0.75, '#EAB308', 0.22),
-        new HighlightZone('overlay_vertical_compactness', OverlayType.RECTANGLE, { center: { x: 22, z: 0 }, bounds: { width: 8, length: 30, rotation: 0 } }, 0.60, 0.75, '#10B981', 0.15),
+        new HighlightZone('overlay_vertical_compactness', OverlayType.RECTANGLE, { center: { x: 22, z: 0 }, bounds: { width: 8, length: 30, rotation: 0 } }, 0.60, 0.75, '#38FE5E', 0.15),
         new HighlightZone('overlay_pressure_trap_wide', OverlayType.CIRCLE, { center: { x: 26, z: -25 }, radius: 7.0 }, 0.80, 0.95, '#EF4444', 0.24),
         new HighlightZone('overlay_protected_space_summary', OverlayType.POLYGON, {
           points: [
@@ -260,7 +260,7 @@ export class DefensiveBlockModule extends ComposedTacticalModule {
             { x: 40, z: 20 },
             { x: 40, z: -20 }
           ]
-        }, 0.90, 1.0, '#10B981', 0.12),
+        }, 0.90, 1.0, '#38FE5E', 0.12),
         new HighlightZone('overlay_compact_shape_summary', OverlayType.RECTANGLE, { center: { x: 22, z: -5 }, bounds: { width: 14, length: 32, rotation: 0 } }, 0.90, 1.0, '#06B6D4', 0.12),
         new HighlightZone('overlay_threat_reduction', OverlayType.CIRCLE, { center: { x: 26, z: 5 }, radius: 8.0 }, 0.92, 1.0, '#EAB308', 0.15)
       ],

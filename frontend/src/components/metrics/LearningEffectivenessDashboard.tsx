@@ -61,16 +61,16 @@ const Sparkline: React.FC<SparklineProps> = ({ data, width = 360, height = 56 })
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full" preserveAspectRatio="none">
       <defs>
         <linearGradient id="spark-gradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#10B981" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+          <stop offset="0%" stopColor="#38FE5E" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#38FE5E" stopOpacity="0.0" />
         </linearGradient>
       </defs>
       <path d={areaPath} fill="url(#spark-gradient)" />
-      <path d={linePath} fill="none" stroke="#10B981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={linePath} fill="none" stroke="#38FE5E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       {/* Dots on data points that have sessions */}
       {data.map((d, i) =>
         d.sessions > 0 ? (
-          <circle key={i} cx={toX(i)} cy={toY(d.comprehension_rate)} r="2.5" fill="#10B981" />
+          <circle key={i} cx={toX(i)} cy={toY(d.comprehension_rate)} r="2.5" fill="#38FE5E" />
         ) : null,
       )}
     </svg>
@@ -163,18 +163,18 @@ const StatCard: React.FC<StatCardProps> = ({
   value,
   suffix = '%',
   subtext,
-  accent = '#10B981',
+  accent = '#38FE5E',
   isPrimary = false,
 }) => (
   <div
     className={`relative rounded-2xl p-5 flex flex-col gap-2 overflow-hidden border transition-all duration-300 ${
       isPrimary
-        ? 'border-[#10B981]/40 bg-gradient-to-br from-[#10B981]/10 to-[#00F3FF]/5 shadow-lg shadow-[#10B981]/10'
+        ? 'border-[#38FE5E]/40 bg-gradient-to-br from-[#38FE5E]/10 to-[#00F3FF]/5 shadow-lg shadow-[#38FE5E]/10'
         : 'border-[#23324C]/50 bg-[#121826]/60'
     }`}
   >
     {isPrimary && (
-      <div className="absolute inset-0 rounded-2xl border border-[#10B981]/20 pointer-events-none" />
+      <div className="absolute inset-0 rounded-2xl border border-[#38FE5E]/20 pointer-events-none" />
     )}
     <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">{label}</span>
     <div
@@ -208,13 +208,13 @@ const RUBRIC_LEVELS = [
     score: 2,
     label: 'Correct',
     emoji: '✅',
-    color: '#10B981',
+    color: '#38FE5E',
     desc: 'Accurately describes the concept and spatial mechanism.',
   },
   {
     score: 3,
     label: 'Can Apply',
-    emoji: '🏆',
+    emoji: '',
     color: '#00F3FF',
     desc: 'Identifies the concept in novel situations unprompted.',
   },
@@ -229,7 +229,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
   if (loading && !metrics) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-slate-500">
-        <div className="w-8 h-8 border-2 border-[#10B981]/30 border-t-[#10B981] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#38FE5E]/30 border-t-[#38FE5E] rounded-full animate-spin" />
         <span className="text-xs font-mono">Loading validation data…</span>
       </div>
     );
@@ -244,7 +244,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
         </span>
         <button
           onClick={refresh}
-          className="px-4 py-2 bg-[#10B981]/10 border border-[#10B981]/30 text-[#10B981] text-xs font-mono rounded-xl hover:brightness-110 transition-all"
+          className="px-4 py-2 bg-[#38FE5E]/10 border border-[#38FE5E]/30 text-[#38FE5E] text-xs font-mono rounded-xl hover:brightness-110 transition-all"
         >
           Retry
         </button>
@@ -263,7 +263,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
   return (
     <div className="w-full h-full overflow-y-auto bg-[#0A0D14] text-slate-100">
       {/* ── Background glows ── */}
-      <div className="fixed top-20 right-20 w-96 h-96 bg-[#10B981]/4 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-20 right-20 w-96 h-96 bg-[#38FE5E]/4 rounded-full blur-[120px] pointer-events-none" />
       <div className="fixed bottom-20 left-40 w-80 h-80 bg-[#00F3FF]/3 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
@@ -272,8 +272,8 @@ const LearningEffectivenessDashboard: React.FC = () => {
         <div className="flex items-start justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#10B981]">
+              <div className="w-2 h-2 rounded-full bg-[#38FE5E] animate-pulse" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#38FE5E]">
                 FootballAtlasValidationFramework · Live
               </span>
             </div>
@@ -305,7 +305,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-wider transition-all ${
                 activeTab === tab
-                  ? 'bg-[#10B981] text-slate-950 font-bold'
+                  ? 'bg-[#38FE5E] text-slate-950 font-bold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -359,7 +359,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-2">
-                        <span className="text-amber-400">🏟</span>
+                        <span className="text-amber-400">STADIUM</span>
                         <span className="text-slate-300 font-medium">
                           Group A — Casual Fans
                         </span>
@@ -383,7 +383,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-2">
-                        <span className="text-sky-400">📐</span>
+                        <span className="text-sky-400">TACTICAL</span>
                         <span className="text-slate-300 font-medium">
                           Group B — Tactical Students
                         </span>
@@ -455,14 +455,14 @@ const LearningEffectivenessDashboard: React.FC = () => {
                           <span className="text-slate-300 font-medium truncate pr-2">
                             {c.concept_id.replace(/_/g, ' ')}
                           </span>
-                          <span className="font-mono font-bold text-[#10B981] shrink-0">
+                          <span className="font-mono font-bold text-[#38FE5E] shrink-0">
                             {c.comprehension_rate}%
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-[#10B981] transition-all duration-700"
+                              className="h-full rounded-full bg-[#38FE5E] transition-all duration-700"
                               style={{ width: `${c.comprehension_rate}%` }}
                             />
                           </div>
@@ -484,7 +484,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
                 <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
                   Comprehension Rate · Last 30 Days
                 </span>
-                <span className="text-[9px] font-mono text-[#10B981]">
+                <span className="text-[9px] font-mono text-[#38FE5E]">
                   {metrics.comprehension_rate}% overall
                 </span>
               </div>
@@ -521,7 +521,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
               <p className="text-xs text-slate-400 leading-relaxed">
                 Used by independent evaluators to score participant recall immediately after one
                 Football Atlas learning loop. Score is assigned by the evaluator, not the participant.
-                A score of <strong className="text-[#10B981]">2 (Correct)</strong> or above counts
+                A score of <strong className="text-[#38FE5E]">2 (Correct)</strong> or above counts
                 as a comprehension success toward the primary metric.
               </p>
             </div>
@@ -557,8 +557,8 @@ const LearningEffectivenessDashboard: React.FC = () => {
               ))}
             </div>
 
-            <div className="p-4 rounded-xl bg-[#10B981]/5 border border-[#10B981]/20 space-y-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[#10B981]">
+            <div className="p-4 rounded-xl bg-[#38FE5E]/5 border border-[#38FE5E]/20 space-y-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#38FE5E]">
                 Evaluator Guidelines
               </span>
               <ul className="text-xs text-slate-300 space-y-1.5 list-none">
@@ -570,7 +570,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
                   'Aim for two independent evaluators for inter-rater reliability in formal studies.',
                 ].map((g, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-[#10B981] mt-0.5 shrink-0">→</span>
+                    <span className="text-[#38FE5E] mt-0.5 shrink-0">→</span>
                     <span>{g}</span>
                   </li>
                 ))}
@@ -593,12 +593,12 @@ const LearningEffectivenessDashboard: React.FC = () => {
                   {
                     label: 'Option A · Concept Comprehension Rate',
                     badge: '✅ PRIMARY',
-                    badgeColor: '#10B981',
+                    badgeColor: '#38FE5E',
                     desc: 'Directly measures learning in a single number. Judges can immediately answer "How do you know this works?". Understandable, measurable, repeatable, and presentation-ready.',
                   },
                   {
                     label: 'Option B · Follow-Up Engagement Rate',
-                    badge: '⭐ SECONDARY',
+                    badge: 'SECONDARY',
                     badgeColor: '#00F3FF',
                     desc: 'Measures curiosity and active learning. 3+ meaningful follow-up questions strongly correlate with understanding. Useful as a leading indicator.',
                   },
@@ -657,7 +657,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
                     {idx < 5 && (
                       <div className="absolute left-[19px] top-10 w-[2px] h-full bg-[#23324C]/60" />
                     )}
-                    <div className="w-10 h-10 rounded-full bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-center text-[10px] font-mono font-bold text-[#10B981] shrink-0 z-10">
+                    <div className="w-10 h-10 rounded-full bg-[#38FE5E]/10 border border-[#38FE5E]/30 flex items-center justify-center text-[10px] font-mono font-bold text-[#38FE5E] shrink-0 z-10">
                       {item.step}
                     </div>
                     <div className="pb-6 space-y-0.5">

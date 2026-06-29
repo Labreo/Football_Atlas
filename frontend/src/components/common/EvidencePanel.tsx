@@ -65,7 +65,7 @@ export const EvidencePanel: React.FC = () => {
       {/* Panel Header */}
       <div className="p-4 bg-[#121826]/90 border-b border-[#23324C]/60 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-amber-500 text-xs">🏛️</span>
+          <span className="text-amber-500 text-xs font-bold">DOC</span>
           <h2 className="font-display font-extrabold text-xs tracking-wider text-slate-200 uppercase">
             Grounding Evidence Panel
           </h2>

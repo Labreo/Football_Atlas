@@ -1457,5 +1457,240 @@ ${explanationText}`;
     
     return sanitized;
   }
+
+  /**
+   * Translates arbitrary text into the target language using the Granite model.
+   */
+  public async translateText(
+    text: string,
+    targetLang: string,
+    traceId: string = 'translation-request'
+  ): Promise<string> {
+    const cleanText = text.trim();
+    if (!cleanText) return '';
+
+    // Standard translation dictionary for mock mode & quick responses
+    const dictionary: Record<string, Record<string, string>> = {
+      es: {
+        "Welcome to Football Atlas! I'm your AI tactical tutor powered by IBM Granite. Ask me questions like 'Why is a False 9 hard to defend?' or 'How does a high press work?' to begin!":
+          "¡Bienvenido a Football Atlas! Soy tu tutor táctico de IA impulsado por IBM Granite. ¡Hazme preguntas como '¿Por qué es difícil defender a un Falso 9?' o '¿Cómo funciona una presión alta?' para comenzar!",
+        "Why is a False 9 hard to defend?": "¿Por qué es difícil defender a un Falso 9?",
+        "Why is False 9 hard to defend?": "¿Por qué es difícil defender a un Falso 9?",
+        "How does a high press create chances?": "¿Cómo crea oportunidades una presión alta?",
+        "How does a high press work?": "¿Cómo funciona una presión alta?",
+        "Can you show me a pressing trap?": "¿Puedes mostrarme una trampa de presión?",
+        "What is a low block?": "¿Qué es un bloque bajo?",
+        "Show supporting evidence": "Mostrar evidencia de respaldo",
+        "Launch breakdown": "Iniciar desglose",
+        "View core lesson": "Ver lección principal",
+        "Explain how this concept works": "Explicar cómo funciona este concepto",
+        "Show me the 3D lesson": "Muéstrame la lección 3D",
+        "A False 9 is a striker who moves away from the goal to create space.": "Un Falso 9 es un delantero que se aleja de la portería para crear espacio.",
+        "A False 9 pulls defenders out of position and creates midfield overloads.": "Un Falso 9 saca a los defensores de su posición y crea superioridad numérica en el mediocampo.",
+        "The False 9 destabilizes defensive reference points and creates central superiority during positional attacks.": "El Falso 9 desestabiliza los puntos de referencia defensivos y crea superioridad central durante los ataques posicionales.",
+      },
+      fr: {
+        "Welcome to Football Atlas! I'm your AI tactical tutor powered by IBM Granite. Ask me questions like 'Why is a False 9 hard to defend?' or 'How does a high press work?' to begin!":
+          "Bienvenue sur Football Atlas! Je suis votre tuteur tactique IA propulsé par IBM Granite. Posez-moi des questions comme 'Pourquoi un Faux 9 est-il difficile à défendre?' ou 'Comment fonctionne un pressing haut?' pour commencer!",
+        "Why is a False 9 hard to defend?": "Pourquoi un Faux 9 est-il difficile à défendre?",
+        "Why is False 9 hard to defend?": "Pourquoi un Faux 9 est-il difficile à défendre?",
+        "How does a high press create chances?": "Comment un pressing haut crée-t-il des occasions?",
+        "How does a high press work?": "Comment fonctionne un pressing haut?",
+        "Can you show me a pressing trap?": "Pouvez-vous me montrer un piège de pressing?",
+        "What is a low block?": "Qu'est-ce qu'un bloc bas?",
+        "Show supporting evidence": "Afficher les preuves à l'appui",
+        "Launch breakdown": "Lancer l'analyse",
+        "View core lesson": "Voir la leçon principale",
+        "Explain how this concept works": "Expliquer le fonctionnement de ce concept",
+        "Show me the 3D lesson": "Montrez-moi la leçon 3D",
+        "A False 9 is a striker who moves away from the goal to create space.": "Un Faux 9 est un attaquant qui s'éloigne du but pour créer de l'espace.",
+        "A False 9 pulls defenders out of position and creates midfield overloads.": "Un Faux 9 attire les défenseurs hors de leur position et crée des surcharges au milieu de terrain.",
+        "The False 9 destabilizes defensive reference points and creates central superiority during positional attacks.": "Le Faux 9 déstabilise les points de référence défensifs et crée une supériorité centrale lors des attaques positionnelles.",
+      },
+      de: {
+        "Welcome to Football Atlas! I'm your AI tactical tutor powered by IBM Granite. Ask me questions like 'Why is a False 9 hard to defend?' or 'How does a high press work?' to begin!":
+          "Willkommen bei Football Atlas! Ich bin Ihr KI-Taktiklehrer, unterstützt von IBM Granite. Stellen Sie mir Fragen wie 'Warum ist eine Falsche 9 schwer zu verteidigen?' oder 'Wie funktioniert ein hohes Pressing?', um zu beginnen!",
+        "Why is a False 9 hard to defend?": "Warum ist eine Falsche 9 schwer zu verteidigen?",
+        "Why is False 9 hard to defend?": "Warum ist eine Falsche 9 schwer zu verteidigen?",
+        "How does a high press create chances?": "Wie schafft ein hohes Pressing Torchancen?",
+        "How does a high press work?": "Wie funktioniert ein hohes Pressing?",
+        "Can you show me a pressing trap?": "Können Sie mir eine Pressingfalle zeigen?",
+        "What is a low block?": "Was ist ein tiefer Block?",
+        "Show supporting evidence": "Belege anzeigen",
+        "Launch breakdown": "Analyse starten",
+        "View core lesson": "Hauptlektion anzeigen",
+        "Explain how this concept works": "Erklären Sie, wie dieses Konzept funktioniert",
+        "Show me the 3D lesson": "Zeig mir die 3D-Lektion",
+        "A False 9 is a striker who moves away from the goal to create space.": "Eine falsche 9 ist ein Stürmer, der sich vom Tor wegbewegt, um Platz zu schaffen.",
+        "A False 9 pulls defenders out of position and creates midfield overloads.": "Eine falsche 9 zieht Verteidiger aus der Position und schafft Überzahl im Mittelfeld.",
+        "The False 9 destabilizes defensive reference points and creates central superiority during positional attacks.": "Die Falsche 9 destabilisiert defensive Referenzpunkte und schafft zentrale Überlegenheit bei positionellen Angriffen.",
+      }
+    };
+
+    if (dictionary[targetLang]?.[cleanText]) {
+      return dictionary[targetLang][cleanText];
+    }
+
+    if (this.isMockMode) {
+      // Basic rule-based translation fallback for paragraphs in mock mode
+      const prefix = targetLang === 'es' ? '[ES] ' : targetLang === 'fr' ? '[FR] ' : targetLang === 'de' ? '[DE] ' : '';
+      
+      // If the text looks like a tactical concept description, let's make it look slightly more translated by replacing a few terms.
+      let mockTranslated = cleanText;
+      if (targetLang === 'es') {
+        mockTranslated = mockTranslated
+          .replace(/False 9/g, 'Falso 9')
+          .replace(/high press/gi, 'presión alta')
+          .replace(/defensive block/gi, 'bloque defensivo')
+          .replace(/low block/gi, 'bloque bajo')
+          .replace(/midfield overload/gi, 'sobrecarga del mediocampo')
+          .replace(/passing lane/gi, 'carril de pase')
+          .replace(/defender/gi, 'defensor')
+          .replace(/space/gi, 'espacio');
+        return `[ES] ${mockTranslated}`;
+      } else if (targetLang === 'fr') {
+        mockTranslated = mockTranslated
+          .replace(/False 9/g, 'Faux 9')
+          .replace(/high press/gi, 'pressing haut')
+          .replace(/defensive block/gi, 'bloc défensif')
+          .replace(/low block/gi, 'bloc bas')
+          .replace(/midfield overload/gi, 'surcharge du milieu')
+          .replace(/passing lane/gi, 'ligne de passe')
+          .replace(/defender/gi, 'défenseur')
+          .replace(/space/gi, 'espace');
+        return `[FR] ${mockTranslated}`;
+      } else if (targetLang === 'de') {
+        mockTranslated = mockTranslated
+          .replace(/False 9/g, 'Falsche 9')
+          .replace(/high press/gi, 'hohes Pressing')
+          .replace(/defensive block/gi, 'Abwehrblock')
+          .replace(/low block/gi, 'tiefer Block')
+          .replace(/midfield overload/gi, 'Mittelfeldüberzahl')
+          .replace(/passing lane/gi, 'Passweg')
+          .replace(/defender/gi, 'Verteidiger')
+          .replace(/space/gi, 'Raum');
+        return `[DE] ${mockTranslated}`;
+      }
+
+      return `${prefix}${cleanText}`;
+    }
+
+    const systemPrompt = `You are a professional football translator. Translate the given text into ${
+      targetLang === 'es' ? 'Spanish' : targetLang === 'fr' ? 'French' : targetLang === 'de' ? 'German' : 'English'
+    }. Keep all tactical terms, player names, markdown formatting, lists, and numbers exactly the same. Respond ONLY with the translated text, without any additional comments, explanations, or quotes.`;
+
+    const userPrompt = cleanText;
+
+    try {
+      if (this.isHFMode) {
+        const url = `https://${envConfig.ibmBaseUrl}/models/${envConfig.ibmGraniteModel}`;
+        const promptText = `<|system|>\n${systemPrompt}\n<|user|>\n${userPrompt}\n<|assistant|>\n`;
+        const payload = {
+          inputs: promptText,
+          parameters: {
+            max_new_tokens: 1000,
+            return_full_text: false,
+            temperature: 0.1,
+          },
+        };
+        const response = await this.fetchWithRetryAndTimeout(
+          url,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${envConfig.ibmApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          },
+          3,
+          15000,
+          traceId
+        );
+        if (response.ok) {
+          const data = await response.json();
+          let rawText = '';
+          if (Array.isArray(data) && data[0]?.generated_text) {
+            rawText = data[0].generated_text;
+          } else if (data && typeof data === 'object' && 'generated_text' in data) {
+            rawText = (data as any).generated_text;
+          }
+          return rawText.trim() || cleanText;
+        }
+      } else if (this.isOpenRouterMode) {
+        const url = envConfig.ibmBaseUrl.startsWith('http')
+          ? `${envConfig.ibmBaseUrl}/chat/completions`
+          : `https://${envConfig.ibmBaseUrl}/chat/completions`;
+        const payload = {
+          model: envConfig.ibmGraniteModel,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.1,
+          max_tokens: 1000
+        };
+        const response = await this.fetchWithRetryAndTimeout(
+          url,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${envConfig.ibmApiKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://github.com/google-deepmind/football-atlas',
+              'X-Title': 'Football Atlas Translator'
+            },
+            body: JSON.stringify(payload),
+          },
+          3,
+          15000,
+          traceId
+        );
+        if (response.ok) {
+          const data = await response.json();
+          return (data.choices?.[0]?.message?.content || '').trim() || cleanText;
+        }
+      } else {
+        const token = await this.getAccessToken(traceId);
+        const url = `https://${envConfig.ibmBaseUrl}/ml/v1/text/generation?version=2023-05-29`;
+        const promptText = `<|system|>\n${systemPrompt}\n<|user|>\n${userPrompt}\n<|assistant|>\n`;
+        const payload = {
+          model_id: envConfig.ibmGraniteModel,
+          input: promptText,
+          parameters: {
+            decoding_method: 'greedy',
+            max_new_tokens: 1000,
+            min_new_tokens: 1,
+            stop_sequences: ['<|endoftext|>'],
+            repetition_penalty: 1.05,
+          },
+          project_id: envConfig.ibmProjectId,
+        };
+        const response = await this.fetchWithRetryAndTimeout(
+          url,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify(payload),
+          },
+          3,
+          15000,
+          traceId
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const rawText = data.results?.[0]?.generated_text || '';
+          return rawText.trim() || cleanText;
+        }
+      }
+    } catch (err) {
+      Logger.error(`Translation failed, falling back to original text. Error: ${err}`);
+    }
+    return cleanText;
+  }
 }
 

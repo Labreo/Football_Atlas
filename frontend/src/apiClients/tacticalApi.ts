@@ -21,12 +21,13 @@ export const tacticalApi = {
   async askTutor(
     prompt: string,
     history: ConversationTurn[],
-    audienceMode?: AudienceMode
+    audienceMode?: AudienceMode,
+    lang?: string
   ): Promise<TutorResponse> {
     const res = await fetch(`${API_BASE}/tutor`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, history, audience_mode: audienceMode })
+      body: JSON.stringify({ prompt, history, audience_mode: audienceMode, lang })
     });
     if (!res.ok) throw new Error('Failed to query tactical tutor');
     return res.json();
@@ -103,6 +104,16 @@ export const tacticalApi = {
   async getHistoricalEvidence(exampleId: string): Promise<HistoricalEvidence[]> {
     const res = await fetch(`${API_BASE}/historical/evidence/${exampleId}`);
     if (!res.ok) throw new Error(`Failed to fetch evidence for example: ${exampleId}`);
+    return res.json();
+  },
+
+  async translateTexts(texts: string[], targetLang: string): Promise<{ translatedTexts: string[] }> {
+    const res = await fetch(`${API_BASE}/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texts, targetLang })
+    });
+    if (!res.ok) throw new Error('Failed to translate texts');
     return res.json();
   },
 };

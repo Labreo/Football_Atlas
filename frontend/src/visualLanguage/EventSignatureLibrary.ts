@@ -131,7 +131,7 @@ const THIRD_MAN_RUN_STAGES: ThirdManRunStage[] = [
   {
     label: 'Primary Movement',
     arrowStyle: {
-      color: '#10B981',
+      color: '#38FE5E',
       width: 3.0,
       dashed: true,
       dashSize: 1.8,
@@ -376,7 +376,7 @@ const COUNTER_ATTACK_TRIGGER: EventSignature = {
   description: 'The moment possession is recovered and attack begins. An instant flash marks the transition.',
   usedIn: ['counter_attack_trigger', 'high_press', 'pressing_trap'],
   arrow: {
-    color: '#10B981',
+    color: '#38FE5E',
     width: 4.0,
     dashed: false,
     opacity: 1.0,
@@ -384,7 +384,7 @@ const COUNTER_ATTACK_TRIGGER: EventSignature = {
   },
   overlay: {
     mode: 'FLASH_BURST',
-    color: '#10B981',
+    color: '#38FE5E',
     colorSecondary: '#ECFDF5',
     opacity: 0.85,
     flashDurationMs: 150,
@@ -416,7 +416,7 @@ const TRANSITION_MOMENT: EventSignature = {
   overlay: {
     mode: 'SPLIT_FIELD',
     color: '#6366F1',
-    colorSecondary: '#10B981',
+    colorSecondary: '#38FE5E',
     opacity: 0.16,
     flashDurationMs: 200,
   },
@@ -476,7 +476,7 @@ const SPACE_EXPLOITATION: EventSignature = {
   description: 'Created space is exploited. The zone glow transforms into a directional attack path.',
   usedIn: ['false_9', 'counter_attack_trigger', 'inverted_winger', 'back_three_wing_back'],
   arrow: {
-    color: '#10B981',
+    color: '#38FE5E',
     width: 3.5,
     dashed: false,
     opacity: 0.95,
@@ -484,7 +484,7 @@ const SPACE_EXPLOITATION: EventSignature = {
   },
   overlay: {
     mode: 'VACATED_GLOW',
-    color: '#10B981',
+    color: '#38FE5E',
     colorSecondary: '#FDE68A',
     opacity: 0.22,
     borderOpacityMultiplier: 1.4,

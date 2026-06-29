@@ -65,6 +65,9 @@ interface TacticalState {
   fetchEvidenceForExample: (exampleId: string) => Promise<void>;
   setSelectedEvidenceItem: (item: HistoricalEvidence | null) => void;
   setEvidencePanelOpen: (isOpen: boolean) => void;
+
+  lang: string;
+  setLang: (lang: string) => Promise<void>;
 }
 
 export const useTacticalStore = create<TacticalState>((set) => ({
@@ -104,6 +107,121 @@ export const useTacticalStore = create<TacticalState>((set) => ({
   visualMode: 'concept',
   playbookSubTab: 'lecture',
   setPlaybookSubTab: (playbookSubTab) => set({ playbookSubTab }),
+  lang: 'en',
+  setLang: async (lang) => {
+    const state = useTacticalStore.getState();
+
+    const isDefaultWelcome = state.conversation.length === 1 && 
+      (state.conversation[0].content.startsWith("Welcome to Football") ||
+       state.conversation[0].content.startsWith("¡Bienvenido a") ||
+       state.conversation[0].content.startsWith("Bienvenue sur") ||
+       state.conversation[0].content.startsWith("Willkommen bei"));
+
+    const getInitialConversation = (l: string) => {
+      switch (l) {
+        case 'es':
+          return [
+            {
+              role: 'assistant' as const,
+              content: "¡Bienvenido a Football Atlas! Soy tu tutor táctico de IA impulsado por IBM Granite. ¡Hazme preguntas como '¿Por qué es difícil defender a un Falso 9?' o '¿Cómo funciona una presión alta?' para comenzar!"
+            }
+          ];
+        case 'fr':
+          return [
+            {
+              role: 'assistant' as const,
+              content: "Bienvenue sur Football Atlas! Je suis votre tuteur tactique IA propulsé par IBM Granite. Posez-moi des questions comme 'Pourquoi un Faux 9 est-il difficile à défendre?' ou 'Comment fonctionne un pressing haut?' pour commencer!"
+            }
+          ];
+        case 'de':
+          return [
+            {
+              role: 'assistant' as const,
+              content: "Willkommen bei Football Atlas! Ich bin Ihr KI-Taktiklehrer, unterstützt von IBM Granite. Stellen Sie mir Fragen wie 'Warum ist eine Falsche 9 schwer zu verteidigen?' oder 'Wie funktioniert ein hohes Pressing?', um zu beginnen!"
+            }
+          ];
+        default:
+          return [
+            {
+              role: 'assistant' as const,
+              content: "Welcome to Football Atlas! I'm your AI tactical tutor powered by IBM Granite. Ask me questions like 'Why is a False 9 hard to defend?' or 'How does a high press work?' to begin!"
+            }
+          ];
+      }
+    };
+
+    const getInitialSuggestions = (l: string) => {
+      switch (l) {
+        case 'es':
+          return [
+            "¿Por qué es difícil defender a un Falso 9?",
+            "¿Cómo crea oportunidades una presión alta?",
+            "¿Puedes mostrarme una trampa de presión?",
+            "¿Qué es un bloque bajo?"
+          ];
+        case 'fr':
+          return [
+            "Pourquoi un Faux 9 est-il difficile à défendre?",
+            "Comment un pressing haut crée-t-il des occasions?",
+            "Pouvez-vous me montrer un piège de pressing?",
+            "Qu'est-ce qu'un bloc bas?"
+          ];
+        case 'de':
+          return [
+            "Warum ist eine Falsche 9 schwer zu verteidigen?",
+            "Wie schafft ein hohes Pressing Torchancen?",
+            "Können Sie mir eine Pressingfalle zeigen?",
+            "Was ist ein tiefer Block?"
+          ];
+        default:
+          return [
+            "Why is a False 9 hard to defend?",
+            "How does a high press create chances?",
+            "Can you show me a pressing trap?",
+            "What is a low block?"
+          ];
+      }
+    };
+
+    set({ lang, followUpSuggestions: getInitialSuggestions(lang) });
+
+    if (isDefaultWelcome) {
+      set({ conversation: getInitialConversation(lang) });
+    } else {
+      // Translate the existing conversation history
+      const textsToTranslate = state.conversation.map(turn => turn.content);
+      try {
+        set({ isLoading: true });
+        const { translatedTexts } = await tacticalApi.translateTexts(textsToTranslate, lang);
+        const translatedConversation = state.conversation.map((turn, i) => ({
+          ...turn,
+          content: translatedTexts[i] || turn.content
+        }));
+        set({ conversation: translatedConversation, isLoading: false });
+      } catch (err) {
+        console.error('Failed to translate conversation:', err);
+        set({ isLoading: false });
+      }
+    }
+
+    // Sync activeAnalyst in useBreakdownStore
+    const analystMap: Record<string, 'nathan' | 'valeria' | 'claire' | 'lukas'> = {
+      en: 'nathan',
+      es: 'valeria',
+      fr: 'claire',
+      de: 'lukas'
+    };
+    const targetAnalyst = analystMap[lang] || 'nathan';
+    if (useBreakdownStore.getState().activeAnalyst !== targetAnalyst) {
+      useBreakdownStore.setState({ activeAnalyst: targetAnalyst });
+    }
+
+    // Translate the active breakdown if one exists
+    const breakdownState = useBreakdownStore.getState();
+    if (breakdownState.currentBreakdown) {
+      await breakdownState.translateBreakdown(lang);
+    }
+  },
 
 
   fetchConcepts: async () => {

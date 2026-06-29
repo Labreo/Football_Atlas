@@ -59,7 +59,7 @@ export const VisualLanguageGuide: React.FC = () => {
               transition: 'all 0.2s',
             }}
           >
-            Mode: {visualMode === 'historical' ? '🏛️ Historical' : '💡 Concept'}
+            Mode: {visualMode === 'historical' ? 'Historical' : 'Concept'}
           </button>
           <button
             onClick={() => setColorBlindMode(!colorBlindMode)}

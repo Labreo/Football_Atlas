@@ -106,7 +106,7 @@ const HistoricalExampleExplorer: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-3">
         <h3 className="font-display text-base font-semibold text-white tracking-wide">
-          📚 Historical Match Explorer
+          Historical Match Explorer
         </h3>
         <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-cyan-400 font-mono uppercase tracking-widest">
           Knowledge Base

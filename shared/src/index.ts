@@ -7,3 +7,5 @@ export * from './types/historical';
 export * from './schemas/historical.schemas';
 export * from './seed/tactical.seed';
 export * from './registry/tactical.registry';
+export * from './utils/xtGrid';
+

@@ -54,3 +54,4 @@ previous_winners/
 
 # Gemini / Agent working directories
 .gemini/
+post_mortem_analysis
